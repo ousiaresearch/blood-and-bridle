@@ -6,10 +6,19 @@ import { checkEnding } from './endings.js';
 import { AVAILABLE_PARCELS } from './map.js';
 import { UPGRADES, getUpgradeLabel, canAffordUpgrade } from './upgrades.js';
 import { getCurrentTutorialStep, TUTORIAL_STEPS } from './tutorial.js';
+import { createAudioEngine } from './audio.js';
+import { applyAmbientForGame, chooseAmbientPreset } from './ambient.js';
+import { getSeason, getYear, getDayOfSeason } from './seasons.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
+// One audio engine for the whole session. AudioContext is created lazily on
+// the first user gesture (browser policy).
+const audio = createAudioEngine();
+let audioAmbientEnabled = false;
+let lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
+
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch' };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null };
 
 const root = document.querySelector('#app');
 
@@ -40,8 +49,9 @@ function bar(value, tone = 'neutral') {
 }
 
 function renderMetric(metric) {
+  const flash = metric._flash ? ` ${metric._flash}` : '';
   return `
-    <article class="metric">
+    <article class="metric${flash}">
       <span>${escapeHtml(metric.label)}</span>
       <strong>${escapeHtml(metric.value)}</strong>
     </article>
@@ -291,6 +301,47 @@ function render() {
   const over = isGameOver(game);
   const finalEnding = checkEnding(game);
 
+  // Compute deltas vs. previous render so we can attach flash classes.
+  // Cash/legacy/reputation/dev-pressure all go up/down. Day ticks up.
+  const previousCash = lastRendered.cash;
+  const previousDay = lastRendered.day;
+  const previousTutorial = lastRendered.tutorial ?? { dismissed: false, completedSteps: [] };
+  const metricClass = (metric) => {
+    if (metric.label === 'Day') {
+      if (previousDay != null && metric.value !== `${previousDay}/30`) return 'is-tick';
+      return '';
+    }
+    if (metric.label === 'Cash') {
+      if (previousCash != null) {
+        const numeric = Number(String(metric.value).replace(/[^0-9-]/g, ''));
+        if (Number.isFinite(numeric) && numeric > previousCash) return 'is-up';
+        if (Number.isFinite(numeric) && numeric < previousCash) return 'is-down';
+      }
+      return '';
+    }
+    return '';
+  };
+
+  // New log entry = the first item in the log wasn't there last render
+  const previousLogTop = lastRendered.logTop;
+  const newLogTop = previousLogTop != null && model.log[0] !== previousLogTop;
+  // New horse = an id we didn't have last render
+  const previousHorseIds = new Set(lastRendered.horseIds ?? []);
+  const newHorseIds = new Set();
+  for (const h of model.horses) if (!previousHorseIds.has(h.id)) newHorseIds.add(h.id);
+  // Newly completed tutorial step
+  const previousCompleted = new Set(previousTutorial.completedSteps ?? []);
+  const newlyCompleted = model.tutorial?.completedSteps?.find((id) => !previousCompleted.has(id));
+
+  // Trigger ambient (cheap) — no-op if disabled or muted
+  if (audioAmbientEnabled && !audio.isMuted()) {
+    const preset = chooseAmbientPreset(game, { season: getSeason(game) });
+    if (lastRendered.ambientPreset !== preset) {
+      audio.ambient(preset);
+      lastRendered.ambientPreset = preset;
+    }
+  }
+
   root.innerHTML = `
     <main class="shell">
       <section class="hero">
@@ -299,7 +350,10 @@ function render() {
           <h1>${escapeHtml(model.title)}</h1>
           <p class="subtitle">${escapeHtml(model.subtitle)} · ${escapeHtml(model.crisisTitle)}</p>
         </div>
-        <button class="reset" data-reset>New legacy</button>
+        <div class="hero-actions">
+          <button class="audio-toggle ${audio.isMuted() ? 'is-muted' : ''}" data-audio-toggle title="Click to cycle: Sound off → Sound on → Sound + Ambient">${audio.isMuted() ? 'Sound off' : (audioAmbientEnabled ? 'Sound + Amb' : 'Sound on')}</button>
+          <button class="reset" data-reset>New legacy</button>
+        </div>
       </section>
 
       <section class="crisis">
@@ -315,12 +369,15 @@ function render() {
       </section>
 
       <section class="metrics">
-        ${model.metrics.map(renderMetric).join('')}
+        ${model.metrics.map((m) => {
+          const cls = metricClass(m);
+          return renderMetric({ ...m, _flash: cls });
+        }).join('')}
       </section>
 
       ${renderTutorialCard()}
 
-      <section class="verdict ${over ? 'verdict--over' : ''}">
+      <section class="verdict ${over ? 'verdict--over is-ending' : ''}">
         <strong>${over ? 'Scenario ended' : 'Ranch read'}</strong>
         <span>${escapeHtml(model.verdict)}</span>
       </section>
@@ -340,7 +397,10 @@ function render() {
             </select>
           </div>
           <div class="horse-grid">
-            ${model.horses.map((horse) => renderHorse(horse, ui.selectedHorse)).join('')}
+            ${model.horses.map((horse) => {
+              const isNew = newHorseIds.has(horse.id) ? ' is-new' : '';
+              return renderHorse(horse, ui.selectedHorse).replace('class="card horse-card', `class="card horse-card${isNew}`);
+            }).join('')}
           </div>
           ${renderLineagePanel()}
         </div>
@@ -401,26 +461,107 @@ function render() {
         <article class="panel log-panel">
           <p class="eyebrow">Ledger</p>
           <h2>Recent events</h2>
-          <ol>${model.log.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ol>
+          <ol>${model.log.map((line, i) => {
+            const fresh = (i === 0 && newLogTop) ? ' class="is-new"' : '';
+            return `<li${fresh}>${escapeHtml(line)}</li>`;
+          }).join('')}</ol>
         </article>
       </section>
     </main>
   `;
 
+  // Side-effects after DOM is in place:
+  // - pulse the action button that was just clicked
+  // - chime if a tutorial step just completed
+  // - mark the firing button briefly
+  if (ui.lastFiredActionType) {
+    const btn = document.querySelector(`[data-action="${ui.lastFiredActionType}"]`);
+    if (btn) {
+      btn.classList.add('is-firing');
+      setTimeout(() => btn.classList.remove('is-firing'), 380);
+    }
+    ui.lastFiredActionType = null;
+  }
+  if (newlyCompleted) audio.play('stepDone');
+  // Show result sound: triggered when a new showResult appears
+  if (model.lastShowResult && lastRendered.lastShowResultId !== model.lastShowResult.id) {
+    if (model.lastShowResult.result === 'champion') audio.play('champion');
+    else if (model.lastShowResult.result === 'also-ran') audio.play('alsoRan');
+    lastRendered.lastShowResultId = model.lastShowResult.id;
+  }
+
   bindEvents();
+
+  // Update the snapshot for the next render
+  lastRendered = {
+    cash: Number(String(model.metrics.find((m) => m.label === 'Cash')?.value ?? '').replace(/[^0-9-]/g, '')) || previousCash,
+    day: model.dayOfSeason,
+    tutorial: model.tutorial ?? { dismissed: false, completedSteps: [] },
+    horseIds: model.horses.map((h) => h.id),
+    logTop: model.log[0],
+  };
+}
+
+function playForOutcome(prevGame, nextGame, actionType) {
+  // Resume AudioContext on the first user gesture
+  audio.resume();
+  audio.play('click');
+
+  // Cash delta
+  const prevCash = prevGame?.cash ?? 0;
+  const nextCash = nextGame?.cash ?? 0;
+  if (nextCash > prevCash) audio.play('cashUp');
+  else if (nextCash < prevCash) audio.play('cashDown');
+
+  // Day tick
+  if (prevGame && nextGame && (nextGame.day ?? 0) > (prevGame.day ?? 0)) {
+    audio.play('tick');
+  }
+
+  // Special actions
+  if (actionType === 'listAtAuction' || actionType === 'sellHorse') audio.play('sale');
+  if (actionType === 'enterShow') audio.play('showEnter');
+  if (actionType === 'acceptContract' || actionType === 'signWithDeveloper') audio.play('confirm');
+  if (actionType === 'dismissTutorial') audio.play('stepDone');
+
+  // Show result sound on the next render — handled there
 }
 
 function bindEvents() {
   document.querySelector('[data-reset]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
     game = createNewGame();
-    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch' };
+    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null };
+    lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
     saveGame();
+    render();
+  });
+
+  document.querySelector('[data-audio-toggle]')?.addEventListener('click', () => {
+    audio.resume();
+    // Cycle: off → on+sfx → on+sfx+amb → off
+    if (audio.isMuted()) {
+      audio.setMuted(false);
+      audioAmbientEnabled = false;
+      audio.ambient('off');
+    } else if (!audioAmbientEnabled) {
+      audioAmbientEnabled = true;
+      const preset = chooseAmbientPreset(game, { season: getSeason(game) });
+      audio.ambient(preset);
+      lastRendered.ambientPreset = preset;
+    } else {
+      audioAmbientEnabled = false;
+      audio.ambient('off');
+    }
+    audio.play('click');
     render();
   });
 
   document.querySelectorAll('[data-select-horse]').forEach((card) => {
     card.addEventListener('click', () => {
       ui.selectedHorse = card.dataset.selectHorse;
+      audio.play('click');
       const select = document.querySelector('[name="horse-select"]');
       if (select) select.value = ui.selectedHorse;
       document.querySelectorAll('.horse-card').forEach((c) => c.classList.remove('card--selected'));
@@ -443,10 +584,14 @@ function bindEvents() {
         action.damId = dam;
       }
       try {
+        const before = game;
         game = applyAction(game, action);
+        ui.lastFiredActionType = type;
+        playForOutcome(before, game, type);
         saveGame();
         render();
       } catch (error) {
+        audio.play('error');
         game = { ...game, log: [`Could not act: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
         render();
       }
@@ -456,10 +601,13 @@ function bindEvents() {
   document.querySelectorAll('[data-resolve-event]').forEach((button) => {
     button.addEventListener('click', () => {
       try {
+        const before = game;
         game = applyAction(game, { type: 'resolveEvent', optionIndex: Number(button.dataset.resolveEvent) });
+        playForOutcome(before, game, 'resolveEvent');
         saveGame();
         render();
       } catch (error) {
+        audio.play('error');
         game = { ...game, log: [`Could not resolve event: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
         render();
       }
@@ -471,10 +619,13 @@ function bindEvents() {
       const parcel = AVAILABLE_PARCELS.find((p) => p.id === button.dataset.buyParcel);
       if (!parcel) return;
       try {
+        const before = game;
         game = buyAvailableParcel(game, parcel);
+        playForOutcome(before, game, 'buyParcel');
         saveGame();
         render();
       } catch (error) {
+        audio.play('error');
         game = { ...game, log: [`Could not buy parcel: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
         render();
       }

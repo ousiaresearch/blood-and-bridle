@@ -30,6 +30,10 @@ C. **Ranch upgrades** — 4 infrastructure categories, 3 levels each. Arena (sho
 D. **Mid-term contracts** — Board commitments and sale reservations. Income or price locks that span months. Offers arrive at season boundaries.
 E. **Onboarding tutorial** — 5-step tutorial across the first 10 in-game days. Card on the dashboard tracks progress, with a "Skip tutorial" button.
 
+## Path 1 features (the polish)
+
+F. **Sound + micro-animations** — 12 synthesized sound effects (Web Audio API, no audio files) covering clicks, day ticks, cash up/down, sales, shows, errors, and tutorial progression. Plus an optional ambient layer (winter drone, wind, rain) that responds to season and disasters. Micro-animations on every state change: metric flash (green/red/gold), button pulse, horse card slide-in, log entry slide-in, tutorial step pop. Mute toggle in the hero cycles Sound off → Sound on → Sound + Amb → Sound off. All respects prefers-reduced-motion.
+
 ## Run
 
 ```bash

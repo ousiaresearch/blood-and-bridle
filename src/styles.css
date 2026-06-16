@@ -49,7 +49,11 @@ button { cursor: pointer; }
   border-radius: 28px;
   background: linear-gradient(135deg, rgba(39, 26, 17, 0.86), rgba(12, 11, 10, 0.82));
   box-shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
+  display: grid;
+  gap: 16px;
 }
+.hero > div:first-child { display: flex; flex-direction: column; gap: 6px; }
+.hero-actions { display: flex; align-items: center; gap: 12px; }
 
 h1, h2, p { margin: 0; }
 
@@ -381,6 +385,105 @@ li button { margin-left: 8px; font-size: 0.78rem; padding: 4px 10px; }
   cursor: pointer;
 }
 .tutorial-skip:hover { background: rgba(201, 162, 90, 0.12); }
+.tutorial-skip:active { transform: scale(0.96); }
+
+/* Path 1 Phase F — micro-animations and feedback */
+
+@keyframes pulse-gold {
+  0%   { box-shadow: 0 0 0 0 rgba(201, 162, 90, 0.55); }
+  60%  { box-shadow: 0 0 0 14px rgba(201, 162, 90, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(201, 162, 90, 0); }
+}
+@keyframes flash-up {
+  0%   { background: rgba(126, 168, 96, 0.32); }
+  100% { background: transparent; }
+}
+@keyframes flash-down {
+  0%   { background: rgba(185, 90, 70, 0.32); }
+  100% { background: transparent; }
+}
+@keyframes flash-gold {
+  0%   { background: rgba(201, 162, 90, 0.34); }
+  100% { background: transparent; }
+}
+@keyframes slide-in-top {
+  0%   { opacity: 0; transform: translateY(-12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-bottom {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes log-slide {
+  0%   { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* Button press feedback — works in all browsers */
+button { transition: transform 80ms ease-out, background 120ms ease-out, color 120ms ease-out; }
+button:active:not(:disabled) { transform: scale(0.97); filter: brightness(0.92); }
+
+/* Action buttons pulse briefly when their click has been registered */
+.action.is-firing {
+  animation: pulse-gold 360ms ease-out;
+}
+
+/* Metric value flashes */
+.metric.is-up   strong { animation: flash-up   420ms ease-out; border-radius: 8px; padding: 2px 6px; }
+.metric.is-down strong { animation: flash-down 420ms ease-out; border-radius: 8px; padding: 2px 6px; }
+.metric.is-tick strong { animation: flash-gold 360ms ease-out; border-radius: 8px; padding: 2px 6px; }
+
+/* New horse card slides in from the top */
+.horse-card.is-new {
+  animation: slide-in-top 380ms ease-out;
+}
+
+/* Newly added log entry */
+.log-panel li.is-new {
+  animation: log-slide 280ms ease-out;
+  background: rgba(201, 162, 90, 0.10);
+  border-radius: 6px;
+}
+
+/* Tutorial step — done state */
+.tutorial-step--done .tutorial-step-num { animation: pop 360ms ease-out; }
+
+/* Verdict on game-over rises up */
+.verdict.is-ending {
+  animation: slide-in-bottom 440ms ease-out;
+  border: 1px solid var(--gold);
+}
+
+/* Action danger variants get a subtle warm flash on hover */
+.action--danger:hover { border-color: var(--gold); }
+
+/* Audio toggle button in the hero */
+.audio-toggle {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.audio-toggle:hover { background: rgba(201, 162, 90, 0.12); }
+.audio-toggle.is-muted { color: var(--muted); border-color: var(--muted); }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 .tutorial-track {
   list-style: none;
   padding: 0;
