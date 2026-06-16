@@ -9,6 +9,15 @@ import { getCurrentTutorialStep, TUTORIAL_STEPS } from './tutorial.js';
 import { createAudioEngine } from './audio.js';
 import { applyAmbientForGame, chooseAmbientPreset } from './ambient.js';
 import { getSeason, getYear, getDayOfSeason } from './seasons.js';
+import {
+  serializeGame,
+  deserializeGame,
+  parseJsonExport,
+  buildShareLink,
+  parseShareLink,
+  suggestFilename,
+} from './dynasty.js';
+import { silhouetteFor, ribbonFor } from './silhouettes.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -18,7 +27,16 @@ let audioAmbientEnabled = false;
 let lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
 
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+// If the page was loaded with a share-link hash, capture the snapshot for the
+// import banner. We do NOT auto-load it — the player must accept.
+let pendingShareSnapshot = (() => {
+  try {
+    return typeof location !== 'undefined' ? parseShareLink(location.hash) : null;
+  } catch {
+    return null;
+  }
+})();
 
 const root = document.querySelector('#app');
 
@@ -64,11 +82,14 @@ function stageClass(stageId) {
 
 function renderHorse(horse, selectedHorseId) {
   const selected = horse.id === selectedHorseId ? 'card--selected' : '';
+  const silhouette = silhouetteFor(horse.stageId);
+  const ribbon = ribbonFor(horse.temperament);
   return `
-    <button class="card horse-card ${selected}" data-select-horse="${escapeHtml(horse.id)}">
-      <span class="eyebrow">${escapeHtml(horse.role)}</span>
+    <button class="card horse-card ${selected}" data-select-horse="${escapeHtml(horse.id)}" style="--silhouette: url('${silhouette}')">
+      <span class="bloodline-ribbon bloodline-ribbon--${ribbon}">${escapeHtml(horse.role)}</span>
       <strong>${escapeHtml(horse.name)}</strong>
       <small>${escapeHtml(horse.bloodline)}</small>
+      <span class="horse-silhouette" aria-hidden="true"></span>
       <p>${escapeHtml(horse.temperament)}</p>
       <span class="${stageClass(horse.stageId)}">${escapeHtml(horse.stage)} · age ${horse.age} · ${horse.sex}</span>
       <dl class="horse-stats">
@@ -150,6 +171,63 @@ function renderTutorialCard() {
   `;
 }
 
+function renderShareCard() {
+  if (!ui.showShareCard) return '';
+  const top = [...(game.horses ?? [])]
+    .sort((a, b) => (b.training ?? 0) - (a.training ?? 0))
+    .slice(0, 3);
+  const recentLog = (game.log ?? []).slice(0, 3);
+  const heroScore = scoreGame(game);
+  return `
+    <section class="share-card">
+      <div class="share-card-head">
+        <p class="eyebrow">Share card</p>
+        <small>Designed to screenshot. Press <strong>Export</strong> for the full save file.</small>
+      </div>
+      <div class="share-card-body">
+        <h3>Blood &amp; Bridle</h3>
+        <p class="share-card-meta">Year ${getYear(game)} ${getSeason(game)} · Day ${getDayOfSeason(game)}/30 · ${game.horses.length} horses · Score ${heroScore.toLocaleString()}</p>
+        <div class="share-card-stats">
+          <div><span>Cash</span><strong>$${game.cash.toLocaleString()}</strong></div>
+          <div><span>Legacy</span><strong>${game.legacy}</strong></div>
+          <div><span>Reputation</span><strong>${game.reputation}</strong></div>
+          <div><span>Dev Pressure</span><strong>${game.developerPressure}</strong></div>
+        </div>
+        ${top.length > 0 ? `
+          <p class="share-card-section-label">Top horses</p>
+          <ul class="share-card-horses">
+            ${top.map((h) => `<li><strong>${escapeHtml(h.name)}</strong> · ${escapeHtml(h.role)} · training ${h.training} · $${(h.value ?? 0).toLocaleString()}</li>`).join('')}
+          </ul>
+        ` : ''}
+        ${recentLog.length > 0 ? `
+          <p class="share-card-section-label">Recent</p>
+          <ol class="share-card-log">
+            ${recentLog.map((l) => `<li>${escapeHtml(l)}</li>`).join('')}
+          </ol>
+        ` : ''}
+      </div>
+    </section>
+  `;
+}
+
+function renderShareBanner() {
+  if (!pendingShareSnapshot) return '';
+  const snap = pendingShareSnapshot;
+  return `
+    <section class="share-banner">
+      <div>
+        <p class="eyebrow">A shared dynasty</p>
+        <strong>Year ${snap.year} ${escapeHtml(snap.season)} · Day ${snap.day}</strong>
+        <small>${snap.horseCount} horses · score ${snap.score.toLocaleString()}${snap.topHorses.length > 0 ? ` · top: ${snap.topHorses.map((n) => escapeHtml(n)).join(', ')}` : ''}</small>
+      </div>
+      <div class="share-banner-actions">
+        <button class="action" data-import-shared>Start new game inspired by this</button>
+        <button class="action action--danger" data-dismiss-shared>Dismiss</button>
+      </div>
+    </section>
+  `;
+}
+
 function renderPendingEvent(model) {
   if (!model.pendingEvent) return '';
   const event = model.pendingEvent;
@@ -166,13 +244,31 @@ function renderPendingEvent(model) {
 
 function renderEnding(model) {
   if (!model.ending) return '';
+  const finalScore = scoreGame(game);
+  const top = [...(game.horses ?? [])]
+    .sort((a, b) => (b.training ?? 0) - (a.training ?? 0))
+    .slice(0, 3);
   return `
     <section class="event-modal event-modal--ending">
-      <p class="eyebrow">Ending</p>
-      <h2>${escapeHtml(model.ending.label)}</h2>
+      <p class="eyebrow">A legacy ends</p>
+      <h2 class="wordmark ending-title">${escapeHtml(model.ending.label)}</h2>
       <p>${escapeHtml(model.ending.body)}</p>
-      <p>Final score: <strong>${scoreGame(game).toLocaleString()}</strong></p>
-      <button class="action" data-reset>Start a new legacy</button>
+      <div class="ending-stats">
+        <div><span>Year</span><strong>${getYear(game)}</strong></div>
+        <div><span>Horses</span><strong>${game.horses.length}</strong></div>
+        <div><span>Score</span><strong>${finalScore.toLocaleString()}</strong></div>
+        <div><span>Cash</span><strong>$${game.cash.toLocaleString()}</strong></div>
+      </div>
+      ${top.length > 0 ? `
+        <p class="ending-horses-label">Top horses</p>
+        <ul class="ending-horses">
+          ${top.map((h) => `<li><strong>${escapeHtml(h.name)}</strong> · ${escapeHtml(h.role)} · training ${h.training} · $${(h.value ?? 0).toLocaleString()}</li>`).join('')}
+        </ul>
+      ` : ''}
+      <div class="ending-actions">
+        <button class="action" data-share-link>Share your ending</button>
+        <button class="action" data-reset>Start a new legacy</button>
+      </div>
     </section>
   `;
 }
@@ -347,11 +443,15 @@ function render() {
       <section class="hero">
         <div>
           <p class="eyebrow">Neo-Western ranch management · Year ${model.year} ${model.season} · Day ${model.dayOfSeason}/${model.daysPerSeason}</p>
-          <h1>${escapeHtml(model.title)}</h1>
+          <h1 class="wordmark">Blood<span class="wordmark-amp"> &amp; </span>Bridle</h1>
           <p class="subtitle">${escapeHtml(model.subtitle)} · ${escapeHtml(model.crisisTitle)}</p>
         </div>
         <div class="hero-actions">
           <button class="audio-toggle ${audio.isMuted() ? 'is-muted' : ''}" data-audio-toggle title="Click to cycle: Sound off → Sound on → Sound + Ambient">${audio.isMuted() ? 'Sound off' : (audioAmbientEnabled ? 'Sound + Amb' : 'Sound on')}</button>
+          <button class="reset" data-toggle-share-card>${ui.showShareCard ? 'Hide card' : 'Share card'}</button>
+          <button class="reset" data-share-link>Share link</button>
+          <button class="reset" data-export-dynasty>Export</button>
+          <button class="reset" data-import-dynasty>Import</button>
           <button class="reset" data-reset>New legacy</button>
         </div>
       </section>
@@ -375,7 +475,9 @@ function render() {
         }).join('')}
       </section>
 
+      ${renderShareBanner()}
       ${renderTutorialCard()}
+      ${renderShareCard()}
 
       <section class="verdict ${over ? 'verdict--over is-ending' : ''}">
         <strong>${over ? 'Scenario ended' : 'Ranch read'}</strong>
@@ -703,6 +805,132 @@ function bindEvents() {
         console.warn('Could not dismiss tutorial:', error);
       }
     });
+  });
+
+  document.querySelector('[data-toggle-share-card]')?.addEventListener('click', () => {
+    audio.play('click');
+    ui.showShareCard = !ui.showShareCard;
+    render();
+  });
+
+  document.querySelector('[data-export-dynasty]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    try {
+      const out = serializeGame(game);
+      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = suggestFilename(game);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      game = { ...game, log: [`Exported dynasty as ${a.download}.`, ...(game.log ?? [])].slice(0, 20) };
+      saveGame();
+      render();
+    } catch (error) {
+      audio.play('error');
+      game = { ...game, log: [`Could not export: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+      render();
+    }
+  });
+
+  document.querySelector('[data-import-dynasty]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (!file) { cleanup(); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const text = String(reader.result ?? '');
+          const result = parseJsonExport(text);
+          if (!result.ok) throw new Error(result.error);
+          game = result.game;
+          ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+          lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
+          saveGame();
+          audio.play('confirm');
+          game = { ...game, log: [`Imported dynasty from ${file.name}.`, ...(game.log ?? [])].slice(0, 20) };
+          render();
+        } catch (error) {
+          audio.play('error');
+          game = { ...game, log: [`Could not import: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+          render();
+        } finally {
+          cleanup();
+        }
+      };
+      reader.onerror = () => { audio.play('error'); cleanup(); };
+      reader.readAsText(file);
+      function cleanup() { try { document.body.removeChild(input); } catch {} }
+    });
+    input.click();
+  });
+
+  document.querySelector('[data-share-link]')?.addEventListener('click', async () => {
+    audio.resume();
+    audio.play('click');
+    try {
+      const url = buildShareLink(game, window.location.origin + window.location.pathname);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        game = { ...game, log: [`Share link copied to clipboard.`, ...(game.log ?? [])].slice(0, 20) };
+        audio.play('confirm');
+      } else {
+        // Fallback: select-and-copy via a temporary textarea
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        game = { ...game, log: [`Share link copied.`, ...(game.log ?? [])].slice(0, 20) };
+        audio.play('confirm');
+      }
+      saveGame();
+      render();
+    } catch (error) {
+      audio.play('error');
+      game = { ...game, log: [`Could not share: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+      render();
+    }
+  });
+
+  document.querySelector('[data-import-shared]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    // "Start new game inspired by this" — start a new game with the same
+    // starting bonus adjusted, and clear the hash so the banner goes away.
+    const snap = pendingShareSnapshot;
+    if (snap) {
+      game = createNewGame();
+      const bonus = Math.min(2000, Math.max(0, Math.floor(snap.score / 200)));
+      game = { ...game, cash: game.cash + bonus };
+      game = { ...game, log: [`Started a new legacy inspired by year ${snap.year} ${snap.season} (${snap.horseCount} horses, score ${snap.score.toLocaleString()}). Bonus: $${bonus.toLocaleString()}.`, ...(game.log ?? [])].slice(0, 20) };
+    }
+    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+    lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
+    try { history.replaceState(null, '', window.location.pathname); } catch {}
+    pendingShareSnapshot = null;
+    saveGame();
+    audio.play('confirm');
+    render();
+  });
+
+  document.querySelector('[data-dismiss-shared]')?.addEventListener('click', () => {
+    audio.play('click');
+    try { history.replaceState(null, '', window.location.pathname); } catch {}
+    pendingShareSnapshot = null;
+    render();
   });
 }
 

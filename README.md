@@ -34,6 +34,10 @@ E. **Onboarding tutorial** — 5-step tutorial across the first 10 in-game days.
 
 F. **Sound + micro-animations** — 12 synthesized sound effects (Web Audio API, no audio files) covering clicks, day ticks, cash up/down, sales, shows, errors, and tutorial progression. Plus an optional ambient layer (winter drone, wind, rain) that responds to season and disasters. Micro-animations on every state change: metric flash (green/red/gold), button pulse, horse card slide-in, log entry slide-in, tutorial step pop. Mute toggle in the hero cycles Sound off → Sound on → Sound + Amb → Sound off. All respects prefers-reduced-motion.
 
+G. **Save/export dynasty** — Export current run as versioned JSON file (filename auto-generated from year + top horse). Import a JSON file to restore. Share-link copies a compact URL hash (`#y=3&s=Summer&d=42&score=412k&horses=12&top=...`) to clipboard. When someone visits a shared link, a banner appears offering "Start new game inspired by this" with a starting bonus scaled to the shared score. Share card is a clean screenshot-friendly panel with stats grid and top horses.
+
+H. **Visual polish** — Custom Western wordmark ("Blood & Bridle" in Rye with italic gold ampersand, Inter for body). Per-life-stage horse silhouettes rendered as CSS-masked SVG data URIs. Bloodline ribbons (hot/warm/cool) colored by temperament. Ending screen has a stat bar, top horses list, and "Share your ending" button. Mobile responsive: 1-column horse grid under 720px, 48px tap targets, tutorial track stacks vertically.
+
 ## Run
 
 ```bash
