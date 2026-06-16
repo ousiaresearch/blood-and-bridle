@@ -6,6 +6,7 @@ import { NPCS } from './npcs.js';
 import { RIVALS } from './rivals.js';
 import { AVAILABLE_PARCELS } from './map.js';
 import { checkEnding } from './endings.js';
+import { getShowCalendar, getUpcomingShow, showDay, SHOW_CATEGORIES, getShowPrestigeLabel } from './shows.js';
 
 export function formatMoney(amount) {
   const absolute = Math.abs(amount).toLocaleString();
@@ -42,6 +43,17 @@ export function getRanchVerdict(game) {
 export function buildDashboardModel(game) {
   const crisis = getActiveCrisis(game);
   const ending = checkEnding(game);
+  const upcoming = getUpcomingShow(game);
+  const calendar = getShowCalendar(game);
+  const showCalendar = calendar
+    .filter((s) => s.status === 'today' || s.status === 'upcoming')
+    .slice(0, 4)
+    .map((s) => ({
+      ...s,
+      categoryLabel: SHOW_CATEGORIES[s.category]?.label ?? s.category,
+      prestigeLabel: getShowPrestigeLabel(s.prestige),
+      daysUntil: s.absoluteDay - game.day,
+    }));
 
   return {
     title: 'Blood & Bridle',
@@ -54,9 +66,12 @@ export function buildDashboardModel(game) {
     crisisDescription: crisis.description,
     verdict: ending ? `Ending unlocked: ${ending.label}` : getRanchVerdict(game),
     ending,
+    upcomingShow: upcoming,
+    showCalendar,
     score: scoreGame(game),
     pendingEvent: game.pendingEvent,
     pendingBreeding: game.pendingBreeding,
+    lastShowResult: game.lastShowResult,
     metrics: [
       { label: 'Year', value: `${getYear(game)}` },
       { label: 'Season', value: getSeason(game) },

@@ -4,7 +4,8 @@ import { buildLineageModel } from './lineage.js';
 import { runAuction } from './auction.js';
 import { checkEnding } from './endings.js';
 import { AVAILABLE_PARCELS } from './map.js';
-
+import { UPGRADES, getUpgradeLabel, canAffordUpgrade } from './upgrades.js';
+import { getCurrentTutorialStep, TUTORIAL_STEPS } from './tutorial.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 let game = loadGame();
@@ -101,6 +102,44 @@ function renderLineagePanel() {
   `;
 }
 
+function renderLastShowResult(result) {
+  const tone = result.result === 'champion' ? 'verdict--good' : result.result === 'also-ran' ? 'verdict--over' : '';
+  return `
+    <div class="verdict ${tone}" style="margin-top: 14px;">
+      <strong>${escapeHtml(result.horseName)} · #${result.playerPlace}</strong>
+      <span>${escapeHtml(result.show.title)} · score ${result.playerScore} · payout $${result.payout.toLocaleString()}</span>
+    </div>
+  `;
+}
+
+function renderTutorialCard() {
+  const step = getCurrentTutorialStep(game);
+  if (!step) return '';
+  const completed = game.tutorial?.completedSteps ?? [];
+  const stepIndex = TUTORIAL_STEPS.findIndex((s) => s.id === step.id);
+  const total = TUTORIAL_STEPS.length;
+  const progress = `${Math.min(completed.length, total)}/${total} steps complete`;
+  return `
+    <section class="tutorial">
+      <div class="tutorial-head">
+        <p class="eyebrow">Tutorial · day ${step.day} · ${progress}</p>
+        <button class="tutorial-skip" data-dismiss-tutorial>Skip tutorial</button>
+      </div>
+      <h2>${escapeHtml(step.title)}</h2>
+      <p>${escapeHtml(step.body)}</p>
+      <p class="hint">${escapeHtml(step.hint)}</p>
+      <ol class="tutorial-track">
+        ${TUTORIAL_STEPS.map((s, i) => `
+          <li class="tutorial-step ${completed.includes(s.id) ? 'tutorial-step--done' : ''} ${s.id === step.id ? 'tutorial-step--current' : ''}">
+            <span class="tutorial-step-num">${i + 1}</span>
+            <span>${escapeHtml(s.title)}</span>
+          </li>
+        `).join('')}
+      </ol>
+    </section>
+  `;
+}
+
 function renderPendingEvent(model) {
   if (!model.pendingEvent) return '';
   const event = model.pendingEvent;
@@ -190,6 +229,63 @@ function renderParcelMarket(model) {
   `;
 }
 
+function renderRanchUpgrades() {
+  const upgrades = ['arena', 'vet_clinic', 'breeding_shed', 'hay_barn'];
+  return `
+    <section class="panel">
+      <p class="eyebrow">Ranch</p>
+      <h2>Build & upgrade</h2>
+      <ul class="upgrades">
+        ${upgrades.map((id) => {
+          const upgrade = UPGRADES[id];
+          const level = game.ranchUpgrades?.[id] ?? 0;
+          const label = getUpgradeLabel(id, level);
+          const atMax = level >= 3;
+          const check = canAffordUpgrade(game, id);
+          return `
+            <li>
+              <strong>${escapeHtml(upgrade.label)}</strong>
+              <small>${escapeHtml(label)} · level ${level}/3</small>
+              <p>${escapeHtml(upgrade.description)}</p>
+              ${atMax
+                ? '<span class="hint">Maxed out.</span>'
+                : `<button class="action" data-upgrade="${escapeHtml(id)}" ${check.ok ? '' : 'disabled'}>${check.ok ? `Upgrade ($${check.cost ?? ''})` : check.reason}</button>`}
+            </li>
+          `;
+        }).join('')}
+      </ul>
+    </section>
+  `;
+}
+
+function renderContracts() {
+  const contracts = game.contracts ?? [];
+  if (contracts.length === 0) {
+    return `
+      <section class="panel">
+        <p class="eyebrow">Contracts</p>
+        <h2>None active</h2>
+        <p class="hint">Buyers and boarders will approach at each season boundary. Check back in 30 in-game days.</p>
+      </section>
+    `;
+  }
+  return `
+    <section class="panel">
+      <p class="eyebrow">Contracts</p>
+      <h2>Open offers & active commitments</h2>
+      <ul>
+        ${contracts.map((c) => `
+          <li>
+            <strong>${escapeHtml(c.template)}</strong> · ${c.status === 'pending' ? 'offer' : `${c.daysRemaining} days left`}
+            <small>${c.type === 'board' ? `$${c.monthlyFee.toLocaleString()}/mo for ${c.duration} days · total $${c.totalValue.toLocaleString()}` : `Lock ${c.lockDays} days · $${c.price.toLocaleString()} on completion · ${escapeHtml(c.horseName)}`}</small>
+            ${c.status === 'pending' ? `<button class="action" data-accept-contract="${escapeHtml(c.id)}">Accept</button> <button class="action action--danger" data-decline-contract="${escapeHtml(c.id)}">Decline</button>` : '<span class="hint">Active</span>'}
+          </li>
+        `).join('')}
+      </ul>
+    </section>
+  `;
+}
+
 function render() {
   const model = buildDashboardModel(game);
   const over = isGameOver(game);
@@ -221,6 +317,8 @@ function render() {
       <section class="metrics">
         ${model.metrics.map(renderMetric).join('')}
       </section>
+
+      ${renderTutorialCard()}
 
       <section class="verdict ${over ? 'verdict--over' : ''}">
         <strong>${over ? 'Scenario ended' : 'Ranch read'}</strong>
@@ -271,14 +369,24 @@ function render() {
         ${renderBreedingPanel()}
         ${renderAuctionPreview()}
         <article class="panel">
+          <p class="eyebrow">Show circuit</p>
+          <h2>What's ahead</h2>
+          ${model.showCalendar.length === 0
+            ? '<p class="hint">No more shows on the calendar.</p>'
+            : `<ul>${model.showCalendar.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> · ${escapeHtml(s.categoryLabel)} · ${escapeHtml(s.prestigeLabel)} · ${s.status === 'today' ? '<strong>TODAY</strong>' : `in ${s.daysUntil} day${s.daysUntil === 1 ? '' : 's'}`} · $${s.entryFee} entry / $${s.prizePool.toLocaleString()} purse</li>`).join('')}</ul>`}
+          ${model.lastShowResult ? renderLastShowResult(model.lastShowResult) : ''}
+        </article>
+      </section>
+
+      <section class="layout layout--lower">
+        <article class="panel">
           <p class="eyebrow">Land</p>
           <h2>Parcels & market</h2>
           <ul>${model.parcels.map((line) => `<li>${escapeHtml(line.line)}</li>`).join('')}</ul>
           ${renderParcelMarket(model)}
         </article>
-      </section>
-
-      <section class="layout layout--lower">
+        ${renderRanchUpgrades()}
+        ${renderContracts()}
         <article class="panel">
           <p class="eyebrow">People</p>
           <h2>Staff & NPCs</h2>
@@ -373,6 +481,45 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll('[data-upgrade]').forEach((button) => {
+    button.addEventListener('click', () => {
+      try {
+        game = applyAction(game, { type: 'upgrade', upgradeId: button.dataset.upgrade });
+        saveGame();
+        render();
+      } catch (error) {
+        game = { ...game, log: [`Could not upgrade: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-accept-contract]').forEach((button) => {
+    button.addEventListener('click', () => {
+      try {
+        game = applyAction(game, { type: 'acceptContract', contractId: button.dataset.acceptContract });
+        saveGame();
+        render();
+      } catch (error) {
+        game = { ...game, log: [`Could not accept: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-decline-contract]').forEach((button) => {
+    button.addEventListener('click', () => {
+      try {
+        game = applyAction(game, { type: 'declineContract', contractId: button.dataset.declineContract });
+        saveGame();
+        render();
+      } catch (error) {
+        game = { ...game, log: [`Could not decline: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+        render();
+      }
+    });
+  });
+
   document.querySelectorAll('[data-list-auction]').forEach((button) => {
     button.addEventListener('click', () => {
       try {
@@ -392,6 +539,19 @@ function bindEvents() {
   });
   document.querySelector('[name="staff-select"]')?.addEventListener('change', (e) => {
     ui.selectedStaff = e.target.value;
+  });
+
+  document.querySelectorAll('[data-dismiss-tutorial]').forEach((button) => {
+    button.addEventListener('click', () => {
+      try {
+        game = applyAction(game, { type: 'dismissTutorial' });
+        saveGame();
+        render();
+      } catch (error) {
+        // non-fatal: tutorial dismiss is a UI affordance, not gameplay
+        console.warn('Could not dismiss tutorial:', error);
+      }
+    });
   });
 }
 

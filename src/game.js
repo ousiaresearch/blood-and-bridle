@@ -11,7 +11,11 @@ import { runAuction } from './auction.js';
 import { tickRivals, RIVALS } from './rivals.js';
 import { rollDisaster } from './weather.js';
 import { checkEnding, scoreGame } from './endings.js';
-import { NPCS, recordNpcMemory, adjustRelationship, adjustPatience } from './npcs.js';
+import { NPCS, recordNpcMemory, adjustRelationship, adjustPatience, STAFF, maeAdvancedTraining, eliFindHayDeal, vossPreventiveCare } from './npcs.js';
+import { runShowdown, canEnterShow, getShowOnDay } from './shows.js';
+import { applyUpgrade, canAffordUpgrade, getRanchEffects, getUpgradeLabel } from './upgrades.js';
+import { generateContractOffer, acceptContract, declineContract, tickContracts } from './contracts.js';
+import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -80,9 +84,24 @@ export function createNewGame() {
       { id: 'cedar-draw',  name: 'Cedar Draw',  x: 1, y: 2, forage: 63, water: 48, threat: 'Drought line creeping east' },
       { id: 'home-place',  name: 'Home Place',  x: 1, y: 1, forage: 70, water: 70, threat: '—' },
     ],
+    ranchUpgrades: {
+      arena: 0,
+      vet_clinic: 0,
+      breeding_shed: 0,
+      hay_barn: 0,
+    },
+    hayDealDaysLeft: 0,
     pendingBreeding: null,
     pendingEvent: null,
     firedEvents: [],
+    contracts: [],
+    milestones: [],
+    lastShowResult: null,
+    tutorial: {
+      day: 1,
+      currentStep: 'train',
+      completedSteps: [],
+    },
     log: [
       'The bank gave you thirty days. The resort buyer gave you a smile that did not reach his eyes.',
     ],
@@ -103,12 +122,17 @@ function findStaff(game, id) {
 function dailyUpkeep(game, entry) {
   const season = getSeason(game);
   const mult = getSeasonalCostMultiplier(season);
-  const burn = Math.round(DAILY_BURN_BASE * mult);
+  const hayDealActive = (game.hayDealDaysLeft ?? 0) > 0;
+  const effects = getRanchEffects(game);
+  const baseMult = 1 - (effects.feedDiscount ?? 0);
+  const feedMult = hayDealActive ? baseMult * 0.7 : baseMult;
+  const burn = Math.round(DAILY_BURN_BASE * mult * feedMult);
 
   const next = {
     ...game,
     day: game.day + 1,
     cash: game.cash - burn,
+    hayDealDaysLeft: Math.max(0, (game.hayDealDaysLeft ?? 0) - 1),
     horses: game.horses.map((h) => ({
       ...h,
       stress: clamp(h.stress + (season === 'Winter' ? 1 : 0)),
@@ -123,21 +147,35 @@ function dailyUpkeep(game, entry) {
 
 function maybeFireSeasonal(game) {
   let g = { ...game };
+  // Auto-complete the "free" tutorial step on day 10
+  if (g.day >= 10) g = markStepComplete(g, 'free');
   // Year tick on year boundary
   if (isYearBoundary(g)) {
     const { horses, log } = tickYear(g.horses);
     g = { ...g, horses, log: [...log, ...g.log].slice(0, 20) };
   }
-  // Season boundary: rivals, disasters, events
+  // Season boundary: rivals, disasters, events, contracts
   if (isSeasonBoundary(g)) {
     g = tickRivals(g);
     const { game: g2 } = rollDisaster(g);
     g = g2;
     g = tickEvents(g);
+    // Contract offer: every 30 days (which aligns with season boundaries)
+    const offer = generateContractOffer(g);
+    if (offer) {
+      g = { ...g, contracts: [...(g.contracts ?? []), offer] };
+    }
+  }
+  // Tick active contracts every day for payouts and completions
+  const { game: g3, payouts, completed } = tickContracts(g);
+  g = g3;
+  if (completed.length > 0) {
+    const completionLog = completed.map((id) => `Contract ${id} completed.`).join(' ');
+    g = { ...g, log: [completionLog, ...g.log].slice(0, 20) };
   }
   // Foal delivery: checked every tick (any day can be a due day)
-  const { game: g3 } = deliverFoals(g);
-  g = g3;
+  const { game: g4 } = deliverFoals(g);
+  g = g4;
   return g;
 }
 
@@ -157,12 +195,14 @@ export function applyAction(game, action) {
       working.horses = working.horses.map((h) => h.id === horse.id
         ? { ...h, training: clamp(h.training + skillBonus + 1), bond: clamp(h.bond + 6), stress: clamp(h.stress + 3) }
         : h);
+      working = markStepComplete(working, 'train');
       working = dailyUpkeep(working, `${staff.name} worked ${horse.name} in the dust-lit arena.`);
       break;
     }
     case 'rotatePasture': {
       working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress - 13) }));
       working.parcels = working.parcels.map((p) => ({ ...p, forage: clamp(p.forage + 9) }));
+      working = markStepComplete(working, 'rotate');
       working = dailyUpkeep(working, 'Rotated the herd through fresh pasture.');
       break;
     }
@@ -192,23 +232,30 @@ export function applyAction(game, action) {
     case 'enterShow': {
       const horse = findHorse(working, action.horseId);
       if (!canCompete(horse)) throw new Error(`${horse.name} is not old enough to compete.`);
-      const readiness = horse.training + horse.bond + horse.health - horse.stress;
-      if (readiness >= 230) {
-        working.cash += SHOW_WINNINGS;
-        working.reputation = clamp(working.reputation + 12);
-        working.legacy = clamp(working.legacy + 3);
-        working.horses = working.horses.map((h) => h.id === horse.id
-          ? { ...h, stress: clamp(h.stress + 11), bond: clamp(h.bond + 2) }
-          : h);
-        working = dailyUpkeep(working, `${horse.name} placed at the invitational. Not a miracle. Proof.`);
-      } else {
-        working.cash -= 1200;
-        working.reputation = clamp(working.reputation - 4);
-        working.horses = working.horses.map((h) => h.id === horse.id
-          ? { ...h, stress: clamp(h.stress + 16), bond: clamp(h.bond + 1) }
-          : h);
-        working = dailyUpkeep(working, `${horse.name} was not ready for the noise.`);
-      }
+      // If a scheduled show exists today, use it. Otherwise, treat as a generic invitational.
+      const scheduled = getShowOnDay(working, working.day);
+      const show = scheduled ?? {
+        id: 'invitational-' + working.day,
+        title: 'Open invitational',
+        category: 'reining',
+        entryFee: 200,
+        prizePool: 4000,
+        prestige: 1,
+      };
+      const entry = canEnterShow(horse, show);
+      if (!entry.ok) throw new Error(entry.reason);
+      if (working.cash < show.entryFee) throw new Error(`Entry fee is $${show.entryFee}.`);
+      working.cash -= show.entryFee;
+      const result = runShowdown(horse, show, working.ranchUpgrades ?? {});
+      working.cash += result.payout;
+      working.reputation = Math.max(0, Math.min(100, working.reputation + result.reputationDelta));
+      working.legacy = Math.max(0, Math.min(100, working.legacy + result.legacyDelta));
+      working.horses = working.horses.map((h) => h.id === horse.id
+        ? { ...h, stress: Math.min(100, h.stress + 12), bond: Math.min(100, h.bond + (result.playerPlace === 1 ? 4 : 1)) }
+        : h);
+      working.lastShowResult = result;
+      working = markStepComplete(working, 'show');
+      working = dailyUpkeep(working, result.log);
       break;
     }
     case 'refuseDeveloper': {
@@ -242,7 +289,48 @@ export function applyAction(game, action) {
     }
     case 'breed': {
       working = queueBreeding(working, action.sireId, action.damId);
+      working = markStepComplete(working, 'breed');
       // breeding does not advance the day — the decision is set, then time catches up
+      break;
+    }
+    case 'maeAdvancedTraining': {
+      const horse = findHorse(working, action.horseId);
+      if (!isTrainable(horse)) throw new Error(`${horse.name} is too young or old for advanced training.`);
+      const stage = getLifeStage(horse);
+      if (stage?.id !== 'campaigner') throw new Error(`Only campaigners can take advanced training. ${horse.name} is a ${stage?.label ?? 'unknown'}.`);
+      working.cash -= 50;
+      working.horses = working.horses.map((h) => h.id === horse.id ? maeAdvancedTraining(h) : h);
+      working = dailyUpkeep(working, `Mae pushed ${horse.name} through an advanced session.`);
+      break;
+    }
+    case 'eliFindHayDeal': {
+      working.cash -= 200;
+      working.hayDealDaysLeft = 30;
+      working = dailyUpkeep(working, 'Eli found a hay deal. Feed costs are down for 30 days.');
+      break;
+    }
+    case 'vossPreventiveCare': {
+      if (working.cash < 300) throw new Error('Need $300 for preventive care.');
+      working.cash -= 300;
+      working.horses = vossPreventiveCare(working.horses);
+      recordNpcMemory(working, 'vet-voss', 'consulted', 1);
+      adjustRelationship('vet-voss', 4);
+      working = dailyUpkeep(working, 'Dr. Voss walked every horse. Stress is down across the herd.');
+      break;
+    }
+    case 'upgrade': {
+      working = applyUpgrade(working, action.upgradeId);
+      // Upgrades don't advance the day — they're a deliberate investment
+      break;
+    }
+    case 'acceptContract': {
+      working = acceptContract(working, action.contractId);
+      working = dailyUpkeep(working, working.log[0] ?? 'Contract accepted.');
+      break;
+    }
+    case 'declineContract': {
+      working = declineContract(working, action.contractId);
+      working = dailyUpkeep(working, working.log[0] ?? 'Contract declined.');
       break;
     }
     case 'resolveEvent': {
@@ -264,6 +352,10 @@ export function applyAction(game, action) {
       const parcel = working.parcels.find((p) => p.id === action.parcelId);
       // (parcel purchasing handled in map.js — see buyAvailableParcel)
       working = dailyUpkeep(working, working.log[0] ?? 'Parcel decision recorded.');
+      break;
+    }
+    case 'dismissTutorial': {
+      working = dismissTutorial(working);
       break;
     }
     default:
@@ -292,6 +384,10 @@ export function getActiveCrisis(game) { return game.crisis; }
 export function getAvailableActions(game) {
   const actions = [
     { type: 'train', label: 'Train a horse', requiresHorse: true, requiresStaff: true },
+    { type: 'maeAdvancedTraining', label: "Mae's advanced session", requiresHorse: true, requiresStaff: false, requiresCampaigner: true },
+    { type: 'vossPreventiveCare', label: "Voss: herd preventive care", requiresHorse: false, requiresStaff: false },
+    { type: 'eliFindHayDeal', label: "Eli: find hay deal", requiresHorse: false, requiresStaff: false },
+    { type: 'upgrade', label: 'Build / upgrade ranch', requiresHorse: false, requiresStaff: false, isUpgrade: true },
     { type: 'rotatePasture', label: 'Rotate pasture' },
     { type: 'enterShow', label: 'Enter a show', requiresHorse: true },
     { type: 'takeBoarders', label: 'Take outside boarders' },

@@ -22,6 +22,14 @@ build a dynasty or sell out.
 9. **Land map + parcel market** — 4x4 grid, three parcels for sale, adjacency matters.
 10. **Endings + scoring** — Dynasty, Sold Out, Bankrupt, Worn Out, Fire, Quiet Life. Final score on the ending screen.
 
+## Path 2 features (the spine, all 5 phases shipped)
+
+A. **Showdown system** — 20 shows across 5 years, one per season. Enter a horse into a generated field of 6–8 rivals; result drives reputation, cash, and legacy.
+B. **Staff specialties** — Mae advanced training (+2 all stats, $50), Voss preventive care (-8 stress across herd, $300), Eli hay deal (30-day feed discount, $200). Each NPC has a unique spend.
+C. **Ranch upgrades** — 4 infrastructure categories, 3 levels each. Arena (show bonus), vet clinic (cheaper care), breeding shed (foal health), hay barn (feed discount). Permanent investments.
+D. **Mid-term contracts** — Board commitments and sale reservations. Income or price locks that span months. Offers arrive at season boundaries.
+E. **Onboarding tutorial** — 5-step tutorial across the first 10 in-game days. Card on the dashboard tracks progress, with a "Skip tutorial" button.
+
 ## Run
 
 ```bash

@@ -148,6 +148,7 @@ h2 {
 }
 
 .verdict--over { border-color: rgba(185, 90, 70, 0.65); }
+.verdict--good { border-color: rgba(126, 166, 106, 0.7); background: rgba(46, 60, 32, 0.78); }
 
 .layout {
   grid-template-columns: minmax(0, 1fr) 340px;
@@ -345,10 +346,63 @@ ul, ol { padding-left: 20px; }
 li + li { margin-top: 8px; }
 li button { margin-left: 8px; font-size: 0.78rem; padding: 4px 10px; }
 
+.upgrades li { display: grid; gap: 4px; padding: 12px; border-radius: 14px; background: rgba(0, 0, 0, 0.18); }
+.upgrades li strong { font-size: 1.05rem; }
+.upgrades li small { color: var(--gold); }
+.upgrades li p { font-size: 0.86rem; color: var(--muted); margin: 4px 0 8px; }
+
 .log-panel ol {
   max-height: 280px;
   overflow: auto;
 }
+
+.tutorial {
+  background: linear-gradient(140deg, rgba(48, 32, 18, 0.55), rgba(20, 14, 8, 0.75));
+  border: 1px solid var(--gold);
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin: 18px 0 12px;
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 0 0 1px rgba(201, 162, 90, 0.18) inset, 0 12px 32px -22px rgba(0, 0, 0, 0.7);
+}
+.tutorial h2 { margin: 0; font-size: 1.4rem; }
+.tutorial p { margin: 0; }
+.tutorial-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tutorial-skip {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tutorial-skip:hover { background: rgba(201, 162, 90, 0.12); }
+.tutorial-track {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.tutorial-track li { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+.tutorial-step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(201, 162, 90, 0.4);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.tutorial-step--done { color: var(--green); }
+.tutorial-step--done .tutorial-step-num { background: rgba(126, 168, 96, 0.2); border-color: var(--green); }
+.tutorial-step--current { color: var(--gold); font-weight: 600; }
+.tutorial-step--current .tutorial-step-num { background: rgba(201, 162, 90, 0.22); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 162, 90, 0.18); }
 
 @media (max-width: 1100px) {
   .metrics { grid-template-columns: repeat(4, 1fr); }
