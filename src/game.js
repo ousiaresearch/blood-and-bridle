@@ -1,14 +1,62 @@
-const DAILY_BURN = 800;
+// Blood & Bridle — main game engine.
+//
+// Pure simulation. No DOM. No localStorage. Every action is a pure function
+// from (game, action) -> game. State is never mutated; new state is returned.
+
+import { tickYear, getLifeStage, isTrainable, canCompete, clamp, seedTraits, ROLE_POOL, BLOODLINE_POOL, TEMPERAMENT_POOL, INHERITABLE_TRAITS, TRAIT_KEYS } from './horse.js';
+import { getSeason, getYear, getDayOfSeason, isSeasonBoundary, isYearBoundary, DAYS_PER_SEASON, getSeasonalCostMultiplier } from './seasons.js';
+import { tickEvents, resolveEvent } from './events.js';
+import { queueBreeding, deliverFoals } from './breeding.js';
+import { runAuction } from './auction.js';
+import { tickRivals, RIVALS } from './rivals.js';
+import { rollDisaster } from './weather.js';
+import { checkEnding, scoreGame } from './endings.js';
+import { NPCS, recordNpcMemory, adjustRelationship, adjustPatience } from './npcs.js';
+
+const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
 const VET_COST = 2600;
 const SHOW_WINNINGS = 6000;
-const MAX_DAY = 30;
+const MAX_DAY = 30 * 5; // 5 years
 
-const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+function clone(v) { return JSON.parse(JSON.stringify(v)); }
 
-const clone = (value) => structuredClone(value);
+function pickName(pool, used, sex) {
+  const prefix = sex === 'male' ? 'His' : 'Her';
+  for (const n of pool) {
+    if (!used.has(n)) {
+      used.add(n);
+      return n;
+    }
+  }
+  return `${prefix} ${Math.floor(Math.random() * 1000)}`;
+}
+
+function createHorse({ id, name, sex, age, role, bloodline, temperament, training, bond, health, stress, value, injured = false }) {
+  return {
+    id, name, sex, age, role, bloodline, temperament,
+    training, bond, health, stress, value, injured,
+    traits: seedTraits(),
+    parents: [],
+    alive: true,
+  };
+}
 
 export function createNewGame() {
+  const usedNames = new Set();
+  const seed = [
+    { id: 'blue-ash',     sex: 'female', age: 6,  role: 'Reining mare',  bloodline: 'Cedar King x Ashfall Lady',  temperament: 'Storm-nervous, handler-loyal, explosive in the turn', training: 62, bond: 46, health: 84, stress: 22, value: 38000 },
+    { id: 'mercy-road',   sex: 'male',   age: 9,  role: 'Ranch gelding', bloodline: 'Old Quarter working line',  temperament: 'Steady, forgiving, suspicious of strangers',         training: 74, bond: 68, health: 71, stress: 18, value: 22000 },
+    { id: 'juniper-smoke',sex: 'female', age: 3,  role: 'Prospect filly',bloodline: 'Smoke Signal x Juniper Belle',temperament: 'Curious, clever, too smart for sloppy hands',         training: 31, bond: 28, health: 93, stress: 30, value: 14000 },
+    { id: 'red-ledger',   sex: 'female', age: 11, role: 'Broodmare',     bloodline: 'Ledger Creek foundation mare',temperament: 'Dominant, protective, throws calm foals',              training: 55, bond: 52, health: 66, stress: 24, value: 26000 },
+    { id: 'sunday-caller',sex: 'male',   age: 2,  role: 'Unstarted colt',bloodline: 'Caller ID x Sunday Chapel',  temperament: 'Hot, brilliant, not yet convinced humans matter',     training: 18, bond: 14, health: 88, stress: 37, value: 9000  },
+  ];
+
+  const horses = seed.map((s) => {
+    const name = s.id.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+    return createHorse({ ...s, name });
+  });
+
   return {
     day: 1,
     maxDay: MAX_DAY,
@@ -19,214 +67,227 @@ export function createNewGame() {
     crisis: {
       id: 'prove-ranch',
       title: 'Thirty Days to Prove the Ranch',
-      description: 'A resort group wants the west parcel. The bank wants proof this place can still earn. You have one month to show both of them the ranch is more than dirt with fences.',
+      description: 'A resort group wants the west parcel. The bank wants proof this place can still earn.',
     },
-    horses: [
-      {
-        id: 'blue-ash',
-        name: 'Blue Ash',
-        age: 6,
-        role: 'Reining mare',
-        bloodline: 'Cedar King x Ashfall Lady',
-        temperament: 'Storm-nervous, handler-loyal, explosive in the turn',
-        training: 62,
-        bond: 46,
-        health: 84,
-        stress: 22,
-        value: 38000,
-        injured: false,
-      },
-      {
-        id: 'mercy-road',
-        name: 'Mercy Road',
-        age: 9,
-        role: 'Ranch gelding',
-        bloodline: 'Old Quarter working line',
-        temperament: 'Steady, forgiving, suspicious of strangers',
-        training: 74,
-        bond: 68,
-        health: 71,
-        stress: 18,
-        value: 22000,
-        injured: false,
-      },
-      {
-        id: 'juniper-smoke',
-        name: 'Juniper Smoke',
-        age: 3,
-        role: 'Prospect filly',
-        bloodline: 'Smoke Signal x Juniper Belle',
-        temperament: 'Curious, clever, too smart for sloppy hands',
-        training: 31,
-        bond: 28,
-        health: 93,
-        stress: 30,
-        value: 14000,
-        injured: false,
-      },
-      {
-        id: 'red-ledger',
-        name: 'Red Ledger',
-        age: 11,
-        role: 'Broodmare',
-        bloodline: 'Ledger Creek foundation mare',
-        temperament: 'Dominant, protective, throws calm foals',
-        training: 55,
-        bond: 52,
-        health: 66,
-        stress: 24,
-        value: 26000,
-        injured: false,
-      },
-      {
-        id: 'sunday-caller',
-        name: 'Sunday Caller',
-        age: 2,
-        role: 'Unstarted colt',
-        bloodline: 'Caller ID x Sunday Chapel',
-        temperament: 'Hot, brilliant, not yet convinced humans matter',
-        training: 18,
-        bond: 14,
-        health: 88,
-        stress: 37,
-        value: 9000,
-        injured: false,
-      },
-    ],
+    horses,
     staff: [
       { id: 'mae', name: 'Mae Calder', role: 'Head trainer', skill: 9, loyalty: 77, note: 'Can make a horse brave, but will not forgive cruelty.' },
       { id: 'eli', name: 'Eli Rusk', role: 'Ranch hand', skill: 6, loyalty: 58, note: 'Knows every fence line and every debt rumor.' },
       { id: 'dr-voss', name: 'Dr. Voss', role: 'Veterinarian', skill: 8, loyalty: 63, note: 'Expensive, honest, worth it when legs are at stake.' },
     ],
     parcels: [
-      { id: 'west-meadow', name: 'West Meadow', forage: 58, water: 71, threat: 'Resort parcel offer' },
-      { id: 'cedar-draw', name: 'Cedar Draw', forage: 63, water: 48, threat: 'Drought line creeping east' },
+      { id: 'west-meadow', name: 'West Meadow', x: 0, y: 1, forage: 58, water: 71, threat: 'Resort parcel offer' },
+      { id: 'cedar-draw',  name: 'Cedar Draw',  x: 1, y: 2, forage: 63, water: 48, threat: 'Drought line creeping east' },
+      { id: 'home-place',  name: 'Home Place',  x: 1, y: 1, forage: 70, water: 70, threat: '—' },
     ],
+    pendingBreeding: null,
+    pendingEvent: null,
+    firedEvents: [],
     log: [
       'The bank gave you thirty days. The resort buyer gave you a smile that did not reach his eyes.',
     ],
   };
 }
 
+function findHorse(game, id) {
+  const h = game.horses.find((x) => x.id === id);
+  if (!h) throw new Error(`Unknown horse: ${id}`);
+  return h;
+}
+function findStaff(game, id) {
+  const s = game.staff.find((x) => x.id === id);
+  if (!s) throw new Error(`Unknown staff: ${id}`);
+  return s;
+}
+
 function dailyUpkeep(game, entry) {
+  const season = getSeason(game);
+  const mult = getSeasonalCostMultiplier(season);
+  const burn = Math.round(DAILY_BURN_BASE * mult);
+
   const next = {
     ...game,
     day: game.day + 1,
-    cash: game.cash - DAILY_BURN,
-    horses: game.horses.map((horse) => ({
-      ...horse,
-      stress: clamp(horse.stress + 1),
-      health: clamp(horse.health - (horse.stress > 75 ? 2 : 0)),
+    cash: game.cash - burn,
+    horses: game.horses.map((h) => ({
+      ...h,
+      stress: clamp(h.stress + (season === 'Winter' ? 1 : 0)),
+      health: clamp(h.health - (h.stress > 75 ? 1 : 0)),
     })),
-    parcels: game.parcels.map((parcel) => ({ ...parcel, forage: clamp(parcel.forage - 1) })),
-    staff: game.staff.map((person) => ({ ...person })),
-    log: [entry, ...game.log].slice(0, 12),
+    parcels: game.parcels.map((p) => ({ ...p, forage: clamp(p.forage - (season === 'Summer' ? 1 : 0)) })),
+    log: [entry, ...game.log].slice(0, 20),
   };
 
   return next;
 }
 
-function findHorse(game, horseId) {
-  const horse = game.horses.find((candidate) => candidate.id === horseId);
-  if (!horse) throw new Error(`Unknown horse: ${horseId}`);
-  return horse;
-}
-
-function findStaff(game, staffId) {
-  const staff = game.staff.find((candidate) => candidate.id === staffId);
-  if (!staff) throw new Error(`Unknown staff: ${staffId}`);
-  return staff;
+function maybeFireSeasonal(game) {
+  let g = { ...game };
+  // Year tick on year boundary
+  if (isYearBoundary(g)) {
+    const { horses, log } = tickYear(g.horses);
+    g = { ...g, horses, log: [...log, ...g.log].slice(0, 20) };
+  }
+  // Season boundary: rivals, disasters, events
+  if (isSeasonBoundary(g)) {
+    g = tickRivals(g);
+    const { game: g2 } = rollDisaster(g);
+    g = g2;
+    g = tickEvents(g);
+  }
+  // Foal delivery: checked every tick (any day can be a due day)
+  const { game: g3 } = deliverFoals(g);
+  g = g3;
+  return g;
 }
 
 export function applyAction(game, action) {
-  const working = clone(game);
+  let working = clone(game);
 
   switch (action.type) {
     case 'train': {
       const horse = findHorse(working, action.horseId);
       const staff = findStaff(working, action.staffId ?? 'mae');
+      if (!isTrainable(horse)) {
+        const stage = getLifeStage(horse);
+        throw new Error(`${horse.name} is too ${stage?.id === 'foal' || stage?.id === 'weanling' ? 'young' : 'old'} to train (${stage?.label}).`);
+      }
       const skillBonus = Math.max(3, Math.round(staff.skill / 2));
       working.cash -= TRAINING_COST;
-      working.horses = working.horses.map((candidate) => candidate.id === horse.id
-        ? {
-            ...candidate,
-            training: clamp(candidate.training + skillBonus + 1),
-            bond: clamp(candidate.bond + 6),
-            stress: clamp(candidate.stress + 3),
-          }
-        : candidate);
-      return dailyUpkeep(working, `${staff.name} worked ${horse.name} in the dust-lit arena. The horse gave a little more than yesterday.`);
+      working.horses = working.horses.map((h) => h.id === horse.id
+        ? { ...h, training: clamp(h.training + skillBonus + 1), bond: clamp(h.bond + 6), stress: clamp(h.stress + 3) }
+        : h);
+      working = dailyUpkeep(working, `${staff.name} worked ${horse.name} in the dust-lit arena.`);
+      break;
     }
-
     case 'rotatePasture': {
-      working.horses = working.horses.map((horse) => ({ ...horse, stress: clamp(horse.stress - 13) }));
-      working.parcels = working.parcels.map((parcel) => ({ ...parcel, forage: clamp(parcel.forage + 9) }));
-      return dailyUpkeep(working, 'Rotated the herd through fresh pasture and gave the land a day to breathe. No headlines. Necessary work.');
+      working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress - 13) }));
+      working.parcels = working.parcels.map((p) => ({ ...p, forage: clamp(p.forage + 9) }));
+      working = dailyUpkeep(working, 'Rotated the herd through fresh pasture.');
+      break;
     }
-
     case 'vetCare': {
       const horse = findHorse(working, action.horseId);
       if (working.cash < VET_COST) throw new Error('Not enough cash for vet care.');
       working.cash -= VET_COST;
       working.reputation = clamp(working.reputation + 3);
-      working.horses = working.horses.map((candidate) => candidate.id === horse.id
-        ? { ...candidate, injured: false, health: clamp(candidate.health + 28), stress: clamp(candidate.stress - 8) }
-        : candidate);
-      return dailyUpkeep(working, `Dr. Voss treated ${horse.name}. Expensive, clean, and the right kind of mercy.`);
+      working.horses = working.horses.map((h) => h.id === horse.id
+        ? { ...h, injured: false, health: clamp(h.health + 28), stress: clamp(h.stress - 8) }
+        : h);
+      recordNpcMemory(working, 'vet-voss', 'billed');
+      adjustRelationship('vet-voss', 2);
+      working = dailyUpkeep(working, `Dr. Voss treated ${horse.name}.`);
+      break;
     }
-
     case 'sellHorse': {
       const horse = findHorse(working, action.horseId);
       if (working.horses.length <= 1) throw new Error('You cannot sell the last horse and still call this a horse ranch.');
       working.cash += horse.value;
       working.legacy = clamp(working.legacy - 12);
-      working.staff = working.staff.map((person) => ({ ...person, loyalty: clamp(person.loyalty - (person.id === 'mae' ? 12 : 6)) }));
-      working.horses = working.horses.filter((candidate) => candidate.id !== horse.id);
-      return dailyUpkeep(working, `Sold ${horse.name}. The books look cleaner. The barn sounds wrong.`);
+      working.staff = working.staff.map((s) => ({ ...s, loyalty: clamp(s.loyalty - (s.id === 'mae' ? 12 : 6)) }));
+      working.horses = working.horses.filter((h) => h.id !== horse.id);
+      working = dailyUpkeep(working, `Sold ${horse.name}. The books look cleaner. The barn sounds wrong.`);
+      break;
     }
-
     case 'enterShow': {
       const horse = findHorse(working, action.horseId);
+      if (!canCompete(horse)) throw new Error(`${horse.name} is not old enough to compete.`);
       const readiness = horse.training + horse.bond + horse.health - horse.stress;
       if (readiness >= 230) {
         working.cash += SHOW_WINNINGS;
         working.reputation = clamp(working.reputation + 12);
         working.legacy = clamp(working.legacy + 3);
-        working.horses = working.horses.map((candidate) => candidate.id === horse.id
-          ? { ...candidate, stress: clamp(candidate.stress + 11), bond: clamp(candidate.bond + 2) }
-          : candidate);
-        return dailyUpkeep(working, `${horse.name} placed at the invitational. Not a miracle. Proof.`);
+        working.horses = working.horses.map((h) => h.id === horse.id
+          ? { ...h, stress: clamp(h.stress + 11), bond: clamp(h.bond + 2) }
+          : h);
+        working = dailyUpkeep(working, `${horse.name} placed at the invitational. Not a miracle. Proof.`);
+      } else {
+        working.cash -= 1200;
+        working.reputation = clamp(working.reputation - 4);
+        working.horses = working.horses.map((h) => h.id === horse.id
+          ? { ...h, stress: clamp(h.stress + 16), bond: clamp(h.bond + 1) }
+          : h);
+        working = dailyUpkeep(working, `${horse.name} was not ready for the noise.`);
       }
-
-      working.cash -= 1200;
-      working.reputation = clamp(working.reputation - 4);
-      working.horses = working.horses.map((candidate) => candidate.id === horse.id
-        ? { ...candidate, stress: clamp(candidate.stress + 16), bond: clamp(candidate.bond + 1) }
-        : candidate);
-      return dailyUpkeep(working, `${horse.name} was not ready for the noise. The judge noticed. So did everyone else.`);
+      break;
     }
-
     case 'refuseDeveloper': {
       working.legacy = clamp(working.legacy + 9);
       working.developerPressure = clamp(working.developerPressure + 8);
-      return dailyUpkeep(working, 'Refused the resort parcel offer. The family table went quiet, but the west meadow stayed yours.');
+      recordNpcMemory(working, 'dev-coleman', 'refused');
+      adjustRelationship('dev-coleman', -8);
+      adjustPatience('dev-coleman', -10);
+      working = dailyUpkeep(working, 'Refused the resort parcel offer. The family table went quiet.');
+      break;
     }
-
+    case 'signWithDeveloper': {
+      const parcel = working.parcels.find((p) => p.id === 'west-meadow');
+      if (!parcel) throw new Error('West meadow is no longer in your hands.');
+      working.cash += 50000;
+      working.legacy = clamp(working.legacy - 25);
+      working.developerPressure = 0;
+      working.parcels = working.parcels.filter((p) => p.id !== 'west-meadow');
+      working.crisis = { ...working.crisis, resolved: 'sold-to-developer' };
+      recordNpcMemory(working, 'dev-coleman', 'signed');
+      adjustRelationship('dev-coleman', 30);
+      working = dailyUpkeep(working, 'Signed the west meadow over to Reyes. The bank is happy. The legacy is thinner.');
+      break;
+    }
     case 'takeBoarders': {
       working.cash += 2200;
       working.legacy = clamp(working.legacy - 3);
-      working.horses = working.horses.map((horse) => ({ ...horse, stress: clamp(horse.stress + 5) }));
-      return dailyUpkeep(working, 'Took three outside boarders for cash flow. It helps. It also makes the place feel rented.');
+      working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress + 5) }));
+      working = dailyUpkeep(working, 'Took three outside boarders for cash flow.');
+      break;
     }
-
+    case 'breed': {
+      working = queueBreeding(working, action.sireId, action.damId);
+      // breeding does not advance the day — the decision is set, then time catches up
+      break;
+    }
+    case 'resolveEvent': {
+      working = resolveEvent(working, action.optionIndex);
+      working = dailyUpkeep(working, working.log[0] ?? 'Decision logged.');
+      break;
+    }
+    case 'listAtAuction': {
+      const horse = findHorse(working, action.horseId);
+      const result = runAuction(horse);
+      working.cash += result.topBid.offer;
+      working.legacy = clamp(working.legacy - 6);
+      working.horses = working.horses.filter((h) => h.id !== horse.id);
+      working.log = [`Sold ${horse.name} at auction to ${result.topBid.name} for $${result.topBid.offer.toLocaleString()}.`, ...working.log].slice(0, 20);
+      working = dailyUpkeep(working, working.log[0]);
+      break;
+    }
+    case 'buyParcel': {
+      const parcel = working.parcels.find((p) => p.id === action.parcelId);
+      // (parcel purchasing handled in map.js — see buyAvailableParcel)
+      working = dailyUpkeep(working, working.log[0] ?? 'Parcel decision recorded.');
+      break;
+    }
     default:
       throw new Error(`Unknown action: ${action.type}`);
   }
+
+  return maybeFireSeasonal(working);
 }
 
-export function getActiveCrisis(game) {
-  return game.crisis;
+export function buyAvailableParcel(game, parcelDef) {
+  if (game.cash < parcelDef.price) throw new Error(`Need $${parcelDef.price.toLocaleString()} to buy ${parcelDef.name}.`);
+  if (game.parcels.find((p) => p.id === parcelDef.id)) throw new Error(`${parcelDef.name} already owned.`);
+  return {
+    ...game,
+    cash: game.cash - parcelDef.price,
+    parcels: [
+      ...game.parcels,
+      { id: parcelDef.id, name: parcelDef.name, x: parcelDef.x, y: parcelDef.y, forage: parcelDef.baseForage, water: parcelDef.baseWater, threat: parcelDef.threat },
+    ],
+    log: [`Purchased ${parcelDef.name} for $${parcelDef.price.toLocaleString()}.`, ...game.log].slice(0, 20),
+  };
 }
+
+export function getActiveCrisis(game) { return game.crisis; }
 
 export function getAvailableActions(game) {
   const actions = [
@@ -235,23 +296,22 @@ export function getAvailableActions(game) {
     { type: 'enterShow', label: 'Enter a show', requiresHorse: true },
     { type: 'takeBoarders', label: 'Take outside boarders' },
     { type: 'refuseDeveloper', label: 'Refuse the developer' },
+    { type: 'signWithDeveloper', label: 'Sign over the west meadow' },
+    { type: 'breed', label: 'Queue breeding', requiresTwoHorses: true },
   ];
-
+  if (game.pendingBreeding) actions.push({ type: 'breedInfo', label: `Foal due: ${game.pendingBreeding.sireName} × ${game.pendingBreeding.damName}` });
   if (game.cash >= VET_COST) actions.push({ type: 'vetCare', label: 'Call the vet', requiresHorse: true });
-  if (game.horses.length > 1) actions.push({ type: 'sellHorse', label: 'Sell a horse', requiresHorse: true, danger: true });
-
+  if (game.horses.length > 1) actions.push({ type: 'sellHorse', label: 'Sell a horse (private)', requiresHorse: true, danger: true });
+  if (game.horses.length > 0) actions.push({ type: 'listAtAuction', label: 'List at auction', requiresHorse: true, danger: true });
   return actions;
 }
 
 export function getGameSummary(game) {
-  return `Day ${game.day}/${game.maxDay} · Cash $${game.cash.toLocaleString()} · Legacy ${game.legacy} · Reputation ${game.reputation} · Developer Pressure ${game.developerPressure}`;
+  return `Year ${getYear(game)} ${getSeason(game)} · Day ${getDayOfSeason(game)}/${DAYS_PER_SEASON} · Cash $${game.cash.toLocaleString()} · Legacy ${game.legacy} · Rep ${game.reputation} · Dev Pressure ${game.developerPressure}`;
 }
 
 export function isGameOver(game) {
-  return game.day > game.maxDay || game.cash < 0 || game.legacy <= 0 || game.horses.length === 0;
+  return game.day > game.maxDay || game.cash < -1000 || game.legacy <= 0 || game.horses.length === 0;
 }
 
-export function scoreGame(game) {
-  const horseValue = game.horses.reduce((sum, horse) => sum + horse.value, 0);
-  return Math.round(game.cash + horseValue + game.legacy * 500 + game.reputation * 400 - game.developerPressure * 250);
-}
+export { scoreGame, checkEnding, getYear, getSeason, getDayOfSeason };
