@@ -1,0 +1,13 @@
+{
+  "name": "blood-and-bridle",
+  "version": "0.1.0",
+  "description": "Blood & Bridle - a prestige neo-Western horse ranch simulator MVP.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "python3 -m http.server 4173"
+  },
+  "keywords": ["game", "simulation", "ranch", "horses"],
+  "license": "UNLICENSED",
+  "private": true
+}
