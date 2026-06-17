@@ -5,6 +5,7 @@
 import { INHERITABLE_TRAITS, getLifeStage, breedById, liveMoodFor } from './horse.js';
 import { renderPortrait } from './portraits.js';
 import { buildLineageModel } from './lineage.js';
+import { renderLetterhead, renderBrandGlyph } from './brand.js';
 
 const STAT_KEYS = [
   { key: 'training', label: 'Training', color: 'gold' },
@@ -116,40 +117,68 @@ export function renderHorseDetail(horse, game) {
     : `<ul class="detail-chronicle">${chronicle.map((c) => `<li>${escapeHtml(c.line)}</li>`).join('')}</ul>`;
 
   return `
-    <div class="horse-detail" data-horse-id="${escapeHtml(horse.id)}" data-mood="${escapeHtml(mood)}">
-      <div class="detail-portrait-block">
-        ${renderPortrait(horse, { size: 'xl', className: 'detail-portrait' })}
-        <h2 class="detail-name">${escapeHtml(horse.name)} ${injuryBadge} ${moodBadge}</h2>
-        <p class="detail-role">${escapeHtml(horse.role)} · ${escapeHtml(breed.label)}</p>
-        <p class="detail-bloodline">${escapeHtml(horse.bloodline)}</p>
-        <p class="detail-meta">age ${horse.age} · ${escapeHtml(stage?.label ?? '—')} · ${escapeHtml(horse.sex)}</p>
+    <article class="bill-of-sale" data-horse-id="${escapeHtml(horse.id)}" data-mood="${escapeHtml(mood)}">
+      <header class="bill-head">
+        ${renderLetterhead({
+          ranchBrand: game.ranchBrand || 'y-bar',
+          ranchName: game.ranchName || 'Unbranded',
+          ownerName: game.ownerName,
+          ownerPronouns: game.ownerPronouns,
+          foundedDay: game.foundedDay,
+        })}
+        <h2 class="bill-title">REGISTRATION</h2>
+        <p class="bill-subtitle">No. ${escapeHtml(horse.id.slice(-6).toUpperCase())} · Filed ${escapeHtml(stage?.label ?? '')} of age ${horse.age}</p>
+      </header>
+
+      <div class="bill-body">
+        <div class="bill-portrait-block">
+          ${renderPortrait(horse, { size: 'xl', className: 'detail-portrait' })}
+          <div class="bill-stamp">${renderBrandGlyph(game.ranchBrand || 'y-bar', 'bill-stamp-glyph')}</div>
+        </div>
+
+        <div class="bill-fields">
+          <h3 class="bill-name">${escapeHtml(horse.name)} ${injuryBadge} ${moodBadge}</h3>
+          <dl class="bill-grid">
+            <div><dt>Role</dt><dd>${escapeHtml(horse.role)}</dd></div>
+            <div><dt>Breed</dt><dd>${escapeHtml(breed.label)}</dd></div>
+            <div><dt>Bloodline</dt><dd>${escapeHtml(horse.bloodline)}</dd></div>
+            <div><dt>Sex</dt><dd>${escapeHtml(horse.sex)}</dd></div>
+            <div><dt>Age</dt><dd>${horse.age}</dd></div>
+            <div><dt>Stage</dt><dd>${escapeHtml(stage?.label ?? '—')}</dd></div>
+            <div><dt>Value</dt><dd>$${(horse.value ?? 0).toLocaleString()}</dd></div>
+            <div><dt>Mood</dt><dd>${escapeHtml(mood)}</dd></div>
+          </dl>
+        </div>
       </div>
 
-      <section class="detail-section">
+      <section class="bill-section">
         <h3 class="eyebrow">Stats</h3>
         <div class="detail-stats">${stats}</div>
-        <p class="detail-value">Value: $${(horse.value ?? 0).toLocaleString()}</p>
       </section>
 
-      <section class="detail-section">
+      <section class="bill-section">
         <h3 class="eyebrow">Traits</h3>
         <div class="detail-traits">${traits}</div>
       </section>
 
-      <section class="detail-section">
+      <section class="bill-section">
         <h3 class="eyebrow">Personality</h3>
         <p class="detail-temperament">${escapeHtml(horse.temperament)}</p>
       </section>
 
-      <section class="detail-section">
+      <section class="bill-section">
         <h3 class="eyebrow">Lineage</h3>
         ${lineageHtml}
       </section>
 
-      <section class="detail-section">
+      <section class="bill-section">
         <h3 class="eyebrow">Chronicle</h3>
         ${chronicleHtml}
       </section>
-    </div>
+
+      <footer class="bill-footer">
+        <p>Stamped at the gate. The brand rides with the horse.</p>
+      </footer>
+    </article>
   `;
 }

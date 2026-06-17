@@ -27,6 +27,7 @@ import { renderCodex } from './codex.js';
 import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } from './brand.js';
 import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
 import { fireSeasonCard } from './time-jump.js';
+import { renderPasture } from './pasture.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -665,10 +666,7 @@ function render() {
             </select>
           </div>
           <div class="horse-grid">
-            ${model.horses.map((horse) => {
-              const isNew = newHorseIds.has(horse.id) ? ' is-new' : '';
-              return renderHorse(horse, ui.selectedHorse).replace('class="card horse-card', `class="card horse-card${isNew}`);
-            }).join('')}
+            ${renderPasture(model.horses, ui.selectedHorse)}
           </div>
           ${renderLineagePanel()}
         </div>
@@ -729,10 +727,17 @@ function render() {
         <article class="panel log-panel">
           <p class="eyebrow">Ledger</p>
           <h2>Recent events</h2>
-          <ol>${model.log.map((line, i) => {
-            const fresh = (i === 0 && newLogTop) ? ' class="is-new"' : '';
-            return `<li${fresh}>${escapeHtml(line)}</li>`;
-          }).join('')}</ol>
+          <div class="ledger-log">
+            <ol>
+              ${model.log.map((line, i) => {
+                // Day label: Y1 Spring D14, etc. We have a rough day-back
+                // approximation: i=0 is today, i=1 is yesterday, etc.
+                const dayLabel = `D${Math.max(1, model.dayOfSeason - i)}`;
+                const fresh = (i === 0 && newLogTop) ? ' class="is-new"' : '';
+                return `<li${fresh}><span class="ledger-day">${escapeHtml(dayLabel)}</span><span class="ledger-line">${escapeHtml(line)}</span></li>`;
+              }).join('')}
+            </ol>
+          </div>
         </article>
       </section>
     </main>
