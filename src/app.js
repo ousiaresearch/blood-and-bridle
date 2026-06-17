@@ -142,7 +142,7 @@ function openRanchProfile() {
       },
     });
     audio.resume();
-    audio.play('click');
+    audio.play('stamp');
     saveGame();
     closeModal();
     render();
@@ -333,11 +333,26 @@ function renderShareBanner() {
   `;
 }
 
+// Map event id to the NPC whose leitmotif should play when the event
+// surfaces. The player learns to dread the Reyes motif, recognize
+// Mae's fiddle, hear Elena's piano — Morricone-style.
+const EVENT_NPC_MAP = {
+  'dev-second-offer':      'dev-coleman',
+  'cordell-trade-offer':    'ranch-cordell',
+  'banker-warning':         'banker-ortega',
+  'vet-second-opinion':     'dr-voss',
+  'sister-asks':            'sister-elena',
+  'callahan-purchases-buyer':'rival-callahan',
+};
+
 function renderPendingEvent(model) {
   if (!model.pendingEvent) return '';
   const event = model.pendingEvent;
+  // Fire the NPC motif the first time this event surfaces.
+  const npcId = EVENT_NPC_MAP[event.id];
+  if (npcId) audio.playMotif(npcId);
   return `
-    <section class="event-modal">
+    <section class="event-modal" data-event-id="${escapeHtml(event.id)}">
       <h2>${escapeHtml(event.title)}</h2>
       <p>${escapeHtml(event.body)}</p>
       <div class="actions">
@@ -585,6 +600,21 @@ function render() {
     }
   }
 
+  // Thunder: layered under any active disaster log line. Subtle.
+  const topLog = game.log?.[0] ?? '';
+  if (/drought|blizzard|flood|disease|fire|strangles|lightning/i.test(topLog)) {
+    audio.resume();
+    audio.play('thunder');
+  }
+
+  // Rooster: fires on the first day of a new season (calendar turning).
+  const dayOfSeason = ((game.day - 1) % 30) + 1;
+  if (dayOfSeason === 1 && lastRendered.dayOfSeason !== 1) {
+    audio.resume();
+    audio.play('rooster');
+  }
+  lastRendered.dayOfSeason = dayOfSeason;
+
   // Time-jump card: fire on season boundary, the 1883 / 1923 device.
   // Detect by comparing the previous season to the current one. Only
   // fires after the first render (lastRendered.seasonIndex is non-null).
@@ -595,6 +625,8 @@ function render() {
     // Play the gate-creak sound effect (procedural noise) and fire the card.
     audio.resume();
     audio.play('gateCreak');
+    // Also play the bowed-cello stinger — the time-jump theme.
+    audio.play('celloStinger');
     fireSeasonCard(game);
   }
   lastRendered.seasonIndex = tjcCurrentIndex;

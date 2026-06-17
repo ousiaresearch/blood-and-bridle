@@ -268,25 +268,87 @@ test('play(bell) creates one oscillator per harmonic partial', () => {
   const { engine, calls } = makeEngine();
   calls.oscillators.length = 0;
   engine.play('bell');
-  // Bell has 3 harmonics: 1, 2.76, 5.40
-  assert.equal(calls.oscillators.length, 3);
-  // Frequencies should be 880, 880*2.76, 880*5.40
+  // Bell has 4 inharmonic partials: 1, 2.76, 5.40, 8.93
+  assert.equal(calls.oscillators.length, 4);
+  // Frequencies should be 880, 880*2.76, 880*5.40, 880*8.93
   assert.equal(calls.oscillators[0].frequency.value, 880);
   assert.equal(calls.oscillators[1].frequency.value, 880 * 2.76);
   assert.equal(calls.oscillators[2].frequency.value, 880 * 5.40);
+  assert.equal(calls.oscillators[3].frequency.value, 880 * 8.93);
 });
 
-test('play(memorial) creates one low oscillator with long duration', () => {
+test('play(memorial) creates a bowed-cello texture (multiple partials + LFOs)', () => {
   const { engine, calls } = makeEngine();
   calls.oscillators.length = 0;
   engine.play('memorial');
-  assert.equal(calls.oscillators.length, 1);
+  // 3 partials + 2 LFO oscillators for the vibrato on partials 2 and 3 = 5 oscillators.
+  assert.equal(calls.oscillators.length, 5);
+  // The first oscillator is the fundamental at 110Hz.
   assert.equal(calls.oscillators[0].frequency.value, 110);
   assert.equal(calls.oscillators[0].type, 'sine');
+  // Partial 2: 110 * 2.005 = 220.55.
+  assert.ok(Math.abs(calls.oscillators[1].frequency.value - 110 * 2.005) < 0.01);
+});
+
+test('play(telegram) creates a single ping with 3 inharmonic partials', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('telegram');
+  assert.equal(calls.oscillators.length, 3);
+  assert.equal(calls.oscillators[0].frequency.value, 1480);
+});
+
+test('play(celloStinger) creates the time-jump theme', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('celloStinger');
+  // 2 partials + 1 LFO oscillator (vibrato only on the second partial).
+  assert.equal(calls.oscillators.length, 3);
+  assert.equal(calls.oscillators[0].frequency.value, 110);
+});
+
+test('play(rooster) creates three ascending triangle pulses', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('rooster');
+  assert.equal(calls.oscillators.length, 3);
+  assert.equal(calls.oscillators[0].frequency.value, 700);
+  assert.equal(calls.oscillators[1].frequency.value, 900);
+  assert.equal(calls.oscillators[2].frequency.value, 1100);
+  assert.equal(calls.oscillators[0].type, 'triangle');
+});
+
+test('play(thunder) creates a noise burst with low-pass filter', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('thunder');
+  // Thunder is a noise sound — no oscillators, but a buffer + filter.
+  assert.equal(calls.oscillators.length, 0);
+  assert.equal(calls.buffers.length, 1);
+  assert.equal(calls.filters.length, 1);
+});
+
+test('playMotif(mae) plays the trainer fiddle motif', () => {
+  const { engine } = makeEngine();
+  const result = engine.playMotif('mae');
+  assert.equal(result, 4);
+  const log = engine.getPlayedLog();
+  assert.ok(log.includes('motif:mae'));
+});
+
+test('playMotif(dev-coleman) plays the low-brass antagonist motif', () => {
+  const { engine } = makeEngine();
+  const result = engine.playMotif('dev-coleman');
+  assert.equal(result, 4);
+});
+
+test('playMotif(unknown) returns null and does not crash', () => {
+  const { engine } = makeEngine();
+  assert.equal(engine.playMotif('nobody'), null);
 });
 
 test('new sounds are exposed in the SOUNDS catalog', () => {
-  for (const name of ['hoofbeat', 'gateCreak', 'bell', 'memorial']) {
+  for (const name of ['hoofbeat', 'gateCreak', 'bell', 'memorial', 'telegram', 'rooster', 'thunder', 'stamp', 'celloStinger']) {
     assert.ok(__INTERNAL__.SOUNDS[name], `missing sound: ${name}`);
   }
 });
