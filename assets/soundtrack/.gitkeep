@@ -1,0 +1,2 @@
+# Keep this directory in version control even when empty — generated
+# soundtrack mp3s are dropped here by scripts/generate-soundtrack.mjs.

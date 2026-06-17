@@ -1,0 +1,107 @@
+[
+  {
+    "id": "foal_calm",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "subject": "a newborn foal, wobbly legs and oversized head",
+    "details": "Soft bay coat still damp from birth, wide curious eyes. A single white star on the forehead."
+  },
+  {
+    "id": "foal_intense",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "subject": "a spirited foal, already showing fire",
+    "details": "Dark chestnut coat, ears pricked forward, one front leg pawing the dust. The spark is there."
+  },
+  {
+    "id": "foal_proud",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "subject": "a foal with an old soul",
+    "details": "Blue roan coat catching the light, head carried high on a long neck. Unusually composed for its age."
+  },
+  {
+    "id": "yearling_calm",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "subject": "a yearling filly, gangly but graceful",
+    "details": "Pale palomino coat, flaxen mane catching the wind. Quiet confidence in her stance."
+  },
+  {
+    "id": "yearling_intense",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "subject": "a yearling colt, coiled energy",
+    "details": "Seal brown coat, black points sharp against the gold light. Eyes bright with challenge."
+  },
+  {
+    "id": "yearling_proud",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "subject": "a yearling of obvious quality",
+    "details": "Dappled gray already showing the pattern, elegant neck arch. The kind that stops conversations."
+  },
+  {
+    "id": "prospect_calm",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "subject": "a 2-year-old prospect, steady in the round pen",
+    "details": "Solid sorrel coat, white blaze down the face. Moves with purpose, no wasted motion."
+  },
+  {
+    "id": "prospect_intense",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "subject": "a 2-year-old prospect, electric in the cut",
+    "details": "Black coat with a single white sock. Explosive stop, ears flat, wholly focused."
+  },
+  {
+    "id": "prospect_proud",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "subject": "a 2-year-old prospect, head high",
+    "details": "Buckskin with dorsal stripe, primitive markings. Carries itself like a finished horse."
+  },
+  {
+    "id": "campaigner_calm",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "subject": "a seasoned campaigner, 6 years old",
+    "details": "Bay roan, scar on the left shoulder from a past run. Unshakable in the box."
+  },
+  {
+    "id": "campaigner_intense",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "subject": "a campaigner at the peak of power",
+    "details": "Gristed black, muscles coiled. The turn is violence and grace in equal measure."
+  },
+  {
+    "id": "campaigner_proud",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "subject": "a champion campaigner",
+    "details": "Deep mahogany bay, white stockings on all four. Ribbons won, but the fire remains."
+  },
+  {
+    "id": "retiree_calm",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "subject": "an elder retiree, 18 years old",
+    "details": "White-faced sorrel, sway back, gentle eyes. Has earned every gray hair."
+  },
+  {
+    "id": "retiree_intense",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "subject": "a retiree who remembers the work",
+    "details": "Fleabitten gray, still moves with purpose when the saddle appears. The mind is sharp."
+  },
+  {
+    "id": "retiree_proud",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "subject": "a founding matriarch",
+    "details": "Blue roan mare, broad hip, deep heart girth. Her blood runs through half the herd."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "spring-warm",
+    "prompt": "Neo-Western ambient loop, early spring on a Pacific Northwest horse ranch. Gentle acoustic guitar fingerpicking, warm cello drone, distant meadowlark calls. Slow tempo (60 BPM), 3/4 time, tender and hopeful. The feeling of frost breaking, green shoots pushing through. Seamless loop for game background.",
+    "style": "neo-western, ambient, acoustic, pastoral",
+    "duration": 45
+  },
+  {
+    "id": "summer-dust",
+    "prompt": "Neo-Western ambient loop, high summer on a dusty ranch. Slow slide guitar in open D, low drone of cello and harmonium, heat shimmer in the sound. Tempo 55 BPM, spacious, tension underneath the calm. The feeling of long days, hard work, something coming. Seamless loop.",
+    "style": "neo-western, ambient, slide guitar, tense",
+    "duration": 50
+  },
+  {
+    "id": "autumn-harvest",
+    "prompt": "Neo-Western ambient loop, autumn harvest on the ranch. Full warm sound - acoustic guitar, mandolin tremolo, rich cello, subtle fiddle drone. Tempo 65 BPM, 4/4, bittersweet richness. The feeling of barns full, horses fat, winter coming but not here yet. Seamless loop.",
+    "style": "neo-western, ambient, folk, bittersweet",
+    "duration": 45
+  },
+  {
+    "id": "winter-sparse",
+    "prompt": "Neo-Western ambient loop, deep winter on a quiet ranch. Minimal piano, sparse harmonics, long silences, a single cello note held until it fades. Tempo free, rubato. The feeling of snow muffling everything, horses breathing steam, the ranch waiting. Seamless loop.",
+    "style": "neo-western, ambient, minimal, cold",
+    "duration": 40
+  },
+  {
+    "id": "show-circuit",
+    "prompt": "Neo-Western driving loop, the show circuit. Rhythmic acoustic guitar strum, steady kick drum heartbeat, bass line that walks, mandolin chop on the off-beats. Tempo 110 BPM, driving but not frantic. The feeling of arena lights, the gate opening, focus narrowing. Seamless loop.",
+    "style": "neo-western, rhythmic, driving, competitive",
+    "duration": 40
+  },
+  {
+    "id": "crisis",
+    "prompt": "Neo-Western tension loop, crisis at the ranch. Dissonant piano clusters, low cello tremolo, uneasy harmonium drone, no clear rhythm. Slow building tension, the feeling of a fence line burning, a lawsuit landing, a horse going lame. Seamless loop.",
+    "style": "neo-western, tension, dissonant, ominous",
+    "duration": 35
+  },
+  {
+    "id": "legacy-moment",
+    "prompt": "Neo-Western emotional loop, a legacy moment. Slow piano melody, warm cello counter-melody, subtle pedal steel swell. Tempo 50 BPM, spacious, emotional weight without melodrama. The feeling of a foal hitting the ground, a champion retiring, a handshake that means everything. Seamless loop.",
+    "style": "neo-western, emotional, piano, cello, pedal steel",
+    "duration": 50
+  },
+  {
+    "id": "ending",
+    "prompt": "Neo-Western resolution loop, the ending of a legacy. Warm decay - piano chords fading, cello held note slowly diminishing, last guitar harmonic ringing out. Tempo free, resolving. The feeling of the gate closing on the last season, the dust settling, peace. Seamless loop.",
+    "style": "neo-western, resolution, warm decay, final",
+    "duration": 45
+  }
+]
