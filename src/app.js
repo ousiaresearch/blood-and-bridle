@@ -28,6 +28,8 @@ import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } fro
 import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
 import { fireSeasonCard } from './time-jump.js';
 import { renderPasture } from './pasture.js';
+import { personalMonologue } from './monologue.js';
+import { renderAuthenticityBanner } from './authenticity.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -677,6 +679,7 @@ function render() {
       ${renderTutorialCard()}
       ${renderShareCard()}
       ${renderMemorialBanner()}
+      ${renderAuthenticityBanner(game)}
 
       <section class="verdict ${over ? 'verdict--over is-ending' : ''}">
         <strong>${over ? 'Scenario ended' : 'Ranch read'}</strong>

@@ -6,6 +6,7 @@ import { INHERITABLE_TRAITS, getLifeStage, breedById, liveMoodFor } from './hors
 import { renderPortrait } from './portraits.js';
 import { buildLineageModel } from './lineage.js';
 import { renderLetterhead, renderBrandGlyph } from './brand.js';
+import { renderMonologue } from './monologue.js';
 
 const STAT_KEYS = [
   { key: 'training', label: 'Training', color: 'gold' },
@@ -165,6 +166,8 @@ export function renderHorseDetail(horse, game) {
         <h3 class="eyebrow">Personality</h3>
         <p class="detail-temperament">${escapeHtml(horse.temperament)}</p>
       </section>
+
+      ${renderMonologue(horse)}
 
       <section class="bill-section">
         <h3 class="eyebrow">Lineage</h3>
