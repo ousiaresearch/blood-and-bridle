@@ -35,6 +35,14 @@ const SOUNDS = {
   error:        { type: 'tone',   freq: 130,  dur: 0.10, gain: 0.14, wave: 'square' },
   // Confirmed (accept, sign): warm mid chord
   confirm:      { type: 'chord',  notes: [{ freq: 392 }, { freq: 494 }], dur: 0.18, gain: 0.10, wave: 'sine' },
+  // Hoofbeats: four low thumps at a slow canter cadence
+  hoofbeat:     { type: 'seq',    notes: [{ freq: 70, dur: 0.06 }, { freq: 70, dur: 0.06 }, { freq: 70, dur: 0.06 }, { freq: 70, dur: 0.06 }], gain: 0.18, wave: 'sine', spacing: 0.32 },
+  // Gate creak: rising-pitch filtered noise burst
+  gateCreak:    { type: 'noise',  dur: 0.42, gain: 0.10, filterStart: 600, filterEnd: 2200, filterQ: 8, sweep: 'up' },
+  // Bell: striking a metal triangle / arena bell. Decaying fundamental + 2 harmonics
+  bell:         { type: 'bell',   freq: 880, dur: 1.20, gain: 0.10, harmonics: [1, 2.76, 5.40] },
+  // Memorial: deep low tone with slow decay — for horse eulogies
+  memorial:     { type: 'tone',   freq: 110, dur: 1.40, gain: 0.14, wave: 'sine' },
 };
 
 const AMBIENT_PRESETS = {
@@ -115,6 +123,78 @@ export function createAudioEngine({ audioContextFactory = defaultFactory, master
     return { osc, gain };
   }
 
+  // Filtered noise burst. Used for organic, textural sounds like a
+  // gate creak. Builds a short noise buffer, runs it through a bandpass
+  // filter that sweeps from filterStart to filterEnd over the duration.
+  function playNoise(spec) {
+    if (!ctx || !master) return null;
+    const dur = spec.dur || 0.3;
+    const t0 = ctx.currentTime;
+    const peak = (spec.gain || 0.1) * (muted ? 0 : 1);
+
+    // Build ~0.5s of white noise (longer than longest expected burst).
+    const bufferLen = Math.max(1, Math.floor(ctx.sampleRate * 0.5));
+    const buffer = ctx.createBuffer(1, bufferLen, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferLen; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = spec.filterQ || 6;
+    filter.frequency.setValueAtTime(spec.filterStart || 800, t0);
+    filter.frequency.exponentialRampToValueAtTime(
+      Math.max(50, spec.filterEnd || 200),
+      t0 + dur,
+    );
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(peak, t0 + 0.04); // 40ms attack
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+    src.connect(filter).connect(gain).connect(master);
+    src.start(t0);
+    src.stop(t0 + dur + 0.05);
+    return { src, filter, gain };
+  }
+
+  // Bell: a fundamental sine plus inharmonic partials (1, 2.76, 5.40 give
+  // a struck-bell timbre without sounding like a real recording). Each
+  // partial decays at its own rate — higher partials die first.
+  function playBell(spec) {
+    if (!ctx || !master) return null;
+    const dur = spec.dur || 1.2;
+    const t0 = ctx.currentTime;
+    const peak = (spec.gain || 0.1) * (muted ? 0 : 1);
+    const harmonics = spec.harmonics || [1, 2.76, 5.40];
+    const partials = [];
+
+    for (let i = 0; i < harmonics.length; i++) {
+      const ratio = harmonics[i];
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = spec.freq * ratio;
+      const gain = ctx.createGain();
+      // Higher partials are quieter and decay faster.
+      const partialGain = peak / (i + 1);
+      const partialDur = dur / (1 + i * 0.4);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(partialGain, t0 + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + partialDur);
+      osc.connect(gain).connect(master);
+      osc.start(t0);
+      osc.stop(t0 + partialDur + 0.02);
+      partials.push({ osc, gain });
+    }
+    return partials;
+  }
+
   function play(name) {
     playedLog.push(name);
     const spec = SOUNDS[name];
@@ -126,9 +206,12 @@ export function createAudioEngine({ audioContextFactory = defaultFactory, master
     }
     if (spec.type === 'seq') {
       let offset = 0;
+      const spacing = spec.spacing ?? null;
       for (const note of spec.notes) {
         playTone({ freq: note.freq, dur: note.dur, gain: spec.gain, wave: spec.wave }, offset);
-        offset += note.dur * 0.85;
+        // If `spacing` is set, use it as the gap between notes (independent of note dur).
+        // Otherwise fall back to the old behavior: 0.85 of note duration.
+        offset += spacing ?? (note.dur * 0.85);
       }
       return spec.notes.length;
     }
@@ -137,6 +220,12 @@ export function createAudioEngine({ audioContextFactory = defaultFactory, master
         playTone({ freq: note.freq, dur: spec.dur, gain: spec.gain, wave: spec.wave });
       }
       return spec.notes.length;
+    }
+    if (spec.type === 'noise') {
+      return playNoise(spec);
+    }
+    if (spec.type === 'bell') {
+      return playBell(spec);
     }
     return null;
   }

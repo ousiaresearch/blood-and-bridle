@@ -16,6 +16,7 @@ import { runShowdown, canEnterShow, getShowOnDay } from './shows.js';
 import { applyUpgrade, canAffordUpgrade, getRanchEffects, getUpgradeLabel } from './upgrades.js';
 import { generateContractOffer, acceptContract, declineContract, tickContracts } from './contracts.js';
 import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
+import { buildMemorial } from './memorial.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -99,6 +100,7 @@ export function createNewGame() {
     firedEvents: [],
     contracts: [],
     milestones: [],
+    memorials: [],
     lastShowResult: null,
     tutorial: {
       day: 1,
@@ -154,8 +156,38 @@ function maybeFireSeasonal(game) {
   if (g.day >= 10) g = markStepComplete(g, 'free');
   // Year tick on year boundary
   if (isYearBoundary(g)) {
+    // Snapshot the herd before the tick so we can detect who left
+    // and build memorials for them.
+    const prevIds = new Set(g.horses.map((h) => h.id));
     const { horses, log } = tickYear(g.horses);
-    g = { ...g, horses, log: [...log, ...g.log].slice(0, 20) };
+    const newIds = new Set(horses.map((h) => h.id));
+
+    // Horses that were in the herd but no longer are: build memorials
+    // for natural deaths and retirements. Sold horses are handled in
+    // their own action and are already recorded in their own log line.
+    const newMemorials = [...(g.memorials ?? [])];
+    for (const h of g.horses) {
+      if (!newIds.has(h.id)) {
+        // Heuristic: if the log line about them starts with "retired",
+        // it's a retirement. Otherwise a death.
+        const line = (log.find((l) => l.includes(h.name)) ?? '').toLowerCase();
+        const kind = line.includes('retired') ? 'retirement' : 'death';
+        const memorial = buildMemorial(h, { ...g, horses }, { kind });
+        if (memorial) newMemorials.push(memorial);
+      }
+    }
+    // Also detect retirements of horses still in the herd (they retire
+    // in place, the log line reads "X retired from the campaign").
+    for (const h of horses) {
+      if (!prevIds.has(h.id)) continue; // newly born, skip
+      const line = (log.find((l) => l.includes(h.name)) ?? '').toLowerCase();
+      if (line.includes('retired from the campaign')) {
+        const memorial = buildMemorial(h, { ...g, horses }, { kind: 'retirement' });
+        if (memorial) newMemorials.push(memorial);
+      }
+    }
+
+    g = { ...g, horses, log: [...log, ...g.log].slice(0, 20), memorials: newMemorials.slice(-20) };
   }
   // Season boundary: rivals, disasters, events, contracts
   if (isSeasonBoundary(g)) {
@@ -228,7 +260,9 @@ export function applyAction(game, action) {
       working.cash += horse.value;
       working.legacy = clamp(working.legacy - 12);
       working.staff = working.staff.map((s) => ({ ...s, loyalty: clamp(s.loyalty - (s.id === 'mae' ? 12 : 6)) }));
+      const memorial = buildMemorial(horse, working, { kind: 'sold', circumstance: `Sold privately at age ${horse.age} for $${horse.value.toLocaleString()}.` });
       working.horses = working.horses.filter((h) => h.id !== horse.id);
+      working.memorials = [...(working.memorials ?? []), memorial].slice(-20);
       working = dailyUpkeep(working, `Sold ${horse.name}. The books look cleaner. The barn sounds wrong.`);
       break;
     }
@@ -346,7 +380,9 @@ export function applyAction(game, action) {
       const result = runAuction(horse);
       working.cash += result.topBid.offer;
       working.legacy = clamp(working.legacy - 6);
+      const memorial = buildMemorial(horse, working, { kind: 'auctioned', circumstance: `Sold at auction to ${result.topBid.name} for $${result.topBid.offer.toLocaleString()}.` });
       working.horses = working.horses.filter((h) => h.id !== horse.id);
+      working.memorials = [...(working.memorials ?? []), memorial].slice(-20);
       working.log = [`Sold ${horse.name} at auction to ${result.topBid.name} for $${result.topBid.offer.toLocaleString()}.`, ...working.log].slice(0, 20);
       working = dailyUpkeep(working, working.log[0]);
       break;

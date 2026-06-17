@@ -5,7 +5,6 @@ import { createAudioEngine, __INTERNAL__ } from '../src/audio.js';
 
 // Build a fake AudioContext that records every oscillator/gain creation
 // and every ramp/set call. We don't care about real audio; we care that the
-// engine dispatches the right number of voices for each sound type.
 function makeFakeContext() {
   const calls = {
     oscillators: [],
@@ -14,15 +13,19 @@ function makeFakeContext() {
     linearRampToValueAtTime: 0,
     exponentialRampToValueAtTime: 0,
     connects: 0,
+    buffers: [],
+    sources: [],
+    filters: [],
   };
   const ctx = {
     destination: { name: 'destination' },
     currentTime: 0,
+    sampleRate: 44100,
     resumeCalls: 0,
     createOscillator() {
       const osc = {
         type: 'sine',
-        frequency: { value: 0 },
+        frequency: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} },
         connect(target) { calls.connects++; osc._connectedTo = target; return target; },
         start(t) { osc.startCalledAt = t; },
         stop(t) { osc.stopCalledAt = t; },
@@ -42,6 +45,40 @@ function makeFakeContext() {
       };
       calls.gains.push(gain);
       return gain;
+    },
+    createBuffer(channels, length, sampleRate) {
+      const data = new Float32Array(length);
+      const buf = {
+        channels, length, sampleRate,
+        getChannelData() { return data; },
+      };
+      calls.buffers.push(buf);
+      return buf;
+    },
+    createBufferSource() {
+      const src = {
+        buffer: null,
+        loop: false,
+        connect(target) { calls.connects++; src._connectedTo = target; return target; },
+        start(t) { src.startCalledAt = t; },
+        stop(t) { src.stopCalledAt = t; },
+      };
+      calls.sources.push(src);
+      return src;
+    },
+    createBiquadFilter() {
+      const filter = {
+        type: 'lowpass',
+        Q: { value: 1 },
+        frequency: {
+          value: 350,
+          setValueAtTime(v) { filter.frequency._start = v; },
+          exponentialRampToValueAtTime(v) { filter.frequency._end = v; },
+        },
+        connect(target) { calls.connects++; filter._connectedTo = target; return target; },
+      };
+      calls.filters.push(filter);
+      return filter;
     },
     resume() { this.resumeCalls++; },
   };
@@ -192,5 +229,72 @@ test('AMBIENT_PRESETS has all 5 documented presets', () => {
   const expected = ['off', 'wind', 'rain', 'drone', 'winter'];
   for (const name of expected) {
     assert.ok(__INTERNAL__.AMBIENT_PRESETS[name], `missing preset: ${name}`);
+  }
+});
+
+// ---------- Procedural SFX: hoofbeat, gate creak, bell, memorial ----------
+
+test('play(hoofbeat) creates a sequence of 4 oscillators (canter cadence)', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('hoofbeat');
+  assert.equal(calls.oscillators.length, 4);
+  // All four should be the same low frequency (70Hz thumps)
+  for (const osc of calls.oscillators) {
+    assert.equal(osc.frequency.value, 70);
+  }
+});
+
+test('play(gateCreak) creates a noise source + bandpass filter + gain', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0; calls.sources.length = 0; calls.filters.length = 0;
+  engine.play('gateCreak');
+  // Should create exactly one buffer source, one bandpass filter
+  assert.equal(calls.sources.length, 1, 'expected 1 buffer source');
+  assert.equal(calls.filters.length, 1, 'expected 1 biquad filter');
+  assert.equal(calls.filters[0].type, 'bandpass');
+  // The filter should sweep from filterStart to filterEnd
+  assert.equal(calls.filters[0].frequency._start, 600);
+  assert.equal(calls.filters[0].frequency._end, 2200);
+  // And there should be a buffer with noise data
+  assert.equal(calls.buffers.length, 1);
+  // The buffer should be a real AudioBuffer shape (or fake with getChannelData)
+  const buf = calls.buffers[0];
+  assert.equal(buf.channels, 1);
+  assert.ok(buf.length > 0);
+});
+
+test('play(bell) creates one oscillator per harmonic partial', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('bell');
+  // Bell has 3 harmonics: 1, 2.76, 5.40
+  assert.equal(calls.oscillators.length, 3);
+  // Frequencies should be 880, 880*2.76, 880*5.40
+  assert.equal(calls.oscillators[0].frequency.value, 880);
+  assert.equal(calls.oscillators[1].frequency.value, 880 * 2.76);
+  assert.equal(calls.oscillators[2].frequency.value, 880 * 5.40);
+});
+
+test('play(memorial) creates one low oscillator with long duration', () => {
+  const { engine, calls } = makeEngine();
+  calls.oscillators.length = 0;
+  engine.play('memorial');
+  assert.equal(calls.oscillators.length, 1);
+  assert.equal(calls.oscillators[0].frequency.value, 110);
+  assert.equal(calls.oscillators[0].type, 'sine');
+});
+
+test('new sounds are exposed in the SOUNDS catalog', () => {
+  for (const name of ['hoofbeat', 'gateCreak', 'bell', 'memorial']) {
+    assert.ok(__INTERNAL__.SOUNDS[name], `missing sound: ${name}`);
+  }
+});
+
+test('all new procedural sounds handle missing AudioContext gracefully', () => {
+  const engine = createAudioEngine({ audioContextFactory: () => null });
+  for (const name of ['hoofbeat', 'gateCreak', 'bell', 'memorial']) {
+    const result = engine.play(name);
+    assert.equal(result, null, `${name} should return null without AudioContext`);
   }
 });

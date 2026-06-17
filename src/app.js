@@ -20,6 +20,9 @@ import {
 import { silhouetteFor, ribbonFor } from './silhouettes.js';
 import { preloadPortraits, renderPortrait, getPortraitForHorse, startIdleAnimation } from './portraits.js';
 import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtrackVolume, stopSoundtrack } from './soundtrack.js';
+import { showModal, closeModal } from './modal.js';
+import { renderHorseDetail } from './horse-detail.js';
+import { buildMemorial, renderMemorial, renderMemorialHall } from './memorial.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -88,6 +91,11 @@ function renderMetric(metric) {
 
 function stageClass(stageId) {
   return `life-stage life-stage--${stageId ?? 'dead'}`;
+}
+
+function openHorseDetail(horse) {
+  const html = renderHorseDetail(horse, game);
+  showModal(html, { title: horse.name });
 }
 
 function renderHorse(horse, selectedHorseId) {
@@ -276,6 +284,21 @@ function renderPendingEvent(model) {
   `;
 }
 
+function renderMemorialBanner() {
+  // Show the most recent memorial (the last entry in the array) as a
+  // compact banner on the dashboard. Older ones are visible on the
+  // Memorial Hall in the ending screen.
+  const memorials = game.memorials ?? [];
+  if (memorials.length === 0) return '';
+  const latest = memorials[memorials.length - 1];
+  return `<section class="memorial-banner-section">${renderMemorial(latest, { compact: true })}</section>`;
+}
+
+function renderMemorialHallJSX(memorials) {
+  if (!memorials || memorials.length === 0) return '';
+  return renderMemorialHall(memorials);
+}
+
 function renderEnding(model) {
   if (!model.ending) return '';
   const finalScore = scoreGame(game);
@@ -307,6 +330,7 @@ function renderEnding(model) {
           `).join('')}
         </ul>
       ` : ''}
+      ${renderMemorialHallJSX(game.memorials)}
       <div class="ending-actions">
         <button class="action" data-share-link>Share your ending</button>
         <button class="action" data-reset>Start a new legacy</button>
@@ -538,6 +562,7 @@ function render() {
       ${renderShareBanner()}
       ${renderTutorialCard()}
       ${renderShareCard()}
+      ${renderMemorialBanner()}
 
       <section class="verdict ${over ? 'verdict--over is-ending' : ''}">
         <strong>${over ? 'Scenario ended' : 'Ranch read'}</strong>
@@ -656,6 +681,11 @@ function render() {
   const currentSeason = getSeason(game);
   if (soundtrackInitialized && lastRendered.season !== currentSeason) {
     playForSeason(currentSeason).catch(() => {});
+    // Season transition: gate creak as the calendar turns. Late enough in
+    // the season cycle that it doesn't fire on first render.
+    if (lastRendered.season && lastRendered.season !== currentSeason) {
+      audio.play('gateCreak');
+    }
     lastRendered.season = currentSeason;
   }
 
@@ -706,11 +736,29 @@ function playForOutcome(prevGame, nextGame, actionType) {
   }
 
   // Special actions
- 
+
   if (actionType === 'listAtAuction' || actionType === 'sellHorse') audio.play('sale');
-  if (actionType === 'enterShow') audio.play('showEnter');
+  if (actionType === 'enterShow') {
+    audio.play('showEnter');
+    // Hoofbeats layer on top of the chord — a slow canter building anticipation.
+    setTimeout(() => audio.play('hoofbeat'), 80);
+  }
   if (actionType === 'acceptContract' || actionType === 'signWithDeveloper') audio.play('confirm');
   if (actionType === 'dismissTutorial') audio.play('stepDone');
+
+  // Champion bell on the show verdict when the horse took first.
+  if (actionType === 'enterShow' && nextGame?.lastShowResult?.playerPlace === 1) {
+    setTimeout(() => audio.play('bell'), 600);
+  }
+
+  // Memorial tone when a horse was lost in the year tick. Detect via herd
+  // size: if a horse we knew is now gone, mourn. (The death/retirement
+  // log entry was pushed in tickYear.)
+  const prevHerd = prevGame?.horses?.length ?? 0;
+  const nextHerd = nextGame?.horses?.length ?? 0;
+  if (prevHerd > nextHerd) {
+    setTimeout(() => audio.play('memorial'), 200);
+  }
 
   // Soundtrack mood triggers
   if (actionType === 'enterShow') playForMood('show').catch(() => {});
@@ -761,6 +809,27 @@ function bindEvents() {
       card.classList.add('card--selected');
       render();
     });
+    // Double-click opens the deep detail modal.
+    card.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      const horse = game.horses.find((h) => h.id === card.dataset.selectHorse);
+      if (horse) {
+        openHorseDetail(horse);
+        audio.play('stepDone');
+      }
+    });
+  });
+
+  // Single-click on a lineage link inside a modal swaps to that horse's detail.
+  document.body.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-detail-horse]');
+    if (link) {
+      e.preventDefault();
+      const horse = game.horses.find((h) => h.id === link.dataset.detailHorse);
+      if (horse) {
+        openHorseDetail(horse);
+      }
+    }
   });
 
   document.querySelectorAll('[data-action]').forEach((button) => {

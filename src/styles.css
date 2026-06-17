@@ -883,3 +883,381 @@ body.season-winter::before {
   background: radial-gradient(ellipse at top, rgba(140, 170, 200, 0.18), transparent 65%),
               radial-gradient(ellipse at bottom, rgba(180, 200, 220, 0.10), transparent 70%);
 }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 14, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: modal-fade-in 200ms ease-out;
+  backdrop-filter: blur(2px);
+}
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-panel {
+  background: var(--panel, #1a1c20);
+  background: linear-gradient(180deg, #1f2227 0%, #16181c 100%);
+  color: var(--paper, #ece4d2);
+  border: 1px solid rgba(201, 162, 90, 0.25);
+  border-radius: 14px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  max-width: 720px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 32px 36px;
+  position: relative;
+  animation: modal-rise 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modal-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--paper, #ece4d2);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.modal-close:hover,
+.modal-close:focus {
+  background: rgba(201, 162, 90, 0.12);
+  border-color: rgba(201, 162, 90, 0.35);
+  outline: none;
+}
+.modal-title {
+  font-family: 'Rye', serif;
+  font-size: 1.5rem;
+  color: var(--gold, #c9a25a);
+  margin: 0 0 16px;
+  padding-right: 40px;
+}
+
+/* ---------- Horse detail modal content ---------- */
+.horse-detail {
+  display: grid;
+  gap: 22px;
+}
+.detail-portrait-block {
+  text-align: center;
+  border-bottom: 1px solid rgba(201, 162, 90, 0.18);
+  padding-bottom: 18px;
+}
+.detail-portrait {
+  margin: 0 auto 14px;
+  width: 200px !important;
+  height: 200px !important;
+  display: block;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+.detail-name {
+  font-family: 'Rye', serif;
+  font-size: 1.7rem;
+  color: var(--gold, #c9a25a);
+  margin: 6px 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.detail-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(201, 162, 90, 0.4);
+  background: rgba(201, 162, 90, 0.12);
+  color: var(--gold, #c9a25a);
+}
+.detail-badge--injured {
+  border-color: rgba(220, 80, 80, 0.5);
+  background: rgba(220, 80, 80, 0.12);
+  color: #ff8888;
+}
+.detail-badge--mood[data-mood="intense"] {
+  border-color: rgba(40, 60, 90, 0.6);
+  background: rgba(40, 60, 90, 0.25);
+  color: #a8c4e0;
+}
+.detail-badge--mood[data-mood="proud"] {
+  border-color: rgba(190, 140, 50, 0.6);
+  background: rgba(190, 140, 50, 0.2);
+  color: #f0c878;
+}
+.detail-badge--mood[data-mood="calm"] {
+  border-color: rgba(110, 80, 50, 0.5);
+  background: rgba(110, 80, 50, 0.15);
+  color: #d4b88a;
+}
+.detail-role { font-weight: 600; color: var(--paper, #ece4d2); margin: 4px 0; }
+.detail-bloodline { font-size: 0.85rem; color: #b0a890; margin: 0 0 4px; font-style: italic; }
+.detail-meta { font-size: 0.8rem; color: #888; margin: 0; }
+
+.detail-section h3.eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold, #c9a25a);
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+.detail-section {
+  border-top: 1px solid rgba(201, 162, 90, 0.10);
+  padding-top: 14px;
+}
+.detail-section:first-of-type { border-top: none; padding-top: 0; }
+.detail-stats, .detail-traits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+  margin: 0 0 8px;
+}
+.detail-stat, .detail-trait {
+  display: grid;
+  grid-template-columns: 80px 1fr 32px;
+  gap: 8px;
+  align-items: center;
+}
+.detail-stat-label, .detail-trait-label {
+  font-size: 0.78rem;
+  color: #b0a890;
+}
+.detail-stat-value, .detail-trait-value {
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: right;
+  color: var(--paper, #ece4d2);
+  font-variant-numeric: tabular-nums;
+}
+.trait-bar {
+  position: relative;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(201, 162, 90, 0.15);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.trait-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 400ms ease;
+}
+.trait-bar--gold .trait-bar-fill { background: linear-gradient(90deg, #b8862e, #e0b865); }
+.trait-bar--green .trait-bar-fill { background: linear-gradient(90deg, #4a8060, #6ab088); }
+.trait-bar--blue .trait-bar-fill { background: linear-gradient(90deg, #2a5a8a, #4a90c8); }
+.trait-bar--red .trait-bar-fill { background: linear-gradient(90deg, #8a3a3a, #c8605a); }
+.trait-bar-text {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--paper, #ece4d2);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+}
+.detail-value { color: var(--gold, #c9a25a); font-weight: 600; margin: 4px 0 0; }
+.detail-temperament { font-style: italic; color: #c4b89a; margin: 0; }
+
+.detail-lineage { display: grid; gap: 10px; }
+.detail-lineage-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.detail-lineage-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(201, 162, 90, 0.12);
+  border-radius: 8px;
+  min-width: 96px;
+}
+.detail-lineage-cell .eyebrow { margin: 0; }
+.detail-lineage-cell small { font-size: 0.72rem; color: #888; }
+.detail-lineage-cell--wide { width: 100%; }
+.detail-lineage-cell--wide .detail-offspring {
+  list-style: none; padding: 0; margin: 4px 0 0;
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+}
+.detail-lineage-cell--wide .detail-offspring li {
+  display: flex; align-items: center; gap: 4px;
+}
+
+.detail-chronicle {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.detail-chronicle li {
+  font-size: 0.84rem;
+  color: #c4b89a;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(201, 162, 90, 0.08);
+  line-height: 1.4;
+}
+.detail-chronicle li:last-child { border-bottom: none; }
+.detail-chronicle li::before {
+  content: '·';
+  color: var(--gold, #c9a25a);
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.hint { color: #888; font-size: 0.85rem; font-style: italic; margin: 0; }
+
+@media (max-width: 600px) {
+  .modal-panel { padding: 20px; }
+  .detail-portrait { width: 160px !important; height: 160px !important; }
+  .detail-stats, .detail-traits { grid-template-columns: 1fr; }
+}
+
+/* ---------- Memorials ---------- */
+.memorial-banner-section { margin: 14px 0 0; }
+.memorial {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(20, 18, 14, 0.7) 0%, rgba(14, 12, 10, 0.85) 100%);
+  border: 1px solid rgba(201, 162, 90, 0.20);
+  border-left: 3px solid var(--gold, #c9a25a);
+  border-radius: 8px;
+  color: var(--paper, #ece4d2);
+}
+.memorial--banner { padding: 12px 14px; gap: 12px; }
+.memorial--hall {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 16px 18px;
+}
+.memorial-portrait {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.memorial-silhouette {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(60, 50, 35, 0.6), rgba(40, 35, 25, 0.6));
+  border: 1px solid rgba(201, 162, 90, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+.memorial-silhouette::after {
+  content: '✝';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(201, 162, 90, 0.35);
+  font-size: 1.6rem;
+  font-weight: 300;
+}
+.memorial-body { flex: 1; min-width: 0; }
+.memorial-kind {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(201, 162, 90, 0.7);
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+.memorial-name {
+  font-family: 'Rye', serif;
+  font-size: 1.15rem;
+  color: var(--gold, #c9a25a);
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+.memorial-meta {
+  font-size: 0.78rem;
+  color: #b0a890;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+.memorial-circumstance {
+  font-size: 0.85rem;
+  color: #d4ccb0;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+.memorial-epitaph {
+  font-size: 0.92rem;
+  color: #c4b89a;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+.memorial-moments {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  border-top: 1px solid rgba(201, 162, 90, 0.12);
+  padding-top: 10px;
+}
+.memorial-moments li {
+  font-size: 0.8rem;
+  color: #c4b89a;
+  padding: 3px 0;
+  line-height: 1.4;
+}
+.memorial-moments li::before {
+  content: '·';
+  color: var(--gold, #c9a25a);
+  font-weight: bold;
+  margin-right: 8px;
+}
+.memorial-hall {
+  margin: 22px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(201, 162, 90, 0.18);
+}
+.memorial-hall h2.eyebrow {
+  font-family: 'Rye', serif;
+  font-size: 1.3rem;
+  color: var(--gold, #c9a25a);
+  margin: 0 0 4px;
+  letter-spacing: 0.02em;
+}
+.memorial-hall .hint { margin: 0 0 14px; }
+.memorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
