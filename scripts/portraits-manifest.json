@@ -1,107 +1,812 @@
 [
   {
-    "id": "foal_calm",
+    "id": "qh_foal_calm",
+    "breed": "quarter_horse",
     "lifeStage": "foal",
     "mood": "calm",
-    "subject": "a newborn foal, wobbly legs and oversized head",
-    "details": "Soft bay coat still damp from birth, wide curious eyes. A single white star on the forehead."
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "foal_intense",
+    "id": "qh_foal_intense",
+    "breed": "quarter_horse",
     "lifeStage": "foal",
     "mood": "intense",
-    "subject": "a spirited foal, already showing fire",
-    "details": "Dark chestnut coat, ears pricked forward, one front leg pawing the dust. The spark is there."
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "foal_proud",
+    "id": "qh_foal_proud",
+    "breed": "quarter_horse",
     "lifeStage": "foal",
     "mood": "proud",
-    "subject": "a foal with an old soul",
-    "details": "Blue roan coat catching the light, head carried high on a long neck. Unusually composed for its age."
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "yearling_calm",
+    "id": "qh_yearling_calm",
+    "breed": "quarter_horse",
     "lifeStage": "yearling",
     "mood": "calm",
-    "subject": "a yearling filly, gangly but graceful",
-    "details": "Pale palomino coat, flaxen mane catching the wind. Quiet confidence in her stance."
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "yearling_intense",
+    "id": "qh_yearling_intense",
+    "breed": "quarter_horse",
     "lifeStage": "yearling",
     "mood": "intense",
-    "subject": "a yearling colt, coiled energy",
-    "details": "Seal brown coat, black points sharp against the gold light. Eyes bright with challenge."
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "yearling_proud",
+    "id": "qh_yearling_proud",
+    "breed": "quarter_horse",
     "lifeStage": "yearling",
     "mood": "proud",
-    "subject": "a yearling of obvious quality",
-    "details": "Dappled gray already showing the pattern, elegant neck arch. The kind that stops conversations."
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "prospect_calm",
+    "id": "qh_prospect_calm",
+    "breed": "quarter_horse",
     "lifeStage": "prospect",
     "mood": "calm",
-    "subject": "a 2-year-old prospect, steady in the round pen",
-    "details": "Solid sorrel coat, white blaze down the face. Moves with purpose, no wasted motion."
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "prospect_intense",
+    "id": "qh_prospect_intense",
+    "breed": "quarter_horse",
     "lifeStage": "prospect",
     "mood": "intense",
-    "subject": "a 2-year-old prospect, electric in the cut",
-    "details": "Black coat with a single white sock. Explosive stop, ears flat, wholly focused."
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "prospect_proud",
+    "id": "qh_prospect_proud",
+    "breed": "quarter_horse",
     "lifeStage": "prospect",
     "mood": "proud",
-    "subject": "a 2-year-old prospect, head high",
-    "details": "Buckskin with dorsal stripe, primitive markings. Carries itself like a finished horse."
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "campaigner_calm",
+    "id": "qh_campaigner_calm",
+    "breed": "quarter_horse",
     "lifeStage": "campaigner",
     "mood": "calm",
-    "subject": "a seasoned campaigner, 6 years old",
-    "details": "Bay roan, scar on the left shoulder from a past run. Unshakable in the box."
+    "description": "A seasoned campaigner, in their prime, in steady work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "campaigner_intense",
+    "id": "qh_campaigner_intense",
+    "breed": "quarter_horse",
     "lifeStage": "campaigner",
     "mood": "intense",
-    "subject": "a campaigner at the peak of power",
-    "details": "Gristed black, muscles coiled. The turn is violence and grace in equal measure."
+    "description": "A seasoned campaigner, in their prime, in steady work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "campaigner_proud",
+    "id": "qh_campaigner_proud",
+    "breed": "quarter_horse",
     "lifeStage": "campaigner",
     "mood": "proud",
-    "subject": "a champion campaigner",
-    "details": "Deep mahogany bay, white stockings on all four. Ribbons won, but the fire remains."
+    "description": "A seasoned campaigner, in their prime, in steady work. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "retiree_calm",
+    "id": "qh_retiree_calm",
+    "breed": "quarter_horse",
     "lifeStage": "retiree",
     "mood": "calm",
-    "subject": "an elder retiree, 18 years old",
-    "details": "White-faced sorrel, sway back, gentle eyes. Has earned every gray hair."
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "retiree_intense",
+    "id": "qh_retiree_intense",
+    "breed": "quarter_horse",
     "lifeStage": "retiree",
     "mood": "intense",
-    "subject": "a retiree who remembers the work",
-    "details": "Fleabitten gray, still moves with purpose when the saddle appears. The mind is sharp."
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
   },
   {
-    "id": "retiree_proud",
+    "id": "qh_retiree_proud",
+    "breed": "quarter_horse",
     "lifeStage": "retiree",
     "mood": "proud",
-    "subject": "a founding matriarch",
-    "details": "Blue roan mare, broad hip, deep heart girth. Her blood runs through half the herd."
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The compact, heavy-muscled build of the working cutting horse. Bay, sorrel, or palomino coat, kind eye, broad chest, the horse that made the West. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_foal_calm",
+    "breed": "appaloosa",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_foal_intense",
+    "breed": "appaloosa",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_foal_proud",
+    "breed": "appaloosa",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_yearling_calm",
+    "breed": "appaloosa",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_yearling_intense",
+    "breed": "appaloosa",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_yearling_proud",
+    "breed": "appaloosa",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_prospect_calm",
+    "breed": "appaloosa",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_prospect_intense",
+    "breed": "appaloosa",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_prospect_proud",
+    "breed": "appaloosa",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_campaigner_calm",
+    "breed": "appaloosa",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "description": "A seasoned campaigner, in their prime, in steady work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_campaigner_intense",
+    "breed": "appaloosa",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "description": "A seasoned campaigner, in their prime, in steady work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_campaigner_proud",
+    "breed": "appaloosa",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "description": "A seasoned campaigner, in their prime, in steady work. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_retiree_calm",
+    "breed": "appaloosa",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_retiree_intense",
+    "breed": "appaloosa",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "appy_retiree_proud",
+    "breed": "appaloosa",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The colorful Northwest stock horse. Spotted blanket over the rump, white sclera showing in the eye, mottled skin around the muzzle. Chestnut base coat with the Appaloosa pattern. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_foal_calm",
+    "breed": "paint_horse",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_foal_intense",
+    "breed": "paint_horse",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_foal_proud",
+    "breed": "paint_horse",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_yearling_calm",
+    "breed": "paint_horse",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_yearling_intense",
+    "breed": "paint_horse",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_yearling_proud",
+    "breed": "paint_horse",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_prospect_calm",
+    "breed": "paint_horse",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_prospect_intense",
+    "breed": "paint_horse",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_prospect_proud",
+    "breed": "paint_horse",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_campaigner_calm",
+    "breed": "paint_horse",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "description": "A seasoned campaigner, in their prime, in steady work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_campaigner_intense",
+    "breed": "paint_horse",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "description": "A seasoned campaigner, in their prime, in steady work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_campaigner_proud",
+    "breed": "paint_horse",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "description": "A seasoned campaigner, in their prime, in steady work. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_retiree_calm",
+    "breed": "paint_horse",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_retiree_intense",
+    "breed": "paint_horse",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "paint_retiree_proud",
+    "breed": "paint_horse",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. Tobiano patches of dark and white crossing the back, dark legs, bald face. The pinto stock horse, Quarter Horse build underneath the color. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_foal_calm",
+    "breed": "arabian",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_foal_intense",
+    "breed": "arabian",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_foal_proud",
+    "breed": "arabian",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_yearling_calm",
+    "breed": "arabian",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_yearling_intense",
+    "breed": "arabian",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_yearling_proud",
+    "breed": "arabian",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_prospect_calm",
+    "breed": "arabian",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_prospect_intense",
+    "breed": "arabian",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_prospect_proud",
+    "breed": "arabian",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_campaigner_calm",
+    "breed": "arabian",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "description": "A seasoned campaigner, in their prime, in steady work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_campaigner_intense",
+    "breed": "arabian",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "description": "A seasoned campaigner, in their prime, in steady work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_campaigner_proud",
+    "breed": "arabian",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "description": "A seasoned campaigner, in their prime, in steady work. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_retiree_calm",
+    "breed": "arabian",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_retiree_intense",
+    "breed": "arabian",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "arab_retiree_proud",
+    "breed": "arabian",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The refined desert breed. Dished face, large dark eyes, arched neck, high-carried tail, fine bone. Grey or chestnut coat, the oldest refined breed. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_foal_calm",
+    "breed": "thoroughbred",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_foal_intense",
+    "breed": "thoroughbred",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_foal_proud",
+    "breed": "thoroughbred",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_yearling_calm",
+    "breed": "thoroughbred",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_yearling_intense",
+    "breed": "thoroughbred",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_yearling_proud",
+    "breed": "thoroughbred",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_prospect_calm",
+    "breed": "thoroughbred",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_prospect_intense",
+    "breed": "thoroughbred",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_prospect_proud",
+    "breed": "thoroughbred",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_campaigner_calm",
+    "breed": "thoroughbred",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "description": "A seasoned campaigner, in their prime, in steady work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_campaigner_intense",
+    "breed": "thoroughbred",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "description": "A seasoned campaigner, in their prime, in steady work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_campaigner_proud",
+    "breed": "thoroughbred",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "description": "A seasoned campaigner, in their prime, in steady work. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_retiree_calm",
+    "breed": "thoroughbred",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_retiree_intense",
+    "breed": "thoroughbred",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "tb_retiree_proud",
+    "breed": "thoroughbred",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The long-legged runner. Deep chest, lean muscle, tall frame, often white socks and a star. Bay or chestnut, the athlete of the show string. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_foal_calm",
+    "breed": "andalusian",
+    "lifeStage": "foal",
+    "mood": "calm",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_foal_intense",
+    "breed": "andalusian",
+    "lifeStage": "foal",
+    "mood": "intense",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_foal_proud",
+    "breed": "andalusian",
+    "lifeStage": "foal",
+    "mood": "proud",
+    "description": "A newborn foal, wobbly legs and oversized head, the world still a question. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_yearling_calm",
+    "breed": "andalusian",
+    "lifeStage": "yearling",
+    "mood": "calm",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_yearling_intense",
+    "breed": "andalusian",
+    "lifeStage": "yearling",
+    "mood": "intense",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_yearling_proud",
+    "breed": "andalusian",
+    "lifeStage": "yearling",
+    "mood": "proud",
+    "description": "A gangly yearling, half-grown, long legs not yet filled in. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_prospect_calm",
+    "breed": "andalusian",
+    "lifeStage": "prospect",
+    "mood": "calm",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_prospect_intense",
+    "breed": "andalusian",
+    "lifeStage": "prospect",
+    "mood": "intense",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_prospect_proud",
+    "breed": "andalusian",
+    "lifeStage": "prospect",
+    "mood": "proud",
+    "description": "A 2-year-old prospect, almost full size, ready for light work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_campaigner_calm",
+    "breed": "andalusian",
+    "lifeStage": "campaigner",
+    "mood": "calm",
+    "description": "A seasoned campaigner, in their prime, in steady work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_campaigner_intense",
+    "breed": "andalusian",
+    "lifeStage": "campaigner",
+    "mood": "intense",
+    "description": "A seasoned campaigner, in their prime, in steady work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_campaigner_proud",
+    "breed": "andalusian",
+    "lifeStage": "campaigner",
+    "mood": "proud",
+    "description": "A seasoned campaigner, in their prime, in steady work. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_retiree_calm",
+    "breed": "andalusian",
+    "lifeStage": "retiree",
+    "mood": "calm",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Soft eye, head lowered, one hind hoof resting. The pasture is enough.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_retiree_intense",
+    "breed": "andalusian",
+    "lifeStage": "retiree",
+    "mood": "intense",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Ears pricked forward, nostrils flared, one front hoof pawing the dust. Coiled and ready.",
+    "view": "side",
+    "size": 64
+  },
+  {
+    "id": "andy_retiree_proud",
+    "breed": "andalusian",
+    "lifeStage": "retiree",
+    "mood": "proud",
+    "description": "A retired veteran, grey around the muzzle, slower but wise. The baroque war horse. Convex profile, powerful hindquarters, thick neck, broad chest, thick flowing mane and tail. Predominantly grey, dappled. The original blood of the bridle. Head high, neck arched, tail carried like a banner. Past the camera, past the rider, past the years.",
+    "view": "side",
+    "size": 64
   }
 ]

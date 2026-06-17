@@ -2,157 +2,185 @@
 /**
  * generate-soundtrack.mjs
  *
- * Generates music loops for Blood & Bridle using MiniMax music API.
- * Reads a manifest of track specs, generates each, saves as MP3 to assets/soundtrack/.
+ * Generates 8 ambient/mood music loops for Blood & Bridle via the MiniMax
+ * music-2.6 API. Reads scripts/soundtrack-manifest.json, calls the API
+ * for each prompt, hex-decodes the audio response, and writes
+ * assets/soundtrack/<id>.mp3 plus an index.js exporting getAllTrackUrls().
+ *
+ * Auth: reads the Subscription Key from ~/.mmx/config.json (where the
+ * `mmx auth login` CLI stores it). The Subscription Key is the Token Plan
+ * credential — pay-as-you-go API keys will return "insufficient balance".
  *
  * Usage:
- *   MINIMAX_API_KEY=your_key node scripts/generate-soundtrack.mjs
+ *   node scripts/generate-soundtrack.mjs             # generate all
+ *   node scripts/generate-soundtrack.mjs --resume   # skip existing files
+ *   node scripts/generate-soundtrack.mjs --ids spring-warm,ending
+ *   node scripts/generate-soundtrack.mjs --dry-run  # print plan, don't call
  *
- * Manifest format: scripts/soundtrack-manifest.json
+ * Cost: 8 music-2.6 generations. Each generates ~45-60s of audio. Token Plan
+ * subscription required.
+ *
+ * State:
+ *   .soundtrack-state.json  (gitignored) — generated/skipped status per id
  */
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const MANIFEST_PATH = path.resolve(ROOT, 'scripts', 'soundtrack-manifest.json');
 const OUTPUT_DIR = path.resolve(ROOT, 'assets', 'soundtrack');
-const INDEX_PATH = path.resolve(OUTPUT_DIR, 'index.js');
+const STATE_PATH = path.resolve(__dirname, '.soundtrack-state.json');
+const CONFIG_PATH = path.join(os.homedir(), '.mmx', 'config.json');
 
-const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
-if (!MINIMAX_API_KEY) {
-  console.error('MINIMAX_API_KEY environment variable required');
-  process.exit(1);
+const FLAGS = new Set(process.argv.slice(2));
+const RESUME = FLAGS.has('--resume');
+const DRY_RUN = FLAGS.has('--dry-run');
+const IDS_FLAG = process.argv.find(a => a.startsWith('--ids='));
+const ONLY_IDS = IDS_FLAG
+  ? new Set(IDS_FLAG.slice(6).split(',').map(s => s.trim()).filter(Boolean))
+  : null;
+
+const ENDPOINT = 'https://api.minimax.io/v1/music_generation';
+const MODEL = 'music-2.6';
+const AUDIO_SETTING = { sample_rate: 44100, bitrate: 256000, format: 'mp3' };
+const CALL_DELAY_MS = 5000; // gentle pacing between API calls
+
+// ---------- API plumbing ----------
+
+function getApiKey() {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    return cfg.api_key || null;
+  } catch (e) {
+    return null;
+  }
 }
 
-const MINIMAX_ENDPOINT = 'https://api.minimax.io/v1/music_generation';
-// The model on the platform is now "music-2.6" / "music-2.6-free". The legacy
-// "music-01" name returns "invalid params, cannot use music-02 params on
-// music-01 model" because the param names have changed.
-const DEFAULT_MODEL = 'music-2.6';
-// For instrumental tracks, the API still requires a `lyrics` field. Use
-// an empty instrumental section as a placeholder; the platform treats it
-// as a no-vocal track.
-const INSTRUMENTAL_LYRICS = '[Instrumental]';
+async function generateTrack(spec, apiKey) {
+  // Vocal tracks get the full lyrics (with structure tags). Instrumental
+  // tracks get the [Instrumental] marker, which music-2.6 interprets as
+  // "no vocals, just play the prompt."
+  const lyrics = spec.type === 'vocal' && spec.lyrics
+    ? spec.lyrics
+    : '[Instrumental]';
 
-async function generateTrack(spec) {
-  // MiniMax music-2.6 expects: model, prompt, lyrics, optional audio_setting.
   const body = {
-    model: DEFAULT_MODEL,
+    model: MODEL,
     prompt: spec.prompt,
-    lyrics: INSTRUMENTAL_LYRICS,
-    audio_setting: {
-      sample_rate: 44100,
-      bitrate: 256000,
-      format: 'mp3'
-    }
+    lyrics,
+    audio_setting: AUDIO_SETTING,
+    aigc_watermark: false,
   };
-
-  const res = await fetch(MINIMAX_ENDPOINT, {
+  const res = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${MINIMAX_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`MiniMax API error: ${res.status} ${err}`);
+  const text = await res.text();
+  if (res.status !== 200) {
+    throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
   }
-
-  const data = await res.json();
-  // The music-2.6 response shape is { data: { audio: "hex..." } } — the audio
-  // comes back as a hex-encoded string, not a URL. Handle both shapes in
-  // case the platform adds a URL variant.
-  if (data.data?.audio) {
-    const buffer = Buffer.from(data.data.audio, 'hex');
-    const outPath = path.resolve(OUTPUT_DIR, `${spec.id}.mp3`);
-    fs.writeFileSync(outPath, buffer);
-    console.log(`  ✓ ${spec.id} → ${outPath} (${(buffer.length / 1024).toFixed(1)} KB, hex audio)`);
-    return { id: spec.id, path: `/assets/soundtrack/${spec.id}.mp3`, spec };
+  const json = JSON.parse(text);
+  if (json.base_resp?.status_code && json.base_resp.status_code !== 0) {
+    throw new Error(`API error ${json.base_resp.status_code}: ${json.base_resp.status_msg}`);
   }
-  const audioUrl = data.data?.audio_url || data.audio_url;
-  if (!audioUrl) throw new Error('No audio in response: ' + JSON.stringify(data).slice(0, 200));
-  const audioRes = await fetch(audioUrl);
-  if (!audioRes.ok) throw new Error(`Failed to download audio: ${audioRes.status}`);
-  const buffer = Buffer.from(await audioRes.arrayBuffer());
-  const outPath = path.resolve(OUTPUT_DIR, `${spec.id}.mp3`);
-  fs.writeFileSync(outPath, buffer);
-  console.log(`  ✓ ${spec.id} → ${outPath} (${(buffer.length / 1024).toFixed(1)} KB)`);
-  return { id: spec.id, path: `/assets/soundtrack/${spec.id}.mp3`, spec };
+  const hex = json.data?.audio;
+  if (!hex) throw new Error('No audio field in response');
+  return Buffer.from(hex, 'hex');
 }
 
-async function main() {
-  if (!fs.existsSync(MANIFEST_PATH)) {
-    console.error(`Manifest not found: ${MANIFEST_PATH}`);
-    process.exit(1);
-  }
-
-  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
-  
-  if (!fs.existsSync(OUTPUT_DIR)) {
-    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  }
-
-  console.log(`Generating ${manifest.length} soundtrack loops...`);
-
-  const results = [];
-  for (const spec of manifest) {
-    try {
-      const result = await generateTrack(spec);
-      results.push(result);
-      // Be nice to the API - longer delay for music
-      await new Promise(r => setTimeout(r, 3000));
-    } catch (err) {
-      console.error(`  ✗ ${spec.id} failed: ${err.message}`);
-    }
-  }
-
-  // Generate the index.js that the game imports
-  const indexContent = `// Auto-generated by generate-soundtrack.mjs
-// DO NOT EDIT DIRECTLY -- run the script to regenerate
-
-export const SOUNDTRACK = ${JSON.stringify(results, null, 2)};
-
-export const TRACK_MAP = {
-  spring: 'spring-warm',
-  summer: 'summer-dust',
-  autumn: 'autumn-harvest',
-  winter: 'winter-sparse',
-  show: 'show-circuit',
-  crisis: 'crisis',
-  legacy: 'legacy-moment',
-  ending: 'ending'
-};
-
-export function getTrackIdForSeason(season) {
-  const map = {
-    Spring: 'spring-warm',
-    Summer: 'summer-dust',
-    Autumn: 'autumn-harvest',
-    Fall: 'autumn-harvest',
-    Winter: 'winter-sparse'
-  };
-  return map[season] || 'spring-warm';
+function logStep(msg) {
+  console.log(`[${new Date().toISOString().slice(11, 19)}] ${msg}`);
 }
 
-export function getTrackUrl(trackId) {
-  const track = SOUNDTRACK.find(t => t.id === trackId);
-  return track?.path || null;
+// ---------- State ----------
+
+function loadState() {
+  try { return JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')); }
+  catch { return {}; }
 }
+function saveState(s) { fs.writeFileSync(STATE_PATH, JSON.stringify(s, null, 2)); }
+function hasAsset(id) { return fs.existsSync(path.join(OUTPUT_DIR, `${id}.mp3`)); }
+
+// ---------- Index writer ----------
+
+function writeIndex() {
+  const files = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.mp3'));
+  const map = {};
+  for (const f of files) {
+    const id = f.replace(/\.mp3$/, '');
+    map[id] = `/assets/soundtrack/${id}.mp3`;
+  }
+  const banner = '// AUTO-GENERATED by scripts/generate-soundtrack.mjs. Do not edit by hand.\n';
+  const body = `
+// Soundtrack track map. Each id is a mood/season; src/soundtrack.js calls
+// getAllTrackUrls() at startup to preload everything. Missing tracks are
+// skipped silently (the game runs without that mood's music).
+
+export const TRACKS = ${JSON.stringify(map, null, 2)};
 
 export function getAllTrackUrls() {
-  return SOUNDTRACK.reduce((acc, t) => { acc[t.id] = t.path; return acc; }, {});
+  return TRACKS;
 }
 `;
-
-  fs.writeFileSync(INDEX_PATH, indexContent);
-  console.log(`\n✓ Generated ${results.length} soundtrack loops`);
-  console.log(`✓ Wrote index to ${INDEX_PATH}`);
+  fs.writeFileSync(path.join(OUTPUT_DIR, 'index.js'), banner + body);
+  logStep(`Wrote index.js with ${files.length} entries`);
 }
 
-main();
+// ---------- Main ----------
+
+async function main() {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.error(`No API key found at ${CONFIG_PATH}. Run: mmx auth login --api-key <subscription-key>`);
+    process.exit(1);
+  }
+  logStep(`Using key ${apiKey.slice(0, 6)}...${apiKey.slice(-4)}`);
+
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+  const state = loadState();
+
+  const queue = manifest.filter(spec => {
+    if (ONLY_IDS && !ONLY_IDS.has(spec.id)) return false;
+    if (RESUME && hasAsset(spec.id)) return false;
+    return true;
+  });
+
+  if (DRY_RUN) {
+    console.log(`Would generate ${queue.length} of ${manifest.length} tracks:`);
+    for (const s of queue) console.log(`  - ${s.id} (${s.style || ''})`);
+    return;
+  }
+
+  logStep(`Generating ${queue.length} tracks (resume=${RESUME})`);
+
+  for (const spec of queue) {
+    logStep(`--- ${spec.id} (${spec.style || ''}) ---`);
+    try {
+      const bytes = await generateTrack(spec, apiKey);
+      const outPath = path.join(OUTPUT_DIR, `${spec.id}.mp3`);
+      fs.writeFileSync(outPath, bytes);
+      state[spec.id] = { status: 'completed', bytes: bytes.length, completed_at: Date.now() };
+      saveState(state);
+      logStep(`  saved ${spec.id}.mp3 (${bytes.length} bytes)`);
+      // Gentle pacing between calls.
+      if (spec !== queue[queue.length - 1]) {
+        await new Promise(r => setTimeout(r, CALL_DELAY_MS));
+      }
+    } catch (err) {
+      logStep(`  ERROR: ${err.message}`);
+      state[spec.id] = { status: 'failed', error: err.message };
+      saveState(state);
+    }
+  }
+
+  writeIndex();
+  logStep('Done.');
+}
+
+main().catch(err => { console.error(err); process.exit(1); });

@@ -1,0 +1,25 @@
+# Local state files for asset generators (PixelLab character IDs, status,
+# cached download URLs, generation progress). Re-runnable; safe to delete
+# and rebuild by re-running the corresponding generator with --resume.
+scripts/.pixellab-state.json
+scripts/.idle-state.json
+scripts/.soundtrack-state.json
+
+# Legacy portrait set kept aside for reference after the breed-specific
+# generation superseded it. Not loaded by the game.
+assets/horses/_legacy_breed_agnostic/
+
+# Temporary PixelLab API key file (session-local, never commit).
+/tmp/pixellab/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getLifeStage, isTrainable, canCompete, tickYear, makeFoal, inheritTraits, seedTraits, INHERITABLE_TRAITS, LIFE_STAGES } from '../src/horse.js';
+import { getLifeStage, isTrainable, canCompete, tickYear, makeFoal, inheritTraits, seedTraits, INHERITABLE_TRAITS, LIFE_STAGES, liveMoodFor, moodFor } from '../src/horse.js';
 
 test('foals and weanlings cannot be trained', () => {
   const foal = { age: 0, traits: seedTraits() };
@@ -74,4 +74,34 @@ test('makeFoal records both parents and 0 age', () => {
   assert.equal(foal.age, 0);
   assert.deepEqual(foal.parents, ['s', 'd']);
   assert.equal(foal.sex, 'female');
+});
+
+test('liveMoodFor returns the soul mood for a healthy, low-stress horse', () => {
+  const calm = { temperament: 'Quiet, willing, asks little and gives much', stress: 20, health: 80, training: 30 };
+  assert.equal(liveMoodFor(calm), 'calm');
+  const proud = { temperament: 'Bold, opinionated, the boss of every pasture', stress: 25, health: 85, training: 50 };
+  assert.equal(liveMoodFor(proud), 'proud');
+  const intense = { temperament: 'Storm-nervous, handler-loyal, explosive in the turn', stress: 30, health: 80, training: 40 };
+  assert.equal(liveMoodFor(intense), 'intense');
+});
+
+test('liveMoodFor overrides to intense under crisis (high stress or low health)', () => {
+  // Soul is calm but the horse is visibly struggling.
+  const sickCalm = { temperament: 'Quiet, willing, asks little and gives much', stress: 30, health: 30, training: 20 };
+  assert.equal(liveMoodFor(sickCalm), 'intense');
+  const stressedProud = { temperament: 'Bold, opinionated, the boss of every pasture', stress: 85, health: 70, training: 50 };
+  assert.equal(liveMoodFor(stressedProud), 'intense');
+});
+
+test('liveMoodFor lifts calm soul to proud under high training', () => {
+  // A calm horse that's been worked hard reads as proud — they're thriving.
+  const workingCalm = { temperament: 'Quiet, willing, asks little and gives much', stress: 30, health: 85, training: 85 };
+  assert.equal(liveMoodFor(workingCalm), 'proud');
+});
+
+test('liveMoodFor handles missing or partial state gracefully', () => {
+  assert.equal(liveMoodFor(null), 'calm');
+  assert.equal(liveMoodFor({ temperament: 'unknown' }), 'calm');
+  // Missing stress/health/training default to safe midpoints — no crash.
+  assert.ok(['calm', 'intense', 'proud'].includes(liveMoodFor({ temperament: 'Quiet, willing, asks little and gives much' })));
 });

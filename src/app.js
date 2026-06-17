@@ -18,7 +18,7 @@ import {
   suggestFilename,
 } from './dynasty.js';
 import { silhouetteFor, ribbonFor } from './silhouettes.js';
-import { preloadPortraits, renderPortrait, getPortraitForHorse } from './portraits.js';
+import { preloadPortraits, renderPortrait, getPortraitForHorse, startIdleAnimation } from './portraits.js';
 import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtrackVolume, stopSoundtrack } from './soundtrack.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
@@ -32,6 +32,9 @@ let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, 
 
 // Preload portraits on startup
 preloadPortraits().catch(() => {});
+// Start the rest-idle animation cycle after portraits are preloaded.
+// This is a no-op if /assets/horses/animations/index.js isn't generated yet.
+startIdleAnimation().catch(() => {});
 
 // Initialize soundtrack on first user gesture (handled by audio.resume in playForOutcome)
 let soundtrackInitialized = false;
@@ -121,18 +124,33 @@ function renderLineagePanel() {
     <div class="lineage">
       <div class="lineage-block lineage-block--self">
         <p class="eyebrow">Selected</p>
-        <strong>${escapeHtml(model.horse.name)}</strong>
-        <small>age ${model.horse.age} · ${escapeHtml(model.horse.role)}</small>
+        <div class="lineage-row">
+          ${renderPortrait(model.horse, { size: 'md' })}
+          <div>
+            <strong>${escapeHtml(model.horse.name)}</strong>
+            <small>age ${model.horse.age} · ${escapeHtml(model.horse.role)}</small>
+          </div>
+        </div>
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Parents</p>
         ${model.parents.length === 0 ? '<p class="hint">No recorded parents.</p>' :
-          model.parents.map((p) => `<button class="lineage-link" data-select-horse="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`).join('')}
+          model.parents.map((p) => `
+            <div class="lineage-row lineage-row--link">
+              ${renderPortrait(p, { size: 'sm' })}
+              <button class="lineage-link" data-select-horse="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>
+            </div>
+          `).join('')}
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Offspring</p>
         ${model.offspring.length === 0 ? '<p class="hint">No offspring yet.</p>' :
-          model.offspring.map((o) => `<button class="lineage-link" data-select-horse="${escapeHtml(o.id)}">${escapeHtml(o.name)} · age ${o.age}</button>`).join('')}
+          model.offspring.map((o) => `
+            <div class="lineage-row lineage-row--link">
+              ${renderPortrait(o, { size: 'sm' })}
+              <button class="lineage-link" data-select-horse="${escapeHtml(o.id)}">${escapeHtml(o.name)} · age ${o.age}</button>
+            </div>
+          `).join('')}
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Traits</p>
@@ -144,10 +162,17 @@ function renderLineagePanel() {
 
 function renderLastShowResult(result) {
   const tone = result.result === 'champion' ? 'verdict--good' : result.result === 'also-ran' ? 'verdict--over' : '';
+  // Find the horse object so we can render its portrait. Fall back to
+  // name-only if the horse has left the herd (e.g. died, sold).
+  const horse = game.horses.find((h) => h.id === result.horseId || h.name === result.horseName);
+  const portrait = horse ? renderPortrait(horse, { size: 'md' }) : '';
   return `
     <div class="verdict ${tone}" style="margin-top: 14px;">
-      <strong>${escapeHtml(result.horseName)} · #${result.playerPlace}</strong>
-      <span>${escapeHtml(result.show.title)} · score ${result.playerScore} · payout $${result.payout.toLocaleString()}</span>
+      ${portrait}
+      <div class="verdict-body">
+        <strong>${escapeHtml(result.horseName)} · #${result.playerPlace}</strong>
+        <span>${escapeHtml(result.show.title)} · score ${result.playerScore} · payout $${result.payout.toLocaleString()}</span>
+      </div>
     </div>
   `;
 }
@@ -271,7 +296,15 @@ function renderEnding(model) {
       ${top.length > 0 ? `
         <p class="ending-horses-label">Top horses</p>
         <ul class="ending-horses">
-          ${top.map((h) => `<li><strong>${escapeHtml(h.name)}</strong> · ${escapeHtml(h.role)} · training ${h.training} · $${(h.value ?? 0).toLocaleString()}</li>`).join('')}
+          ${top.map((h) => `
+            <li class="ending-horse">
+              ${renderPortrait(h, { size: 'lg' })}
+              <div class="ending-horse-body">
+                <strong>${escapeHtml(h.name)}</strong>
+                <span>${escapeHtml(h.role)} · training ${h.training} · $${(h.value ?? 0).toLocaleString()}</span>
+              </div>
+            </li>
+          `).join('')}
         </ul>
       ` : ''}
       <div class="ending-actions">
@@ -284,9 +317,18 @@ function renderEnding(model) {
 
 function renderBreedingPanel() {
   if (game.pendingBreeding) {
+    // Look up the parents in the current herd to show their portraits.
+    // If they've left the herd (sold, died), fall back to name-only.
+    const sire = game.horses.find((h) => h.id === game.pendingBreeding.sireId);
+    const dam = game.horses.find((h) => h.id === game.pendingBreeding.damId);
     return `
       <section class="panel">
         <p class="eyebrow">Pending breeding</p>
+        <div class="breed-pending">
+          ${sire ? renderPortrait(sire, { size: 'lg' }) : '<div class="horse-portrait horse-portrait--lg"></div>'}
+          <span class="breed-x">×</span>
+          ${dam ? renderPortrait(dam, { size: 'lg' }) : '<div class="horse-portrait horse-portrait--lg"></div>'}
+        </div>
         <h2>${escapeHtml(game.pendingBreeding.sireName)} × ${escapeHtml(game.pendingBreeding.damName)}</h2>
         <p class="hint">Foal due in ${Math.max(0, game.pendingBreeding.dueDay - game.day)} in-game days.</p>
       </section>
@@ -303,6 +345,7 @@ function renderBreedingPanel() {
             ${game.horses.filter((h) => h.sex === 'male' && h.age >= 4 && h.age <= 12).map((h) => `<option value="${escapeHtml(h.id)}">${escapeHtml(h.name)} · age ${h.age}</option>`).join('')}
           </select>
         </label>
+        <span class="breed-x">×</span>
         <label>
           Mare
           <select name="breed-dam">
@@ -323,6 +366,14 @@ function renderAuctionPreview() {
   return `
     <section class="panel">
       <p class="eyebrow">Auction preview for ${escapeHtml(horse.name)}</p>
+      <div class="auction-head">
+        ${renderPortrait(horse, { size: 'lg' })}
+        <div class="auction-body">
+          <strong>${escapeHtml(horse.name)}</strong>
+          <small>${escapeHtml(horse.role)} · age ${horse.age} · ${escapeHtml(horse.bloodline)}</small>
+          <small>Training ${horse.training} · bond ${horse.bond} · $${(horse.value ?? 0).toLocaleString()}</small>
+        </div>
+      </div>
       <ul>
         ${result.allBids.map((b) => `<li><strong>${escapeHtml(b.name)}</strong> · $${b.offer.toLocaleString()}${b === result.topBid ? ' · top bid' : ''}</li>`).join('')}
       </ul>
@@ -609,6 +660,15 @@ function render() {
   }
 
   bindEvents();
+
+  // Tint the page atmosphere by season — visual reinforcement of the
+  // soundtrack swap. Spring = pollen haze, summer = warm gold, autumn =
+  // amber dust, winter = cold blue. Each is a subtle radial wash so
+  // the cards still read clearly.
+  const seasonClass = `season-${currentSeason}`;
+  if (document.body.className !== seasonClass) {
+    document.body.className = seasonClass;
+  }
 
   // Update the snapshot for the next render
   lastRendered = {

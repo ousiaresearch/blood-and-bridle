@@ -3,7 +3,7 @@
 // Pure simulation. No DOM. No localStorage. Every action is a pure function
 // from (game, action) -> game. State is never mutated; new state is returned.
 
-import { tickYear, getLifeStage, isTrainable, canCompete, clamp, seedTraits, ROLE_POOL, BLOODLINE_POOL, TEMPERAMENT_POOL, INHERITABLE_TRAITS, TRAIT_KEYS } from './horse.js';
+import { tickYear, getLifeStage, isTrainable, canCompete, clamp, seedTraits, ROLE_POOL, BLOODLINE_POOL, TEMPERAMENT_POOL, INHERITABLE_TRAITS, TRAIT_KEYS, moodFor } from './horse.js';
 import { getSeason, getYear, getDayOfSeason, isSeasonBoundary, isYearBoundary, DAYS_PER_SEASON, getSeasonalCostMultiplier } from './seasons.js';
 import { tickEvents, resolveEvent } from './events.js';
 import { queueBreeding, deliverFoals } from './breeding.js';
@@ -36,9 +36,12 @@ function pickName(pool, used, sex) {
   return `${prefix} ${Math.floor(Math.random() * 1000)}`;
 }
 
-function createHorse({ id, name, sex, age, role, bloodline, temperament, training, bond, health, stress, value, injured = false }) {
+function createHorse({ id, name, sex, age, role, bloodline, temperament, training, bond, health, stress, value, injured = false, breed = 'quarter_horse' }) {
   return {
     id, name, sex, age, role, bloodline, temperament,
+    breed,
+    lifeStageId: getLifeStage({ age })?.id ?? 'dead',
+    mood: moodFor(temperament),
     training, bond, health, stress, value, injured,
     traits: seedTraits(),
     parents: [],
@@ -49,11 +52,11 @@ function createHorse({ id, name, sex, age, role, bloodline, temperament, trainin
 export function createNewGame() {
   const usedNames = new Set();
   const seed = [
-    { id: 'blue-ash',     sex: 'female', age: 6,  role: 'Reining mare',  bloodline: 'Cedar King x Ashfall Lady',  temperament: 'Storm-nervous, handler-loyal, explosive in the turn', training: 62, bond: 46, health: 84, stress: 22, value: 38000 },
-    { id: 'mercy-road',   sex: 'male',   age: 9,  role: 'Ranch gelding', bloodline: 'Old Quarter working line',  temperament: 'Steady, forgiving, suspicious of strangers',         training: 74, bond: 68, health: 71, stress: 18, value: 22000 },
-    { id: 'juniper-smoke',sex: 'female', age: 3,  role: 'Prospect filly',bloodline: 'Smoke Signal x Juniper Belle',temperament: 'Curious, clever, too smart for sloppy hands',         training: 31, bond: 28, health: 93, stress: 30, value: 14000 },
-    { id: 'red-ledger',   sex: 'female', age: 11, role: 'Broodmare',     bloodline: 'Ledger Creek foundation mare',temperament: 'Dominant, protective, throws calm foals',              training: 55, bond: 52, health: 66, stress: 24, value: 26000 },
-    { id: 'sunday-caller',sex: 'male',   age: 2,  role: 'Unstarted colt',bloodline: 'Caller ID x Sunday Chapel',  temperament: 'Hot, brilliant, not yet convinced humans matter',     training: 18, bond: 14, health: 88, stress: 37, value: 9000  },
+    { id: 'blue-ash',     sex: 'female', age: 6,  role: 'Reining mare',  bloodline: 'Cedar King x Ashfall Lady',  temperament: 'Storm-nervous, handler-loyal, explosive in the turn', training: 62, bond: 46, health: 84, stress: 22, value: 38000, breed: 'quarter_horse' },
+    { id: 'mercy-road',   sex: 'male',   age: 9,  role: 'Ranch gelding', bloodline: 'Old Quarter working line',  temperament: 'Steady, forgiving, suspicious of strangers',         training: 74, bond: 68, health: 71, stress: 18, value: 22000, breed: 'quarter_horse' },
+    { id: 'juniper-smoke',sex: 'female', age: 3,  role: 'Prospect filly',bloodline: 'Smoke Signal x Juniper Belle',temperament: 'Curious, clever, too smart for sloppy hands',         training: 31, bond: 28, health: 93, stress: 30, value: 14000, breed: 'quarter_horse' },
+    { id: 'red-ledger',   sex: 'female', age: 11, role: 'Broodmare',     bloodline: 'Ledger Creek foundation mare',temperament: 'Dominant, protective, throws calm foals',              training: 55, bond: 52, health: 66, stress: 24, value: 26000, breed: 'quarter_horse' },
+    { id: 'sunday-caller',sex: 'male',   age: 2,  role: 'Unstarted colt',bloodline: 'Caller ID x Sunday Chapel',  temperament: 'Hot, brilliant, not yet convinced humans matter',     training: 18, bond: 14, health: 88, stress: 37, value: 9000,  breed: 'quarter_horse' },
   ];
 
   const horses = seed.map((s) => {

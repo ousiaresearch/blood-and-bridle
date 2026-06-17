@@ -1,50 +1,128 @@
 [
   {
     "id": "spring-warm",
+    "type": "instrumental",
     "prompt": "Neo-Western ambient loop, early spring on a Pacific Northwest horse ranch. Gentle acoustic guitar fingerpicking, warm cello drone, distant meadowlark calls. Slow tempo (60 BPM), 3/4 time, tender and hopeful. The feeling of frost breaking, green shoots pushing through. Seamless loop for game background.",
     "style": "neo-western, ambient, acoustic, pastoral",
     "duration": 45
   },
   {
     "id": "summer-dust",
+    "type": "instrumental",
     "prompt": "Neo-Western ambient loop, high summer on a dusty ranch. Slow slide guitar in open D, low drone of cello and harmonium, heat shimmer in the sound. Tempo 55 BPM, spacious, tension underneath the calm. The feeling of long days, hard work, something coming. Seamless loop.",
     "style": "neo-western, ambient, slide guitar, tense",
     "duration": 50
   },
   {
     "id": "autumn-harvest",
+    "type": "instrumental",
     "prompt": "Neo-Western ambient loop, autumn harvest on the ranch. Full warm sound - acoustic guitar, mandolin tremolo, rich cello, subtle fiddle drone. Tempo 65 BPM, 4/4, bittersweet richness. The feeling of barns full, horses fat, winter coming but not here yet. Seamless loop.",
     "style": "neo-western, ambient, folk, bittersweet",
     "duration": 45
   },
   {
     "id": "winter-sparse",
+    "type": "instrumental",
     "prompt": "Neo-Western ambient loop, deep winter on a quiet ranch. Minimal piano, sparse harmonics, long silences, a single cello note held until it fades. Tempo free, rubato. The feeling of snow muffling everything, horses breathing steam, the ranch waiting. Seamless loop.",
     "style": "neo-western, ambient, minimal, cold",
     "duration": 40
   },
   {
     "id": "show-circuit",
+    "type": "instrumental",
     "prompt": "Neo-Western driving loop, the show circuit. Rhythmic acoustic guitar strum, steady kick drum heartbeat, bass line that walks, mandolin chop on the off-beats. Tempo 110 BPM, driving but not frantic. The feeling of arena lights, the gate opening, focus narrowing. Seamless loop.",
     "style": "neo-western, rhythmic, driving, competitive",
     "duration": 40
   },
   {
     "id": "crisis",
+    "type": "instrumental",
     "prompt": "Neo-Western tension loop, crisis at the ranch. Dissonant piano clusters, low cello tremolo, uneasy harmonium drone, no clear rhythm. Slow building tension, the feeling of a fence line burning, a lawsuit landing, a horse going lame. Seamless loop.",
     "style": "neo-western, tension, dissonant, ominous",
     "duration": 35
   },
   {
     "id": "legacy-moment",
+    "type": "instrumental",
     "prompt": "Neo-Western emotional loop, a legacy moment. Slow piano melody, warm cello counter-melody, subtle pedal steel swell. Tempo 50 BPM, spacious, emotional weight without melodrama. The feeling of a foal hitting the ground, a champion retiring, a handshake that means everything. Seamless loop.",
     "style": "neo-western, emotional, piano, cello, pedal steel",
     "duration": 50
   },
   {
     "id": "ending",
+    "type": "instrumental",
     "prompt": "Neo-Western resolution loop, the ending of a legacy. Warm decay - piano chords fading, cello held note slowly diminishing, last guitar harmonic ringing out. Tempo free, resolving. The feeling of the gate closing on the last season, the dust settling, peace. Seamless loop.",
     "style": "neo-western, resolution, warm decay, final",
     "duration": 45
+  },
+  {
+    "id": "dawn-camp",
+    "type": "instrumental",
+    "prompt": "Outlaw country instrumental, dawn on the high line. Sparse fingerpicked acoustic guitar in open G, the clink of a tin coffee cup, a single train whistle far off. Tempo 58 BPM, 4/4, easy and weathered. Colter Wall feel without vocals — just the guitar and the morning. Seamless loop.",
+    "style": "outlaw, fingerpicked, sparse, dawn",
+    "duration": 45
+  },
+  {
+    "id": "trail-ride",
+    "type": "instrumental",
+    "prompt": "Outlaw country instrumental, mid-tempo trail ride. Steady fingerpicked guitar with a light brush-style snare pattern, walking bass, occasional harmonica wail. Tempo 88 BPM, 4/4, the rhythm of a horse at a long trot across open country. Zach Bryan energy without words. Seamless loop.",
+    "style": "outlaw, fingerpicked, brush snare, walking",
+    "duration": 50
+  },
+  {
+    "id": "storm-coming",
+    "type": "instrumental",
+    "prompt": "Cinematic Western instrumental, storm rolling in. Low piano ostinato, swelling cello tremolo, bowed bass, distant timpani thunder. Tempo rubato, building slowly. The feeling of weather you can't outrun, the whole sky going dark. Yellowstone title-card energy, no vocals. Seamless loop.",
+    "style": "cinematic, western, swelling, ominous",
+    "duration": 50
+  },
+  {
+    "id": "campfire",
+    "type": "instrumental",
+    "prompt": "Outlaw country instrumental, campfire scene. Fingerpicked acoustic guitar with a slight bottleneck lead, soft harmonium pad underneath, the crackle and pop of pine resin in the air. Tempo 62 BPM, 3/4 time, intimate porch-after-work feel. Colter Wall after-hours, no vocals. Seamless loop.",
+    "style": "outlaw, fingerpicked, intimate, harmonium",
+    "duration": 50
+  },
+  {
+    "id": "cedar-and-bone",
+    "type": "vocal",
+    "prompt": "Outlaw country song in the style of Colter Wall. Deep baritone male vocal, sparse fingerpicked acoustic guitar in open D, low brushed snare, slow tempo (58 BPM), 3/4 time. Dusty Western folk, mournful and dignified, no fiddle, no drums except a soft brush pattern. The song should feel like a rancher alone in a cedar forest at dusk.",
+    "style": "colter wall, outlaw, baritone, fingerpicked",
+    "lyrics": "[Intro]\n\n[Verse]\nI know every fence post by the rot\nI know every cedar by the knot\nI know where the creek goes underground\nAnd I know the bones beneath the ground\n\n[Chorus]\nCedar and bone, dust and stone\nI built this place with calloused hands\nCedar and bone, I'm not alone\nThe land remembers who I am\n\n[Verse]\nThe horses drink at first light\nThe mares are heavy, the colts are tight\nThe bank's been calling since the fall\nBut I don't answer, not at all\n\n[Chorus]\nCedar and bone, dust and stone\nI built this place with calloused hands\nCedar and bone, I'm not alone\nThe land remembers who I am\n\n[Outro]\n[Inst]"
+  },
+  {
+    "id": "twelve-horses",
+    "type": "vocal",
+    "prompt": "Outlaw country song in the style of Zach Bryan. Raw emotional male vocal with slight rasp, fingerpicked acoustic guitar, light drums, walking bass, tempo 78 BPM, 4/4 time. Storytelling country, each verse names a horse, the chorus counts them. The song should feel like a working rancher at the kitchen table, slightly hoarse, slightly drunk, deeply sincere.",
+    "style": "zach bryan, outlaw, storytelling, emotional",
+    "lyrics": "[Intro]\n\n[Verse]\nThere's Blue Ash, she turns on a dime\nThere's Mercy Road, he's done with his time\nThere's Juniper Smoke with her dam's clever eye\nTwelve horses under a low Western sky\n\n[Chorus]\nTwelve horses, twelve names I know by heart\nTwelve horses, and I'll keep every part\nSome for the cutting, some for the show\nTwelve horses, and the work moves slow\n\n[Verse]\nThere's Red Ledger, she's the queen of the band\nThere's Sunday Caller, never been handled by hand\nI feed them at five when the stars are still lit\nI check every fence and I mend every bit\n\n[Chorus]\nTwelve horses, twelve names I know by heart\nTwelve horses, and I'll keep every part\nSome for the cutting, some for the show\nTwelve horses, and the work moves slow\n\n[Bridge]\nThe young ones grow and the old ones rest\nThe mares in the foaling barn are doing their best\nThe whole operation runs on a feed bucket and a prayer\nBut the horses are breathing, and I'm breathing the air\n\n[Outro]\n[Inst]"
+  },
+  {
+    "id": "the-last-foal",
+    "type": "vocal",
+    "prompt": "Outlaw country ballad in the style of Colter Wall. Deep baritone male vocal, sparse fingerpicked acoustic guitar, very minimal arrangement, no drums. Slow tempo (52 BPM), 3/4 time, mournful and tender. The song should feel like sitting in a foaling barn at 3am with a mare you love, knowing it's her last time.",
+    "style": "colter wall, ballad, baritone, foaling barn",
+    "lyrics": "[Intro]\n\n[Verse]\nShe's thirteen, this mare I'm talking about\nSixteen hands and her teeth wearing out\nThe vet said it's time, the insurance won't pay\nBut she nuzzles my hand like she has something to say\n\n[Chorus]\nIt's her last foal, born in the spring rain\nIt's her last foal, born with a stain\nOf her mother's mother, and her mother's mother before\nIt's her last foal, and there won't be any more\n\n[Verse]\nThe stallion is gentle, the labor is long\nI sit with her in the straw, humming a song\nShe pushes and rises and the foal finds the teat\nAnd I weep in the barn with the dirt on my feet\n\n[Chorus]\nIt's her last foal, born in the spring rain\nIt's her last foal, born with a stain\nOf her mother's mother, and her mother's mother before\nIt's her last foal, and there won't be any more\n\n[Outro]\n[Inst]"
+  },
+  {
+    "id": "hay-and-hunger",
+    "type": "vocal",
+    "prompt": "Outlaw country song, working cowboy stoicism. Mid-range male vocal with slight gravel, fingerpicked acoustic guitar with a steady bass drum heartbeat, brushed snare. Tempo 72 BPM, 4/4 time. The song should feel like a man who's been awake since four, who has fed the horses before himself, who doesn't complain because complaining doesn't feed anyone. Townes Van Zandt meets modern outlaw.",
+    "style": "outlaw, stoic, working cowboy, townes van zandt",
+    "lyrics": "[Intro]\n\n[Verse]\nI drove forty miles for a load of hay\nThe price was up, the seller's face was gray\nHe said the drought's been hard on every man\nI said I know, brother, I know where I am\n\n[Chorus]\nHay and hunger, dust and rain\nThe work don't stop for the body's pain\nHay and hunger, hay and hunger\nSome seasons give and some pull you under\n\n[Verse]\nThe horses are hungry and so are we\nThe wife makes coffee, the kids sleep free\nThe barn is empty and the well runs low\nI pray for weather I can't control\n\n[Chorus]\nHay and hunger, dust and rain\nThe work don't stop for the body's pain\nHay and hunger, hay and hunger\nSome seasons give and some pull you under\n\n[Outro]\n[Inst]"
+  },
+  {
+    "id": "ashes-of-the-brand",
+    "type": "vocal",
+    "prompt": "Outlaw country song, slow ballad about loss. Deep male vocal with weight, piano and cello led arrangement, sparse acoustic guitar, brushed snare, slow tempo (55 BPM), 3/4 time. The song should feel like standing in the ashes of what your grandfather built, deciding whether to rebuild or walk away. Yellowstone end-of-season ballad energy.",
+    "style": "outlaw, ballad, piano cello, loss",
+    "lyrics": "[Intro]\n\n[Verse]\nThe brand in the wood is a hundred years old\nMy grandfather's hand, my father's to hold\nThe fire took the barn and the hay and the grain\nBut the brand is still there in the blackened rain\n\n[Chorus]\nAshes of the brand, ashes of the brand\nThe iron is cold, the iron is cold\nAshes of the brand, ashes of the brand\nThe ranch is gone but the name is still told\n\n[Verse]\nThe horses ran loose in the smoke and the heat\nThe neighbors came running with nothing but feet\nWe found them at dawn in a draw by the creek\nThe brand on their shoulders was all that we'd speak\n\n[Chorus]\nAshes of the brand, ashes of the brand\nThe iron is cold, the iron is cold\nAshes of the brand, ashes of the brand\nThe ranch is gone but the name is still told\n\n[Outro]\n[Inst]"
+  },
+  {
+    "id": "hand-on-the-mane",
+    "type": "vocal",
+    "prompt": "Country waltz, female vocal lead, intimate and tender. Warm alto voice, fingerpicked acoustic guitar, soft piano, brushed snare, slow tempo (68 BPM), 3/4 time. The song should feel like a woman who knows horses better than people, standing in a quiet barn at dusk, telling the mare what she can't tell anyone else. Lainey Wilson energy, no pedal steel, just guitar and piano.",
+    "style": "country, female vocal, waltz, intimate",
+    "lyrics": "[Intro]\n\n[Verse]\nI put my hand on the mane of a horse\nAnd I tell her all the things I can't tell him\nThe weather and the worry and the worry about the weather\nThe bank and the fence and the slow burning together\n\n[Chorus]\nHand on the mane, hand on the mane\nShe breathes and I breathe and we breathe the same\nHand on the mane, hand on the mane\nShe carries me through the hardest days\n\n[Verse]\nShe knows when I'm lying, she knows when I'm true\nShe knows that the work is the thing we must do\nShe turns her head and her eye meets mine\nAnd I see the whole of her, the whole of her line\n\n[Chorus]\nHand on the mane, hand on the mane\nShe breathes and I breathe and we breathe the same\nHand on the mane, hand on the mane\nShe carries me through the hardest days\n\n[Outro]\n[Inst]"
   }
 ]
