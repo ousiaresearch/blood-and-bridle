@@ -13,7 +13,7 @@ test('new game opens with six horses (5 seed + legendary), staff, three parcels,
   assert.equal(game.horses.length, 6);
   assert.ok(game.horses.some((h) => h.legendary), 'expected a legendary horse in the herd');
   assert.equal(game.staff.length >= 3, true);
-  assert.equal(game.parcels.length, 3);
+  assert.equal(game.parcels.length, 7);
   assert.ok(game.crisis.title);
 });
 

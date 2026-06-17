@@ -47,7 +47,7 @@ test('dashboard model exposes hero metrics, horses, staff, parcels, NPCs, rivals
   assert.equal(model.metrics[3].value, '$18,500');
   assert.equal(model.horses.length, 6);
   assert.equal(model.staff.length >= 3, true);
-  assert.equal(model.parcels.length, 3);
+  assert.equal(model.parcels.length, 7);
   assert.equal(model.npcs.length >= 5, true);
   assert.equal(model.rivals.length >= 2, true);
   assert.equal(model.actions.some((action) => action.type === 'train'), true);

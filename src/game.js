@@ -19,6 +19,7 @@ import { generateLegendaryHorse, findLegendary, maybeBondLegendary, applyLegenda
 import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
+import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, IMPROVEMENT_COSTS } from './parcels.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -86,11 +87,30 @@ export function createNewGame() {
       { id: 'eli', name: 'Eli Rusk', role: 'Ranch hand', skill: 6, loyalty: 58, note: 'Knows every fence line and every debt rumor.' },
       { id: 'dr-voss', name: 'Dr. Voss', role: 'Veterinarian', skill: 8, loyalty: 63, note: 'Expensive, honest, worth it when legs are at stake.' },
     ],
-    parcels: [
-      { id: 'west-meadow', name: 'West Meadow', x: 0, y: 1, forage: 58, water: 71, threat: 'Resort parcel offer' },
-      { id: 'cedar-draw',  name: 'Cedar Draw',  x: 1, y: 2, forage: 63, water: 48, threat: 'Drought line creeping east' },
-      { id: 'home-place',  name: 'Home Place',  x: 1, y: 1, forage: 70, water: 70, threat: '—' },
-    ],
+    // Seven parcels: 6 working parcels + west-meadow, which the developer
+    // wants to buy. West-meadow is a regular parcel the player owns; the
+    // developer's offer is on the table but unsigned.
+    parcels: createInitialParcels().concat([
+      {
+        id: 'west-meadow',
+        name: 'West Meadow',
+        x: 0, y: 1,
+        acres: 240,
+        forage: 58,
+        water: 71,
+        threat: 'Resort parcel offer',
+        terrain: TERRAIN.PASTURE,
+        state: PARCEL_STATE.DEFAULT,
+        improvement: null,
+        hazard: 'drought',
+        feedCapacity: 8,
+        riskModifier: 0.9,
+        leased: false,
+        offLimits: false,
+        monthlyFee: 0,
+        developerOffer: 50000,
+      },
+    ]),
     ranchUpgrades: {
       arena: 0,
       vet_clinic: 0,
@@ -411,6 +431,15 @@ export function applyAction(game, action) {
       working = dailyUpkeep(working, working.log[0] ?? 'Parcel decision recorded.');
       break;
     }
+    case 'improveParcel': {
+      const { parcelId, improvement } = action;
+      const newParcels = applyParcelImprovement(working.parcels, parcelId, improvement, working.cash);
+      const def = IMPROVEMENT_COSTS[improvement];
+      working.parcels = newParcels;
+      working.cash -= def.cash;
+      working = dailyUpkeep(working, `${def.label}. The land remembers.`);
+      break;
+    }
     case 'dismissTutorial': {
       working = dismissTutorial(working);
       break;
@@ -440,10 +469,7 @@ export function buyAvailableParcel(game, parcelDef) {
   return {
     ...game,
     cash: game.cash - parcelDef.price,
-    parcels: [
-      ...game.parcels,
-      { id: parcelDef.id, name: parcelDef.name, x: parcelDef.x, y: parcelDef.y, forage: parcelDef.baseForage, water: parcelDef.baseWater, threat: parcelDef.threat },
-    ],
+    parcels: addParcelDef(game.parcels, parcelDef),
     log: [`Purchased ${parcelDef.name} for $${parcelDef.price.toLocaleString()}.`, ...game.log].slice(0, 20),
   };
 }
