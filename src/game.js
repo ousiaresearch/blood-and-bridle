@@ -19,7 +19,7 @@ import { generateLegendaryHorse, findLegendary, maybeBondLegendary, applyLegenda
 import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
-import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, IMPROVEMENT_COSTS } from './parcels.js';
+import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -212,11 +212,56 @@ function maybeFireSeasonal(game) {
 
     g = { ...g, horses, log: [...log, ...g.log].slice(0, 20), memorials: newMemorials.slice(-20) };
   }
-  // Season boundary: rivals, disasters, events, contracts
+  // Season boundary: rivals, disasters, parcel hazards, events, contracts
   if (isSeasonBoundary(g)) {
     g = tickRivals(g);
-    const { game: g2 } = rollDisaster(g);
+    const { disaster, game: g2 } = rollDisaster(g);
     g = g2;
+    // Parcel hazards: per-parcel terrain-driven. Weather severity is
+    // amplified when a global disaster of the same flavor fires
+    // (drought year, hard winter, etc.). Herd losses build memorials.
+    const weatherSeverity = disaster
+      ? (disaster.id === 'drought' ? 1.6 : disaster.id === 'flood' ? 1.4 : disaster.id === 'blizzard' ? 1.5 : 1.2)
+      : 1.0;
+    const season = getSeason(g);
+    const hazardResult = tickParcelHazards(g.parcels, g.horses, season, weatherSeverity);
+    g = { ...g, parcels: hazardResult.parcels };
+    // Apply cash cost
+    if (hazardResult.parcelCost > 0) {
+      g = { ...g, cash: g.cash - hazardResult.parcelCost };
+    }
+    // Apply injuries (health drop) — non-cumulative: injured horses
+    // get health -15 if not already injured.
+    if (hazardResult.injured.length > 0) {
+      const injuredIds = new Set(hazardResult.injured.map((h) => h.id));
+      g = {
+        ...g,
+        horses: g.horses.map((h) => injuredIds.has(h.id)
+          ? { ...h, injured: true, health: clamp(h.health - 15) }
+          : h),
+      };
+    }
+    // Apply deaths: build memorials, remove from herd.
+    if (hazardResult.killed.length > 0) {
+      const killedIds = new Set(hazardResult.killed.map((h) => h.id));
+      const newMemorials = [...(g.memorials ?? [])];
+      for (const h of g.horses) {
+        if (killedIds.has(h.id)) {
+          const memorial = buildMemorial(h, g, { kind: 'death', circumstance: hazardDeathCircumstance(h, g) });
+          if (memorial) newMemorials.push(memorial);
+        }
+      }
+      g = {
+        ...g,
+        horses: g.horses.filter((h) => !killedIds.has(h.id)),
+        memorials: newMemorials.slice(-20),
+        legacy: clamp(g.legacy - 4),
+      };
+    }
+    // Push log lines from parcel hazards and herd losses
+    if (hazardResult.parcelHazardLog.length > 0) {
+      g = { ...g, log: [...hazardResult.parcelHazardLog, ...g.log].slice(0, 20) };
+    }
     g = tickEvents(g);
     // Contract offer: every 30 days (which aligns with season boundaries)
     const offer = generateContractOffer(g);

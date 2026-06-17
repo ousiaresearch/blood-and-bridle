@@ -141,6 +141,48 @@ export const HAZARD_OUTCOME = Object.freeze({
   none:            { state: null,                             canceledBy: null         },
 });
 
+// Loss-effects per hazard outcome. Forage/water are mechanical. The
+// injury/death rolls are returns — caller applies them to the herd.
+// The cost is added to the season's expenses (Group F Phase 2.2 will
+// integrate this with the ledger).
+export const HAZARD_LOSS = Object.freeze({
+  flood: {
+    forageDelta: -100,    // flood wipes the bottom
+    waterDelta: 15,       // but the water table rises
+    injuryChance: 0.0,    // creek bottom has no horses in flood season
+    deathChance: 0.0,
+    cost: 1200,           // vet/clean-up
+  },
+  rock_fall: {
+    forageDelta: -8,      // rocks take out a corner of pasture
+    waterDelta: 0,
+    injuryChance: 0.12,   // one horse hurt by the slide
+    deathChance: 0.04,    // small chance of a horse lost
+    cost: 2400,           // vet/surgery/disposal
+  },
+  predator: {
+    forageDelta: -3,
+    waterDelta: 0,
+    injuryChance: 0.18,   // coyotes can tear up a horse
+    deathChance: 0.08,    // foals especially vulnerable (applied in caller)
+    cost: 1800,           // vet/preventive measures
+  },
+  drought: {
+    forageDelta: -22,     // grass goes brown to the root
+    waterDelta: -12,      // troughs go dry
+    injuryChance: 0.0,
+    deathChance: 0.0,
+    cost: 2400,           // buy hay at drought prices
+  },
+  none: {
+    forageDelta: 0,
+    waterDelta: 0,
+    injuryChance: 0,
+    deathChance: 0,
+    cost: 0,
+  },
+});
+
 // Build initial parcels array for a new game. Backward compatible with
 // the existing 3-parcel format (west-meadow is offered by the developer
 // and not in the initial set).
@@ -258,6 +300,8 @@ export function rollParcelHazard(parcel, season, weatherSeverity = 1) {
 }
 
 // Apply hazard outcomes to parcels. Takes an array of roll results.
+// Each result: { parcelId, hazard, outcome }. If outcome is null,
+// the parcel is left alone.
 export function applyParcelHazardOutcomes(parcels, outcomes) {
   let next = [...parcels];
   for (const o of outcomes) {
@@ -267,6 +311,148 @@ export function applyParcelHazardOutcomes(parcels, outcomes) {
     next[idx] = { ...next[idx], state: o.outcome };
   }
   return next;
+}
+
+// Apply a single hazard outcome to one parcel. Returns new parcels array.
+// forageDelta and waterDelta can be added to current values. Caller is
+// responsible for clamping.
+export function applyParcelLoss(parcels, parcelId, loss) {
+  const idx = parcels.findIndex((p) => p.id === parcelId);
+  if (idx < 0) return parcels;
+  const p = parcels[idx];
+  const next = [...parcels];
+  next[idx] = {
+    ...p,
+    forage: Math.max(0, Math.min(100, p.forage + (loss.forageDelta ?? 0))),
+    water: Math.max(0, Math.min(100, p.water + (loss.waterDelta ?? 0))),
+  };
+  return next;
+}
+
+// Roll injury/death outcomes for a herd given a hazard loss. Returns
+// { injured: horse[], killed: horse[], log: string[] }. Horses that
+// die are returned separately so the caller can build a memorial.
+//
+// Pure function. Does not mutate the herd. Caller applies deltas to
+// the herd and pushes memorials.
+//
+// Vulnerability modifier: foals are 2x vulnerable to predator (the
+// natural world is hard on the young). Campaigners/retirees are 1.5x
+// vulnerable to rock_fall (less sure-footed). Otherwise 1x.
+function rollHerdLoss(horses, loss, hazard) {
+  if (!loss || (loss.injuryChance === 0 && loss.deathChance === 0)) {
+    return { injured: [], killed: [], log: [] };
+  }
+  // Filter working horses (alive, not legendary) so we don't kill
+  // the picturebook horse.
+  const eligible = horses.filter((h) => !h.legendary);
+  if (eligible.length === 0) return { injured: [], killed: [], log: [] };
+
+  // Vulnerability per stage
+  const stageVuln = (horse) => {
+    if (hazard === 'predator') {
+      const stage = horse.lifeStage ?? horse.stage ?? null;
+      const age = horse.age ?? 0;
+      if (stage === 'foal' || age < 1) return 2.0;
+      if (stage === 'yearling' || age < 3) return 1.3;
+      return 1.0;
+    }
+    if (hazard === 'rock_fall') {
+      const age = horse.age ?? 0;
+      if (age >= 10) return 1.5;
+      return 1.0;
+    }
+    return 1.0;
+  };
+
+  const injured = [];
+  const killed = [];
+  const log = [];
+  for (const h of eligible) {
+    const v = stageVuln(h);
+    const deathRoll = Math.random();
+    if (deathRoll < loss.deathChance * v) {
+      killed.push(h);
+      log.push(`${h.name} did not come back from the ${hazard === 'rock_fall' ? 'ridge' : 'back forty'}.`);
+      continue;
+    }
+    const injRoll = Math.random();
+    if (injRoll < loss.injuryChance * v) {
+      injured.push(h);
+      log.push(`${h.name} came in hurt. The vet is on the way.`);
+    }
+  }
+  return { injured, killed, log };
+}
+
+// McCarthy-style circumstance line for a horse killed by a parcel hazard.
+// The land is the antagonist; the death is the consequence of choices.
+export function hazardDeathCircumstance(horse, game) {
+  // Look up the parcel context — what kind of land took the horse.
+  // Game doesn't track horse-to-parcel location yet, so we infer from
+  // the horse's stage: foals on the back-forty (scrub, predators);
+  // campaigners on the north-ridge (rock-fall).
+  const age = horse.age ?? 0;
+  const stage = horse.lifeStage ?? horse.stage ?? null;
+  if (stage === 'foal' || age < 1) {
+    return `Coyotes took ${horse.name} off the back forty. The fence was not high enough. The land remembers.`;
+  }
+  if (age >= 10) {
+    return `${horse.name} went down under the rock fall on the north ridge. Some hills give up their dead.`;
+  }
+  return `${horse.name} did not come back from the back forty. The land keeps its own count.`;
+}
+
+// Tick parcel hazards for a season boundary. Returns:
+//   { parcels, parcelHazardLog, parcelCost, injured, killed }
+//
+// The caller (game.maybeFireSeasonal) integrates the injury/death into
+// the herd, adds the cost to cash, and pushes the log lines.
+//
+// season: the current season name ('Spring' | 'Summer' | 'Fall' | 'Winter').
+// weatherSeverity: multiplier from the global disaster system
+// (1.0 = normal, 1.5 = drought year, 2.0 = hard winter, etc.). When
+// a global drought fires, weatherSeverity is set high and parcel
+// hazards fire more often.
+export function tickParcelHazards(parcels, horses, season, weatherSeverity = 1.0) {
+  let nextParcels = parcels;
+  let totalCost = 0;
+  const log = [];
+  const injured = [];
+  const killed = [];
+
+  for (const p of parcels) {
+    if (p.leased || p.offLimits) continue;
+    if (p.hazard === 'none') continue;
+    const roll = rollParcelHazard(p, season, weatherSeverity);
+    if (!roll.outcome) continue;
+
+    // Apply the loss to the parcel
+    const loss = HAZARD_LOSS[p.hazard] ?? HAZARD_LOSS.none;
+    nextParcels = applyParcelLoss(nextParcels, p.id, loss);
+    nextParcels = applyParcelHazardOutcomes(nextParcels, [{ parcelId: p.id, hazard: p.hazard, outcome: roll.outcome }]);
+    totalCost += loss.cost ?? 0;
+
+    // Apply the loss to the herd (if predator or rock_fall)
+    if (p.hazard === 'predator' || p.hazard === 'rock_fall') {
+      const herdLoss = rollHerdLoss(horses, loss, p.hazard);
+      injured.push(...herdLoss.injured);
+      killed.push(...herdLoss.killed);
+      log.push(...herdLoss.log);
+    }
+
+    // Log the parcel-level outcome
+    const line = parcelConditionLine({ ...p, state: roll.outcome, improvement: p.improvement });
+    if (line) log.push(line);
+  }
+
+  return {
+    parcels: nextParcels,
+    parcelHazardLog: log,
+    parcelCost: totalCost,
+    injured,
+    killed,
+  };
 }
 
 // Compute total feed capacity across all non-leased, non-off-limits parcels.
