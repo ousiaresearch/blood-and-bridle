@@ -26,6 +26,7 @@ import { buildMemorial, renderMemorial, renderMemorialHall } from './memorial.js
 import { renderCodex } from './codex.js';
 import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } from './brand.js';
 import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
+import { fireSeasonCard } from './time-jump.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -583,6 +584,20 @@ function render() {
     }
   }
 
+  // Time-jump card: fire on season boundary, the 1883 / 1923 device.
+  // Detect by comparing the previous season to the current one. Only
+  // fires after the first render (lastRendered.seasonIndex is non-null).
+  const tjcCurrentSeason = getSeason(game);
+  const tjcCurrentIndex = ['Spring', 'Summer', 'Fall', 'Winter'].indexOf(tjcCurrentSeason);
+  const tjcPreviousIndex = lastRendered.seasonIndex;
+  if (tjcPreviousIndex !== null && tjcCurrentIndex !== tjcPreviousIndex) {
+    // Play the gate-creak sound effect (procedural noise) and fire the card.
+    audio.resume();
+    audio.play('gateCreak');
+    fireSeasonCard(game);
+  }
+  lastRendered.seasonIndex = tjcCurrentIndex;
+
   root.innerHTML = `
     <main class="shell">
       <section class="hero">
@@ -761,9 +776,13 @@ function render() {
   // soundtrack swap. Spring = pollen haze, summer = warm gold, autumn =
   // amber dust, winter = cold blue. Each is a subtle radial wash so
   // the cards still read clearly.
-  const seasonClass = `season-${currentSeason}`;
-  if (document.body.className !== seasonClass) {
-    document.body.className = seasonClass;
+  // Sepia mode unlocks at legacy ≥ 75 — the 1883 / 1923 visual identity.
+  const sepiaMode = (game.legacy ?? 0) >= 75;
+  const bodyClasses = [`season-${currentSeason}`];
+  if (sepiaMode) bodyClasses.push('sepia-mode');
+  const bodyClassString = bodyClasses.join(' ');
+  if (document.body.className !== bodyClassString) {
+    document.body.className = bodyClassString;
   }
 
   // Update the snapshot for the next render

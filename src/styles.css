@@ -1261,3 +1261,405 @@ body.season-winter::before {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
+
+/* ============================================================== */
+/*  GROUP B — VISUAL CHROME                                        */
+/*  Slab serif (Rye) for titles. Cormorant Garamond for time-     */
+/*  jump cards. Paper grain on panels. Sepia mode unlock. Cold-   */
+/*  blue winter desaturation. Warm autumn grain. Leather-stitch     */
+/*  buttons. Boot-on-fence-post cemetery. Telegram death notice.   */
+/* ============================================================== */
+
+/* --- h1 wordmark: now slab serif (Rye) ---------------------------- */
+h1, h2, .modal-title, .codex-collection-head h2 {
+  font-family: 'Rye', 'IM Fell English', Georgia, serif;
+}
+
+/* --- Hero with brand glyph block --------------------------------- */
+.hero-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.hero-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(160deg, rgba(214, 168, 79, 0.06), rgba(0,0,0,0.3));
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 244, 222, 0.04);
+}
+.hero-brand-glyph {
+  font-family: 'Rye', 'IM Fell English', Georgia, serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--gold);
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.hero-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hero h1.wordmark {
+  font-family: 'Rye', 'IM Fell English', Georgia, serif;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+  color: var(--ink);
+  margin: 0;
+}
+.hero-brand-text .subtitle { margin-top: 0; }
+
+/* --- Ranch brand glyph styling (rendered anywhere) --------------- */
+.ranch-brand {
+  display: inline-block;
+  font-family: 'Rye', 'IM Fell English', Georgia, serif;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.letterhead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(214, 168, 79, 0.05), rgba(0,0,0,0.25));
+  margin: 0 0 14px;
+}
+.letterhead-brand {
+  font-family: 'Rye', serif;
+  font-size: 2rem;
+  color: var(--gold);
+  line-height: 1;
+}
+.letterhead-text { display: flex; flex-direction: column; gap: 2px; }
+.letterhead-name {
+  font-family: 'Rye', serif;
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.letterhead-owner, .letterhead-meta { margin: 0; color: var(--muted); font-size: 0.82rem; }
+
+/* --- Ranch profile modal form ------------------------------------ */
+.ranch-profile { display: flex; flex-direction: column; gap: 16px; }
+.ranch-profile-field { display: flex; flex-direction: column; gap: 6px; border: none; padding: 0; margin: 0; }
+.ranch-profile-field legend { padding: 0; }
+.ranch-profile-field input[type="text"] {
+  background: #1c1510;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  font-family: 'Rye', serif;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+.brand-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.brand-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(255, 244, 222, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: var(--ink);
+}
+.brand-option:hover { border-color: rgba(214, 168, 79, 0.4); background: rgba(214, 168, 79, 0.08); }
+.brand-option--selected {
+  border-color: var(--gold);
+  background: rgba(214, 168, 79, 0.18);
+  box-shadow: 0 0 0 1px var(--gold) inset;
+}
+.brand-option-glyph {
+  font-family: 'Rye', serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--gold);
+}
+.brand-option small { color: var(--muted); font-size: 0.7rem; }
+.brand-hint { margin: 4px 0 0; font-size: 0.82rem; }
+.ranch-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+.action--primary {
+  background: rgba(214, 168, 79, 0.22);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* --- Codex modal -------------------------------------------------- */
+.codex { display: flex; flex-direction: column; gap: 18px; }
+.codex-collection {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(22, 18, 15, 0.5);
+}
+.codex-collection-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.codex-collection-head p.eyebrow { margin: 0; }
+.codex-collection-head small { margin: 0; }
+.codex-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.codex-entry {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 244, 222, 0.03);
+  border-left: 2px solid rgba(214, 168, 79, 0.4);
+}
+.codex-entry--locked {
+  opacity: 0.45;
+  border-left-color: rgba(189, 169, 141, 0.2);
+}
+.codex-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+.codex-text--locked {
+  font-style: normal;
+  letter-spacing: 0.2em;
+  font-family: 'Rye', serif;
+}
+
+/* --- Legendary block in horse detail ----------------------------- */
+.detail-section--legendary {
+  border-top: 1px solid rgba(214, 168, 79, 0.4);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+.legendary-coat {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.legendary-backstory {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0 0 12px;
+}
+.legendary-status {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+/* --- Time-jump card (1883 / 1923 device) ------------------------- */
+.time-jump {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+  pointer-events: none;
+}
+.time-jump--visible { opacity: 1; }
+.time-jump--fading { opacity: 0; transition: opacity 0.8s ease-in; }
+.time-jump-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #f5ead7;
+}
+.time-jump-line {
+  margin: 0;
+  font-family: 'Cormorant Garamond', 'Adobe Garamond', Georgia, serif;
+  text-align: center;
+  letter-spacing: 0.02em;
+  color: #f5ead7;
+}
+.time-jump-line--year {
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-family: 'Rye', serif;
+  font-weight: 400;
+  opacity: 0.78;
+}
+.time-jump-line--location {
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.time-jump-line--season {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-family: 'Rye', serif;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* --- Paper grain texture on panels ------------------------------- */
+.panel,
+.crisis > div,
+.crisis aside,
+.metric,
+.verdict,
+.letterhead,
+.event-modal,
+.codex-collection,
+.ranch-profile-field input[type="text"] {
+  position: relative;
+}
+.panel::before,
+.crisis > div::before,
+.crisis aside::before,
+.metric::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.96 0 0 0 0 0.92 0 0 0 0 0.84 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.45;
+  mix-blend-mode: overlay;
+}
+.panel > *, .crisis > div > *, .crisis aside > *, .metric > * { position: relative; }
+
+/* --- Leather-stitch button treatment ----------------------------- */
+.action:not(.action--primary),
+.reset,
+button.btn,
+.modal-panel button:not(.modal-close):not(.brand-option) {
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 6px, rgba(214, 168, 79, 0.06) 6px 7px),
+    linear-gradient(180deg, rgba(255, 244, 222, 0.08), rgba(255, 244, 222, 0.03));
+  border: 1px solid var(--line);
+  box-shadow: inset 0 0 0 1px rgba(214, 168, 79, 0.06), 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.reset:hover, .action:hover:not(:disabled) {
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 6px, rgba(214, 168, 79, 0.1) 6px 7px),
+    linear-gradient(180deg, rgba(214, 168, 79, 0.16), rgba(214, 168, 79, 0.06));
+  transform: translateY(-1px);
+  transition: all 0.18s ease;
+}
+
+/* --- Cold-blue winter desaturation ------------------------------- */
+body.season-winter {
+  filter: saturate(0.86) hue-rotate(-6deg) brightness(0.96);
+}
+
+/* --- Warm autumn grain ------------------------------------------- */
+body.season-autumn::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.42 0 0 0 0 0.18 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 320px 320px;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+
+/* --- Sepia mode (legacy ≥ 75) ------------------------------------ */
+body.sepia-mode {
+  filter: grayscale(0.45) sepia(0.78) saturate(0.7) hue-rotate(-8deg) brightness(0.94);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(180, 140, 60, 0.18), transparent 34rem),
+    linear-gradient(145deg, rgba(38, 28, 14, 0.85), rgba(20, 14, 6, 0.95)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cpath d='M0 150 C50 100 90 170 140 110 C170 80 190 90 220 80 L220 220 L0 220 Z' fill='%23331708'/%3E%3Cpath d='M0 148 C50 98 90 168 140 108 C170 78 190 88 220 78' fill='none' stroke='%23523623' stroke-width='2'/%3E%3C/svg%3E");
+  background-size: cover, cover, 480px;
+}
+body.sepia-mode h1, body.sepia-mode h2, body.sepia-mode .eyebrow { color: #e8d3a4; }
+
+/* --- Boot-on-fence-post cemetery marker -------------------------- */
+.memorial--hall {
+  position: relative;
+  padding-left: 32px;
+}
+.memorial--hall::before {
+  content: '\u2003\2003\u26DF'; /* vertical bar with boot glyph */
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1.4rem;
+  color: rgba(189, 169, 141, 0.6);
+  line-height: 1;
+  letter-spacing: -0.1em;
+}
+
+/* --- Telegram-style death notice --------------------------------- */
+.telegram {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: rgba(22, 18, 15, 0.85);
+  border-left: 3px solid var(--ink);
+  padding: 12px 16px;
+  margin: 8px 0;
+  text-decoration: underline dotted rgba(214, 168, 79, 0.4);
+  text-underline-offset: 4px;
+}
+.telegram .telegram-head {
+  font-family: 'Rye', serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+
+/* --- Page-turn transition between major views -------------------- */
+@keyframes page-turn {
+  0% { transform: perspective(1200px) rotateY(0); opacity: 1; }
+  35% { transform: perspective(1200px) rotateY(-22deg); opacity: 0.4; }
+  60% { transform: perspective(1200px) rotateY(22deg); opacity: 0.4; }
+  100% { transform: perspective(1200px) rotateY(0); opacity: 1; }
+}
+main.shell.is-turning {
+  animation: page-turn 0.6s ease-in-out;
+  transform-origin: center;
+}
