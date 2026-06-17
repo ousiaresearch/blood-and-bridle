@@ -23,6 +23,9 @@ import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtra
 import { showModal, closeModal } from './modal.js';
 import { renderHorseDetail } from './horse-detail.js';
 import { buildMemorial, renderMemorial, renderMemorialHall } from './memorial.js';
+import { renderCodex } from './codex.js';
+import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } from './brand.js';
+import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
@@ -94,8 +97,66 @@ function stageClass(stageId) {
 }
 
 function openHorseDetail(horse) {
-  const html = renderHorseDetail(horse, game);
+  const html = renderHorseDetail(horse, game) + renderLegendaryBlock(horse, game);
   showModal(html, { title: horse.name });
+}
+
+// Open the Ranch Profile modal. The form is rendered by brand.js.
+// Submission and brand selection are wired via event delegation on the
+// body (one-shot per modal open).
+function openRanchProfile() {
+  const html = renderRanchProfile(game);
+  showModal(html, { title: 'Ranch profile' });
+
+  // The modal is now in the DOM. Wire the brand picker.
+  const overlay = document.querySelector('.modal-overlay');
+  if (!overlay) return;
+  const opts = overlay.querySelectorAll('.brand-option');
+  const hintEl = overlay.querySelector('.brand-hint');
+
+  opts.forEach((opt) => {
+    opt.addEventListener('click', () => {
+      opts.forEach((o) => o.classList.remove('brand-option--selected'));
+      opt.classList.add('brand-option--selected');
+      const id = opt.getAttribute('data-brand-id');
+      const brand = brandById(id);
+      if (hintEl && brand) hintEl.textContent = brand.hint;
+    });
+  });
+
+  // Wire the form submission. Read the form fields, dispatch the action.
+  const form = overlay.querySelector('[data-form="ranch-profile"]');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const selectedBrand = overlay.querySelector('.brand-option--selected')?.getAttribute('data-brand-id') ?? game.ranchBrand;
+    game = applyAction(game, {
+      type: 'updateRanchProfile',
+      profile: {
+        ownerName: (fd.get('ownerName') ?? '').toString().trim(),
+        ownerPronouns: (fd.get('ownerPronouns') ?? '').toString().trim(),
+        ranchName: (fd.get('ranchName') ?? '').toString().trim(),
+        ranchBrand: selectedBrand,
+      },
+    });
+    audio.resume();
+    audio.play('click');
+    saveGame();
+    closeModal();
+    render();
+  });
+
+  // Cancel button.
+  overlay.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+    audio.play('click');
+    closeModal();
+  });
+}
+
+// Open the Codex of the Code. Pure render — no form, no submission.
+function openCodex() {
+  const html = renderCodex(game);
+  showModal(html, { title: 'Codex of the Code' });
 }
 
 function renderHorse(horse, selectedHorseId) {
@@ -525,12 +586,17 @@ function render() {
   root.innerHTML = `
     <main class="shell">
       <section class="hero">
-        <div>
-          <p class="eyebrow">Neo-Western ranch management · Year ${model.year} ${model.season} · Day ${model.dayOfSeason}/${model.daysPerSeason}</p>
-          <h1 class="wordmark">Blood<span class="wordmark-amp"> &amp; </span>Bridle</h1>
-          <p class="subtitle">${escapeHtml(model.subtitle)} · ${escapeHtml(model.crisisTitle)}</p>
+        <div class="hero-brand-block">
+          <div class="hero-brand-mark">${renderBrandGlyph(game.ranchBrand, 'hero-brand-glyph')}</div>
+          <div class="hero-brand-text">
+            <p class="eyebrow">Neo-Western ranch management · Year ${model.year} ${model.season} · Day ${model.dayOfSeason}/${model.daysPerSeason}</p>
+            <h1 class="wordmark">${escapeHtml(game.ranchName || 'Unbranded')}</h1>
+            <p class="subtitle">${escapeHtml(model.subtitle)} · ${escapeHtml(model.crisisTitle)}${game.ownerName ? ' · ' + escapeHtml(game.ownerName) : ''}</p>
+          </div>
         </div>
         <div class="hero-actions">
+          <button class="reset" data-ranch-profile title="Set the ranch name and the brand">Ranch</button>
+          <button class="reset" data-codex title="The earned code of the West">Codex</button>
           <button class="audio-toggle ${audio.isMuted() ? 'is-muted' : ''}" data-audio-toggle title="Click to cycle: Sound off → Sound on → Sound + Ambient">${audio.isMuted() ? 'Sound off' : (audioAmbientEnabled ? 'Sound + Amb' : 'Sound on')}</button>
           <button class="reset" data-toggle-share-card>${ui.showShareCard ? 'Hide card' : 'Share card'}</button>
           <button class="reset" data-share-link>Share link</button>
@@ -766,6 +832,20 @@ function playForOutcome(prevGame, nextGame, actionType) {
 }
 
 function bindEvents() {
+  // Open the Ranch Profile modal.
+  document.querySelector('[data-ranch-profile]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    openRanchProfile();
+  });
+
+  // Open the Codex of the Code.
+  document.querySelector('[data-codex]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    openCodex();
+  });
+
   document.querySelector('[data-reset]')?.addEventListener('click', () => {
     audio.resume();
     audio.play('click');

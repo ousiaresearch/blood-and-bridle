@@ -45,7 +45,7 @@ test('deliverFoals produces a foal with parents recorded', () => {
   game = { ...game, day: game.pendingBreeding.dueDay };
   const { game: g, delivered } = deliverFoals(game);
   assert.equal(delivered.length, 1);
-  assert.equal(g.horses.length, 6);
+  assert.equal(g.horses.length, 7);
   assert.ok(g.horses.find((h) => h.parents?.includes('mercy-road')));
   assert.equal(g.pendingBreeding, null);
 });

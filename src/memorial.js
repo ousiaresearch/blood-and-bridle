@@ -13,6 +13,7 @@
 // functions only shape it for display.
 
 import { getLifeStage, breedById } from './horse.js';
+import { legendaryEpitaph } from './legendary.js';
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -99,6 +100,23 @@ function defaultCircumstance(kind, horse) {
 
 function epitaphFor(kind, horse, breed, stage) {
   // Short, breed-aware, kind-aware. The last line of a life.
+  // Legendary horses get the McMurtry epithet — the picturebook treatment.
+  if (horse.legendary) {
+    const leg = legendaryEpitaph(horse);
+    if (leg) return leg;
+  }
+
+  // Show-champion horses get a show-specific line if they won a major title.
+  if (kind === 'death' && horse.lastShowResult?.result === 'champion') {
+    return `${horse.name} won where it mattered. The arena is quieter, and the brand ${horse.name} carried is in someone else's hand now.`;
+  }
+  if (kind === 'death' && (horse.training ?? 0) >= 90) {
+    return `${horse.name} was the best horse that ever stood in this barn. The work is the same without them. The work is not the same.`;
+  }
+  if (kind === 'death' && (horse.bond ?? 0) >= 80) {
+    return `${horse.name} knew the hand. The hand will miss them longer than the hand will admit.`;
+  }
+
   if (kind === 'death') {
     if (horse.age >= 13) return `A long run. The pasture is dimmer without ${horse.name}.`;
     if (horse.age >= 7) return `${horse.name} knew the work. The work will miss them.`;
@@ -160,7 +178,7 @@ export function renderMemorial(memorial, { compact = false } = {}) {
         <h3 class="memorial-name">${escapeHtml(memorial.horseName)}</h3>
         <p class="memorial-meta">${escapeHtml(memorial.breedLabel)} · ${escapeHtml(memorial.role)} · age ${memorial.age}</p>
         <p class="memorial-circumstance">${escapeHtml(memorial.circumstance)}</p>
-        <p class="memorial-epitaph">"${escapeHtml(memorial.epitaph)}"</p>
+        <p class="memorial-epitaph">${escapeHtml(memorial.epitaph)}</p>
         ${compact ? '' : moments}
       </div>
     </article>

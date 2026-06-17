@@ -3,7 +3,7 @@
 // Pure simulation. No DOM. No localStorage. Every action is a pure function
 // from (game, action) -> game. State is never mutated; new state is returned.
 
-import { tickYear, getLifeStage, isTrainable, canCompete, clamp, seedTraits, ROLE_POOL, BLOODLINE_POOL, TEMPERAMENT_POOL, INHERITABLE_TRAITS, TRAIT_KEYS, moodFor } from './horse.js';
+import { tickYear, getLifeStage, isTrainable, canCompete, clamp, seedTraits, ROLE_POOL, BLOODLINE_POOL, TEMPERAMENT_POOL, INHERITABLE_TRAITS, TRAIT_KEYS, moodFor, createHorse } from './horse.js';
 import { getSeason, getYear, getDayOfSeason, isSeasonBoundary, isYearBoundary, DAYS_PER_SEASON, getSeasonalCostMultiplier } from './seasons.js';
 import { tickEvents, resolveEvent } from './events.js';
 import { queueBreeding, deliverFoals } from './breeding.js';
@@ -15,8 +15,10 @@ import { NPCS, recordNpcMemory, adjustRelationship, adjustPatience, STAFF, maeAd
 import { runShowdown, canEnterShow, getShowOnDay } from './shows.js';
 import { applyUpgrade, canAffordUpgrade, getRanchEffects, getUpgradeLabel } from './upgrades.js';
 import { generateContractOffer, acceptContract, declineContract, tickContracts } from './contracts.js';
+import { generateLegendaryHorse, findLegendary, maybeBondLegendary, applyLegendaryTrainingBonus, isLegendaryRidden, canSellLegendary } from './legendary.js';
 import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
 import { buildMemorial } from './memorial.js';
+import { DEFAULT_BRAND_ID } from './brand.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -37,18 +39,7 @@ function pickName(pool, used, sex) {
   return `${prefix} ${Math.floor(Math.random() * 1000)}`;
 }
 
-function createHorse({ id, name, sex, age, role, bloodline, temperament, training, bond, health, stress, value, injured = false, breed = 'quarter_horse' }) {
-  return {
-    id, name, sex, age, role, bloodline, temperament,
-    breed,
-    lifeStageId: getLifeStage({ age })?.id ?? 'dead',
-    mood: moodFor(temperament),
-    training, bond, health, stress, value, injured,
-    traits: seedTraits(),
-    parents: [],
-    alive: true,
-  };
-}
+// Pure factory moved to horse.js (createHorse) — see import above.
 
 export function createNewGame() {
   const usedNames = new Set();
@@ -65,6 +56,10 @@ export function createNewGame() {
     return createHorse({ ...s, name });
   });
 
+  // The legendary horse. Generated once per save. Cannot be ridden
+  // until legendaryUnlockedDay. McMurtry's Hell Bitch archetype.
+  const legendary = generateLegendaryHorse(Math.random, 1);
+
   return {
     day: 1,
     maxDay: MAX_DAY,
@@ -77,7 +72,15 @@ export function createNewGame() {
       title: 'Thirty Days to Prove the Ranch',
       description: 'A resort group wants the west parcel. The bank wants proof this place can still earn.',
     },
-    horses,
+    horses: [...horses, legendary],
+    // Ranch profile — the brand is unified with the wordmark.
+    // Sheridan: wordmark and brand are the same glyph.
+    ownerName: '',
+    ownerPronouns: '',
+    ranchName: '',
+    ranchBrand: DEFAULT_BRAND_ID,
+    foundedDay: 1,
+    legendaryUnlockedDay: legendary.legendary.unlockedDay,
     staff: [
       { id: 'mae', name: 'Mae Calder', role: 'Head trainer', skill: 9, loyalty: 77, note: 'Can make a horse brave, but will not forgive cruelty.' },
       { id: 'eli', name: 'Eli Rusk', role: 'Ranch hand', skill: 6, loyalty: 58, note: 'Knows every fence line and every debt rumor.' },
@@ -225,11 +228,23 @@ export function applyAction(game, action) {
         const stage = getLifeStage(horse);
         throw new Error(`${horse.name} is too ${stage?.id === 'foal' || stage?.id === 'weanling' ? 'young' : 'old'} to train (${stage?.label}).`);
       }
+      // Legendary gate: the picturebook horse cannot be ridden before unlock day.
+      if (!isLegendaryRidden(working, horse)) {
+        throw new Error(`${horse.name} will not be ridden before day ${horse.legendary.unlockedDay}. She decides.`);
+      }
       const skillBonus = Math.max(3, Math.round(staff.skill / 2));
       working.cash -= TRAINING_COST;
-      working.horses = working.horses.map((h) => h.id === horse.id
-        ? { ...h, training: clamp(h.training + skillBonus + 1), bond: clamp(h.bond + 6), stress: clamp(h.stress + 3) }
-        : h);
+      working.horses = working.horses.map((h) => {
+        if (h.id !== horse.id) return h;
+        const bonded = maybeBondLegendary(h);
+        const trained = applyLegendaryTrainingBonus(bonded);
+        return {
+          ...trained,
+          training: clamp(trained.training + skillBonus + 1),
+          bond: clamp(trained.bond + 6),
+          stress: clamp(trained.stress + 3),
+        };
+      });
       working = markStepComplete(working, 'train');
       working = dailyUpkeep(working, `${staff.name} worked ${horse.name} in the dust-lit arena.`);
       break;
@@ -257,6 +272,9 @@ export function applyAction(game, action) {
     case 'sellHorse': {
       const horse = findHorse(working, action.horseId);
       if (working.horses.length <= 1) throw new Error('You cannot sell the last horse and still call this a horse ranch.');
+      // Legendary gate: the picturebook horse cannot be sold before bonded.
+      const legCheck = canSellLegendary(working, horse);
+      if (!legCheck.ok) throw new Error(legCheck.reason);
       working.cash += horse.value;
       working.legacy = clamp(working.legacy - 12);
       working.staff = working.staff.map((s) => ({ ...s, loyalty: clamp(s.loyalty - (s.id === 'mae' ? 12 : 6)) }));
@@ -395,6 +413,18 @@ export function applyAction(game, action) {
     }
     case 'dismissTutorial': {
       working = dismissTutorial(working);
+      break;
+    }
+    case 'updateRanchProfile': {
+      const p = action.profile ?? {};
+      working = {
+        ...working,
+        ownerName: typeof p.ownerName === 'string' ? p.ownerName.slice(0, 48) : working.ownerName,
+        ownerPronouns: typeof p.ownerPronouns === 'string' ? p.ownerPronouns.slice(0, 32) : working.ownerPronouns,
+        ranchName: typeof p.ranchName === 'string' ? p.ranchName.slice(0, 48) : working.ranchName,
+        ranchBrand: typeof p.ranchBrand === 'string' ? p.ranchBrand : working.ranchBrand,
+      };
+      working = dailyUpkeep(working, `Stamped the brand at the gate. ${working.ranchName || 'The ranch'} rides under a new mark.`);
       break;
     }
     default:

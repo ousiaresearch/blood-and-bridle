@@ -8,9 +8,10 @@ import { AVAILABLE_PARCELS } from '../src/map.js';
 import { NPCS } from '../src/npcs.js';
 import { RIVALS } from '../src/rivals.js';
 
-test('new game opens with five horses, staff, three parcels, and a crisis', () => {
+test('new game opens with six horses (5 seed + legendary), staff, three parcels, and a crisis', () => {
   const game = createNewGame();
-  assert.equal(game.horses.length, 5);
+  assert.equal(game.horses.length, 6);
+  assert.ok(game.horses.some((h) => h.legendary), 'expected a legendary horse in the herd');
   assert.equal(game.staff.length >= 3, true);
   assert.equal(game.parcels.length, 3);
   assert.ok(game.crisis.title);
@@ -70,7 +71,7 @@ test('breeding aborts if the dam is not of the right sex', () => {
 test('selling a horse reduces the herd and damages legacy', () => {
   let game = createNewGame();
   game = applyAction(game, { type: 'sellHorse', horseId: 'sunday-caller' });
-  assert.equal(game.horses.length, 4);
+  assert.equal(game.horses.length, 5);
   assert.ok(game.legacy < 62);
 });
 

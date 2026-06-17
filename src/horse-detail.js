@@ -138,7 +138,7 @@ export function renderHorseDetail(horse, game) {
 
       <section class="detail-section">
         <h3 class="eyebrow">Personality</h3>
-        <p class="detail-temperament">"${escapeHtml(horse.temperament)}"</p>
+        <p class="detail-temperament">${escapeHtml(horse.temperament)}</p>
       </section>
 
       <section class="detail-section">

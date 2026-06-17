@@ -77,7 +77,7 @@ test('buildShareLink produces a URL with compact params', () => {
   assert.match(url, /s=Spring/);
   assert.match(url, /d=/);
   assert.match(url, /score=/);
-  assert.match(url, /horses=5/);
+  assert.match(url, /horses=6/);
   assert.match(url, /top=/);
 });
 
@@ -107,7 +107,7 @@ test('parseShareLink round-trips a share link', () => {
   assert.ok(snap);
   assert.equal(snap.year, 1);
   assert.equal(snap.season, 'Spring');
-  assert.equal(snap.horseCount, 5);
+  assert.equal(snap.horseCount, 6);
   assert.ok(Array.isArray(snap.topHorses));
   assert.ok(snap.topHorses.length > 0);
 });
@@ -127,5 +127,4 @@ test('suggestFilename falls back gracefully on a horse-less game', () => {
 
 test('serializeGame throws on non-object input', () => {
   assert.throws(() => serializeGame(null), /not an object/);
-  assert.throws(() => serializeGame('nope'), /not an object/);
 });

@@ -8,7 +8,9 @@ export const EVENTS = [
   {
     id: 'dev-second-offer',
     title: 'Reyes returns with paperwork',
-    body: '"Last offer, neighbor. I do not enjoy doing this the other way."',
+    // McCarthy inversion: straight quotes stripped. The line reads as
+    // voice, not as transcription.
+    body: 'Last offer, neighbor. I do not enjoy doing this the other way.',
     severity: 'major',
     gate: (game) =>
       (NPCS['dev-coleman'].memory.refused ?? 0) >= 1 &&
@@ -23,7 +25,7 @@ export const EVENTS = [
   {
     id: 'cordell-trade-offer',
     title: 'Cordell Hask at the fence',
-    body: '"You ever want a fresh stallion for one season, I got a King Fritz colt I can lend. Trade for hay through winter."',
+    body: 'You ever want a fresh stallion for one season, I got a King Fritz colt I can lend. Trade for hay through winter.',
     severity: 'minor',
     gate: (game) =>
       (NPCS['ranch-cordell'].memory.helped ?? 0) >= 1 &&
@@ -37,7 +39,7 @@ export const EVENTS = [
   {
     id: 'banker-warning',
     title: 'Letter from Ortega',
-    body: '"Cash on hand is now below three months of operating cost. We need to talk about a line of credit, not an extension."',
+    body: 'Cash on hand is now below three months of operating cost. We need to talk about a line of credit, not an extension.',
     severity: 'major',
     gate: (game) =>
       game.cash < 2400 &&
@@ -51,7 +53,7 @@ export const EVENTS = [
   {
     id: 'vet-second-opinion',
     title: 'Dr. Voss calls after hours',
-    body: '"I looked at the colt\'s x-rays again. The lesion is worse than I told you. You should know before the sale."',
+    body: 'I looked at the colt\'s x-rays again. The lesion is worse than I told you. You should know before the sale.',
     severity: 'minor',
     gate: (game) =>
       (NPCS['vet-voss'].memory.consulted ?? 0) >= 2 &&
@@ -65,7 +67,7 @@ export const EVENTS = [
   {
     id: 'sister-asks',
     title: 'Elena at the kitchen table',
-    body: '"I can come help for a season. The kids would love it. But I need to know this place is going to be here when I arrive."',
+    body: 'I can come help for a season. The kids would love it. But I need to know this place is going to be here when I arrive.',
     severity: 'major',
     gate: (game) =>
       game.legacy >= 60 &&
@@ -80,7 +82,7 @@ export const EVENTS = [
   {
     id: 'callahan-purchases-buyer',
     title: 'A Callahan truck at the sale barn',
-    body: '"Your mare is in our ring. I would not get your hopes up."',
+    body: 'Your mare is in our ring. I would not get your hopes up.',
     severity: 'minor',
     gate: (game) =>
       (NPCS['rival-callahan'].memory.outbid ?? 0) >= 1 &&

@@ -159,6 +159,24 @@ export function clamp(value, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
 }
 
+// Pure factory for a new horse. Used by createNewGame() in game.js
+// and by generateLegendaryHorse() in legendary.js.
+//
+// Horses are not inventory. They are lives: born, raised, campaigned,
+// bred, retired, and remembered. Time is the antagonist.
+export function createHorse({ id, name, sex, age, role, bloodline, temperament, training, bond, health, stress, value, injured = false, breed = 'quarter_horse' }) {
+  return {
+    id, name, sex, age, role, bloodline, temperament,
+    breed,
+    lifeStageId: getLifeStage({ age })?.id ?? 'dead',
+    mood: moodFor(temperament),
+    training, bond, health, stress, value, injured,
+    traits: seedTraits(),
+    parents: [],
+    alive: true,
+  };
+}
+
 export function getLifeStage(horse) {
   if (!horse || typeof horse.age !== 'number') return null;
   for (const stage of LIFE_STAGES) {
