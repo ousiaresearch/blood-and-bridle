@@ -18,18 +18,25 @@ import {
   suggestFilename,
 } from './dynasty.js';
 import { silhouetteFor, ribbonFor } from './silhouettes.js';
+import { preloadPortraits, renderPortrait, getPortraitForHorse } from './portraits.js';
+import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtrackVolume, stopSoundtrack } from './soundtrack.js';
 const STORAGE_KEY = 'blood-and-bridle-save-v2';
 
 // One audio engine for the whole session. AudioContext is created lazily on
 // the first user gesture (browser policy).
 const audio = createAudioEngine();
 let audioAmbientEnabled = false;
-let lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
 
 let game = loadGame();
 let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
-// If the page was loaded with a share-link hash, capture the snapshot for the
-// import banner. We do NOT auto-load it — the player must accept.
+
+// Preload portraits on startup
+preloadPortraits().catch(() => {});
+
+// Initialize soundtrack on first user gesture (handled by audio.resume in playForOutcome)
+let soundtrackInitialized = false;
+
+let lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
 let pendingShareSnapshot = (() => {
   try {
     return typeof location !== 'undefined' ? parseShareLink(location.hash) : null;
@@ -84,11 +91,13 @@ function renderHorse(horse, selectedHorseId) {
   const selected = horse.id === selectedHorseId ? 'card--selected' : '';
   const silhouette = silhouetteFor(horse.stageId);
   const ribbon = ribbonFor(horse.temperament);
+  const portraitHtml = renderPortrait(horse);
   return `
     <button class="card horse-card ${selected}" data-select-horse="${escapeHtml(horse.id)}" style="--silhouette: url('${silhouette}')">
       <span class="bloodline-ribbon bloodline-ribbon--${ribbon}">${escapeHtml(horse.role)}</span>
       <strong>${escapeHtml(horse.name)}</strong>
       <small>${escapeHtml(horse.bloodline)}</small>
+      ${portraitHtml}
       <span class="horse-silhouette" aria-hidden="true"></span>
       <p>${escapeHtml(horse.temperament)}</p>
       <span class="${stageClass(horse.stageId)}">${escapeHtml(horse.stage)} · age ${horse.age} · ${horse.sex}</span>
@@ -592,6 +601,13 @@ function render() {
     lastRendered.lastShowResultId = model.lastShowResult.id;
   }
 
+  // Soundtrack: play season track when season changes
+  const currentSeason = getSeason(game);
+  if (soundtrackInitialized && lastRendered.season !== currentSeason) {
+    playForSeason(currentSeason).catch(() => {});
+    lastRendered.season = currentSeason;
+  }
+
   bindEvents();
 
   // Update the snapshot for the next render
@@ -601,6 +617,7 @@ function render() {
     tutorial: model.tutorial ?? { dismissed: false, completedSteps: [] },
     horseIds: model.horses.map((h) => h.id),
     logTop: model.log[0],
+    season: currentSeason,
   };
 }
 
@@ -608,6 +625,14 @@ function playForOutcome(prevGame, nextGame, actionType) {
   // Resume AudioContext on the first user gesture
   audio.resume();
   audio.play('click');
+
+  // Initialize soundtrack on first user gesture
+  if (!soundtrackInitialized) {
+    soundtrackInitialized = true;
+    soundtrack.init().catch(() => {});
+    // Play initial season track
+    playForSeason(getSeason(nextGame)).catch(() => {});
+  }
 
   // Cash delta
   const prevCash = prevGame?.cash ?? 0;
@@ -621,12 +646,15 @@ function playForOutcome(prevGame, nextGame, actionType) {
   }
 
   // Special actions
+ 
   if (actionType === 'listAtAuction' || actionType === 'sellHorse') audio.play('sale');
   if (actionType === 'enterShow') audio.play('showEnter');
   if (actionType === 'acceptContract' || actionType === 'signWithDeveloper') audio.play('confirm');
   if (actionType === 'dismissTutorial') audio.play('stepDone');
 
-  // Show result sound on the next render — handled there
+  // Soundtrack mood triggers
+  if (actionType === 'enterShow') playForMood('show').catch(() => {});
+  if (actionType === 'signWithDeveloper') playForMood('crisis').catch(() => {});
 }
 
 function bindEvents() {
@@ -634,8 +662,10 @@ function bindEvents() {
     audio.resume();
     audio.play('click');
     game = createNewGame();
-    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null };
-    lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
+    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+    lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
+    soundtrackInitialized = false;
+    stopSoundtrack();
     saveGame();
     render();
   });
@@ -647,6 +677,7 @@ function bindEvents() {
       audio.setMuted(false);
       audioAmbientEnabled = false;
       audio.ambient('off');
+      setSoundtrackMuted(false); // soundtrack follows main mute
     } else if (!audioAmbientEnabled) {
       audioAmbientEnabled = true;
       const preset = chooseAmbientPreset(game, { season: getSeason(game) });

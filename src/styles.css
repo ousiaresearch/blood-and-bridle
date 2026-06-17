@@ -615,7 +615,45 @@ h1.wordmark .wordmark-amp { font-style: italic; color: var(--gold); padding: 0 0
   .event-modal--ending .ending-actions .action { width: 100%; }
 }
 
+/* Horse portrait (real art) */
+.horse-portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px 10px 0 0;
+  margin: -12px -12px 10px -12px;
+  opacity: 0;
+  animation: portrait-fade-in 500ms ease-out forwards;
+}
+
+@keyframes portrait-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* When no portrait yet, silhouette shows through */
+.horse-card:has(.horse-silhouette) .horse-silhouette {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--silhouette) center / contain no-repeat;
+  opacity: 0.18;
+  margin: -12px -12px 10px -12px;
+  border-radius: 10px 10px 0 0;
+  pointer-events: none;
+}
+
+/* Hide silhouette when portrait is present */
+.horse-card:has(.horse-portrait) .horse-silhouette {
+  display: none;
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  .horse-portrait { animation: none; opacity: 1; }
+}
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
