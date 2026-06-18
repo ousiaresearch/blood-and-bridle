@@ -1,0 +1,126 @@
+[
+  {
+    "id": "daughter_neutral",
+    "category": "heir-portrait",
+    "subject": "The player's daughter, grown and away",
+    "description": "Woman in her late 20s, the player's face but sharper, more watchful. Dark hair cut to her jaw, simple silver earrings, a worn canvas jacket over a clean shirt. The look of someone who has been to college and to the world and is back at the kitchen table deciding what to do with what she inherited.",
+    "style": "Neo-Western painterly portrait, late-afternoon kitchen-table light, weathered wood and coffee cup behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/daughter_neutral.png"
+  },
+  {
+    "id": "daughter_concerned",
+    "category": "heir-portrait",
+    "subject": "The player's daughter, grown and away",
+    "description": "Same woman — late 20s, sharp features, dark hair to jaw, canvas jacket. Expression is the look of a daughter about to say the thing her father has been avoiding: the ranch is not the only way. She has her own plans, and she is not hiding them.",
+    "style": "Neo-Western painterly portrait, late-afternoon kitchen-table light, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/daughter_concerned.png"
+  },
+  {
+    "id": "daughter_arguing",
+    "category": "heir-portrait",
+    "subject": "The player's daughter, grown and away",
+    "description": "Same woman — late 20s, sharp features, dark hair. Expression is the look of a daughter laying down her own claim: she will run the ranch her way, with her own brand, and she is not asking for permission. The ranch hands will need to learn her name.",
+    "style": "Neo-Western painterly portrait, late-afternoon kitchen-table light, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/daughter_arguing.png"
+  },
+
+  {
+    "id": "son_neutral",
+    "category": "heir-portrait",
+    "subject": "The player's son, the working heir",
+    "description": "Man in his mid-20s, broad-shouldered, sun-darkened, the player's build. Short hair, a day's worth of stubble, a clean chambray shirt and a rope on his hip. The look of a son who grew up riding and never quite left.",
+    "style": "Neo-Western painterly portrait, mid-morning stable light, weathered wood and hay dust behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/son_neutral.png"
+  },
+  {
+    "id": "son_concerned",
+    "category": "heir-portrait",
+    "subject": "The player's son, the working heir",
+    "description": "Same man — mid-20s, broad-shouldered, sun-darkened, rope on hip. Expression is the look of a son who has been doing the work and is now thinking about what it costs. He has been patient. He has been loyal. He is not sure how much longer.",
+    "style": "Neo-Western painterly portrait, mid-morning stable light, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/son_concerned.png"
+  },
+  {
+    "id": "son_arguing",
+    "category": "heir-portrait",
+    "subject": "The player's son, the working heir",
+    "description": "Same man — mid-20s, broad-shouldered, sun-darkened. Expression is direct and grounded: he will take the ranch and he will run it as his father did, and he is not going to apologize for that either. The brand is the brand.",
+    "style": "Neo-Western painterly portrait, mid-morning stable light, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/son_arguing.png"
+  },
+
+  {
+    "id": "niece_neutral",
+    "category": "heir-portrait",
+    "subject": "The player's niece, the unexpected one",
+    "description": "Woman in her early 30s, sharp and a little wary, the family face but with city edges. Dark hair pulled back, a tailored jacket over a work shirt — the look of a woman who came back from elsewhere because her uncle asked. Or because she had nowhere else to go. The reader can't tell yet which.",
+    "style": "Neo-Western painterly portrait, late-afternoon light through a barn window, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/niece_neutral.png"
+  },
+  {
+    "id": "niece_concerned",
+    "category": "heir-portrait",
+    "subject": "The player's niece, the unexpected one",
+    "description": "Same woman — early 30s, sharp and wary, dark hair. Expression is the look of a niece who is reading the kitchen table for what it is — a ledger, a test, a place where she has to decide whether to stay.",
+    "style": "Neo-Western painterly portrait, late-afternoon light through a barn window, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/niece_concerned.png"
+  },
+  {
+    "id": "niece_arguing",
+    "category": "heir-portrait",
+    "subject": "The player's niece, the unexpected one",
+    "description": "Same woman — early 30s, sharp and wary, dark hair. Expression is direct: she has her own ideas about what a ranch can be. She will run it differently. She has a spreadsheet and a brand and she is not hiding either.",
+    "style": "Neo-Western painterly portrait, late-afternoon light through a barn window, weathered wood behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/niece_arguing.png"
+  },
+
+  {
+    "id": "nephew_neutral",
+    "category": "heir-portrait",
+    "subject": "The player's nephew, the kid who came back",
+    "description": "Man in his early 20s, lean and watchful, the family jaw but younger, softer. Brown hair under a worn felt hat, a faded denim jacket, boots that have been resoled once. The look of a kid who went to the city for two years and came back because the ranch wouldn't leave him alone.",
+    "style": "Neo-Western painterly portrait, golden hour corral light, weathered wood rails behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/nephew_neutral.png"
+  },
+  {
+    "id": "nephew_concerned",
+    "category": "heir-portrait",
+    "subject": "The player's nephew, the kid who came back",
+    "description": "Same young man — early 20s, lean, family jaw, faded denim jacket. Expression is the look of a nephew who is asking the question the rest of the family has been avoiding: do you want to keep doing this? He is not sure he wants to know the answer.",
+    "style": "Neo-Western painterly portrait, golden hour corral light, weathered wood rails behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/nephew_concerned.png"
+  },
+  {
+    "id": "nephew_arguing",
+    "category": "heir-portrait",
+    "subject": "The player's nephew, the kid who came back",
+    "description": "Same young man — early 20s, lean, family jaw. Expression is direct and a little older than his age: he will take the ranch if his uncle asks, but he is not going to do it the way it was done. He will do it his way or not at all.",
+    "style": "Neo-Western painterly portrait, golden hour corral light, weathered wood rails behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/heirs/nephew_arguing.png"
+  },
+
+  {
+    "id": "heir_arrival",
+    "category": "scene-composition",
+    "subject": "The heir arrives at the gate",
+    "description": "An old pickup truck pulling up to the ranch gate. The heir is stepping out. The gate is the B with bar, weathered iron. The dust is still settling from the drive in. The ranch hands are watching from the porch.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, late-afternoon arrival light, dust settling. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/heir/heir_arrival.png"
+  },
+  {
+    "id": "heir_departure",
+    "category": "scene-composition",
+    "subject": "The heir departs, the gate closing",
+    "description": "The same gate, the truck pulling away. The dust trail in the rearview. The heir is leaving the ranch — either refusing it, or taking it elsewhere. The brand is on the gate. The gate is closing. The player is alone in the frame.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, golden hour departure light, dust trail. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/heir/heir_departure.png"
+  },
+  {
+    "id": "heir_kitchen_table",
+    "category": "scene-composition",
+    "subject": "The heir at the kitchen table, the night before",
+    "description": "The bunkhouse kitchen table at night. The heir sits across from the player. Two coffee cups. The woodstove ticking. The conversation has been going for an hour. Outside the window, the cottonwoods are still.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, warm woodstove interior light, dark window. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/heir/heir_kitchen_table.png"
+  }
+]

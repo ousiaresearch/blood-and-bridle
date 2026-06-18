@@ -1,0 +1,107 @@
+[
+  {
+    "id": "gate_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the home gate, daylight",
+    "description": "A weathered ranch gate at the home place, photographed close. The Blood & Bridle brand — a B with a horizontal bar below, burned into the wood of the upper rail — is fresh and visible. The iron hinges are aged but sound. Late afternoon light, the dust of the road in front of the gate.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, weathered wood and iron. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/gate_brand.png"
+  },
+  {
+    "id": "gate_brand_night",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the home gate, after dark",
+    "description": "The same gate at night. The brand catches the porch light from a distance. The wood is in shadow but the iron-on B with bar glows faintly. The road is dark. A pickup's headlights are visible a long way back.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, night, single distant light source. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/gate_brand_night.png"
+  },
+  {
+    "id": "truck_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the ranch truck, parked",
+    "description": "The ranch's old pickup, parked at the barn. The door bears the Blood & Bridle brand — a B with a horizontal bar, painted in faded white over rust. The truck is dusty, the tires are mud-caked, the truck has clearly been working.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, faded paint on rust. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/truck_brand.png"
+  },
+  {
+    "id": "truck_brand_moving",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the ranch truck, in motion",
+    "description": "The same truck, but moving — caught at speed on a county road. The brand on the door is motion-blurred but still readable. The dust kicks up behind. The road runs through open country.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, motion blur, dust trail. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/truck_brand_moving.png"
+  },
+  {
+    "id": "hay_barn_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the hay barn, evening",
+    "description": "The hay barn at evening. The brand — B with bar — is painted in black on the barn's broad side, large enough to read from the county road. The barn doors are open, hay is visible inside, the light is going amber.",
+    "style": "Neo-Western painterly wide shot, 4:5 aspect ratio, evening amber light, weathered wood barn. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/hay_barn_brand.png"
+  },
+  {
+    "id": "hay_barn_brand_evening",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the hay barn, dusk",
+    "description": "The same barn at the last light. The brand is silhouetted against the orange sky. The barn is dark, the doors are closed. The light inside is off.",
+    "style": "Neo-Western painterly wide shot, 4:5 aspect ratio, dusk silhouette, last light. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/hay_barn_brand_evening.png"
+  },
+  {
+    "id": "heifer_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand fresh on a heifer's hip",
+    "description": "A close-up of a young heifer's hip, just branded. The brand — B with bar — is fresh, the hair still slightly singed, the skin pink around the mark. The heifer is in a squeeze chute, the smell of scorched hair in the air.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, fresh brand on hide. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/heifer_brand.png"
+  },
+  {
+    "id": "heifer_brand_done",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand healed on an older heifer",
+    "description": "The brand on an older heifer, healed. The B-with-bar has become a clean scar, the hair grown back white around it. The heifer is in the pasture, the brand barely visible at a distance but unmistakable up close. The work was done a season ago.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, healed brand on hide. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/heifer_brand_done.png"
+  },
+  {
+    "id": "jacket_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on the heir's jacket",
+    "description": "A young person's canvas ranch jacket, hanging on a peg by the door. The Blood & Bridle brand — B with bar — is stitched into the upper back in dark thread. The jacket is the heir's. It's not new.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, daylight, canvas and stitch. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/jacket_brand.png"
+  },
+  {
+    "id": "salve_brand",
+    "category": "brand-surface",
+    "subject": "The Blood & Bridle brand on a salve tin in the tack room",
+    "description": "A small tin of salve in the tack room, the label hand-printed with the Blood & Bridle brand. The tin is dented, the lid is closed. It is the kind of thing a hand keeps on a shelf because it has always been there.",
+    "style": "Neo-Western painterly close-up, 4:5 aspect ratio, indoor tack-room light, weathered tin. Sheridan-true quality.",
+    "outPath": "assets/brand/surfaces/salve_brand.png"
+  },
+
+  {
+    "id": "branding_scene",
+    "category": "scene-composition",
+    "subject": "The branding scene, working close",
+    "description": "Close composition of a working branding. The iron coming out of the coals. The heifer pressed against the chute. The hand with the iron steady. Smoke and dust in the air. The brand is about to land. Time slows.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, hot midday light, smoke and dust. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/brand/branding_scene.png"
+  },
+  {
+    "id": "gate_scene",
+    "category": "scene-composition",
+    "subject": "The gate at the end of the road",
+    "description": "The ranch gate at the end of a long approach road. The brand is visible on the upper rail. The gate is closed. The road runs through open country. The mountains are far behind. The ranch is what the road leads to.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, late-afternoon approach light, long road. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/brand/gate_scene.png"
+  },
+  {
+    "id": "brand_loss",
+    "category": "scene-composition",
+    "subject": "The brand lost — the unbolted gate",
+    "description": "The brand unbolted from the gate. The iron is on the ground, the screws pulled, the wood scarred where it used to be. The gate is open. A developer at the road. The land has been sold. The brand has been taken down.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, winter grey light, brand on the ground, gate open. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/brand/brand_loss.png"
+  }
+]

@@ -1,0 +1,207 @@
+[
+  {
+    "id": "cobb_neutral",
+    "category": "rival-portrait",
+    "subject": "Cobb Blood, the player's cousin, dispersaler on the creek",
+    "description": "Man in his mid-30s, lean and sharp-featured, dark hair pushed back, a touch of the family jaw. The Blood family eyes — same as the player's, but harder, meaner. Wearing a worn straw cowboy hat tilted back, a faded chambray shirt, the kind of ranch clothes that have been mended one too many times. Expression is watchful, slightly amused, the look of someone who knows the family history and uses it.",
+    "style": "Neo-Western painterly portrait, late-afternoon creek-side light, weathered wood barn behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/cobb_neutral.png"
+  },
+  {
+    "id": "cobb_concerned",
+    "category": "rival-portrait",
+    "subject": "Cobb Blood, the player's cousin, dispersaler on the creek",
+    "description": "Same man — mid-30s, lean sharp features, dark hair, Blood family eyes. Expression has tightened: the amusement is gone. He's watching the player the way a man watches a hand he's about to call.",
+    "style": "Neo-Western painterly portrait, late-afternoon creek-side light, weathered wood barn behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/cobb_concerned.png"
+  },
+  {
+    "id": "cobb_arguing",
+    "category": "rival-portrait",
+    "subject": "Cobb Blood, the player's cousin, dispersaler on the creek",
+    "description": "Same man — mid-30s, lean sharp features, Blood family eyes. Expression is hard: jaw forward, mouth tight, the look of a Blood cousin who is about to make the family history into a problem. The dispersaler who doesn't think the player deserves the home place.",
+    "style": "Neo-Western painterly portrait, late-afternoon creek-side light, weathered wood barn behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/cobb_arguing.png"
+  },
+
+  {
+    "id": "william_neutral",
+    "category": "rival-portrait",
+    "subject": "William Blood, the player's uncle, on the show-grounds",
+    "description": "Man in his early 60s, square face, gray hair cropped short, the family build but heavier now. Blood eyes — same as the player's, but settled. Wearing a clean pearl-snap shirt, a felt cowboy hat, polished boots. The look of a man who has shown horses his whole life and expects to keep doing it.",
+    "style": "Neo-Western painterly portrait, mid-morning arena light, white show-grounds fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/william_neutral.png"
+  },
+  {
+    "id": "william_concerned",
+    "category": "rival-portrait",
+    "subject": "William Blood, the player's uncle, on the show-grounds",
+    "description": "Same man — early 60s, square face, gray hair, family build. Expression is the look of a man trying to keep the peace across a family fracture he didn't start. He's heard the player's name again and is choosing his words.",
+    "style": "Neo-Western painterly portrait, mid-morning arena light, white show-grounds fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/william_concerned.png"
+  },
+  {
+    "id": "william_arguing",
+    "category": "rival-portrait",
+    "subject": "William Blood, the player's uncle, on the show-grounds",
+    "description": "Same man — early 60s, square face, gray hair, pearl-snap shirt. Expression is firm but not unkind — the look of an uncle laying down the family rule. He is Bo's brother. He has his own ranch. He does not agree with the player but he is not the enemy.",
+    "style": "Neo-Western painterly portrait, mid-morning arena light, white show-grounds fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/william_arguing.png"
+  },
+
+  {
+    "id": "edith_neutral",
+    "category": "rival-portrait",
+    "subject": "Edith Crane, the player's aunt (née Blood), on the ridge",
+    "description": "Woman in her late 50s, weathered handsome face, silver hair pinned up, lines earned across a long life on the ridge. Blood family build but taller, leaner. Wearing a clean denim dress, a wool shawl, silver earrings. Expression is measured, kind-but-not-soft, the look of a woman who married away from the family and has done fine.",
+    "style": "Neo-Western painterly portrait, golden hour ridge-side light, weathered split-rail fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/edith_neutral.png"
+  },
+  {
+    "id": "edith_concerned",
+    "category": "rival-portrait",
+    "subject": "Edith Crane, the player's aunt (née Blood), on the ridge",
+    "description": "Same woman — late 50s, weathered handsome face, silver hair, Blood build. Expression is the kind that comes when she hears about a family member making a hard decision. She's thinking of her brother Wade, the patriarch, and what he would have said.",
+    "style": "Neo-Western painterly portrait, golden hour ridge-side light, weathered split-rail fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/edith_concerned.png"
+  },
+  {
+    "id": "edith_arguing",
+    "category": "rival-portrait",
+    "subject": "Edith Crane, the player's aunt (née Blood), on the ridge",
+    "description": "Same woman — late 50s, weathered handsome face, silver hair. Expression is the rare hard one: Edith made her choices long ago and is not unsympathetic, but the ridge is hers and she does not apologize for it.",
+    "style": "Neo-Western painterly portrait, golden hour ridge-side light, weathered split-rail fence behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/edith_arguing.png"
+  },
+
+  {
+    "id": "henry_neutral",
+    "category": "rival-portrait",
+    "subject": "Henry Whitehorse, Ash Coulee Nation foreman",
+    "description": "Man in his early 50s, Native American, weathered bronze face, dark hair going gray at the temples, high cheekbones, calm dark eyes. Strong hands, clean dark work shirt, a felt hat in good shape. The look of a man who has run cattle his whole life and is still learning. Expression is patient and present.",
+    "style": "Neo-Western painterly portrait, late-afternoon open-range light, weathered corral and sagebrush behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/henry_neutral.png"
+  },
+  {
+    "id": "henry_concerned",
+    "category": "rival-portrait",
+    "subject": "Henry Whitehorse, Ash Coulee Nation foreman",
+    "description": "Same man — early 50s, Native American, weathered bronze face, calm dark eyes, clean work shirt. Expression has gone watchful: he's listening to the player bid against his operation. He has bid against the Bloods before. He knows how this goes.",
+    "style": "Neo-Western painterly portrait, late-afternoon open-range light, weathered corral and sagebrush behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/henry_concerned.png"
+  },
+  {
+    "id": "henry_arguing",
+    "category": "rival-portrait",
+    "subject": "Henry Whitehorse, Ash Coulee Nation foreman",
+    "description": "Same man — early 50s, Native American, weathered bronze face, calm dark eyes. Expression is direct and grounded: he's about to bid a number the player wasn't expecting. The Ash Coulee Nation is a real operation. He is not bluffing.",
+    "style": "Neo-Western painterly portrait, late-afternoon open-range light, weathered corral and sagebrush behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/rivals/henry_arguing.png"
+  },
+
+  {
+    "id": "brandings_summer",
+    "category": "scene-composition",
+    "subject": "The brandings, mid-summer",
+    "description": "Wide composition of a working cattle branding in summer. The iron in the coals. The heifer in the chute. Three men on horseback, dust, the smell of scorched hair. Smoke rising straight up because the air is still. A brand — B with a bar — already cooling on a hip.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, hot summer midday light, smoke and dust. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/brandings_summer.png"
+  },
+  {
+    "id": "brandings_fall",
+    "category": "scene-composition",
+    "subject": "The brandings, autumn weaning",
+    "description": "The branding in autumn. Calves separated from the cows in a temporary corral, the iron ready, an older man handling the flank. The cottonwoods turning yellow behind. The work has a steady rhythm; no one is hurrying.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, amber autumn afternoon. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/brandings_fall.png"
+  },
+  {
+    "id": "show_spring",
+    "category": "scene-composition",
+    "subject": "The spring show, Cedar Valley Classic",
+    "description": "An early-season reining show at a small-town arena. The rider in the box, the gate open, the announcer on the speaker. Bleachers half-full, a few pickup trucks in the parking lot. Cold spring light. The judge at the far end with a clipboard.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, cool spring daylight, arena dust. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/show_spring.png"
+  },
+  {
+    "id": "show_summer",
+    "category": "scene-composition",
+    "subject": "The summer show, county fair",
+    "description": "A larger summer show at the county fair. Outdoor arena, banner flags, the rail packed with people in hats. The rider cutting a hard turn, the horse in the dirt, the crowd leaning in. Hot afternoon light, dust in the air.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, hot summer afternoon light, dust and crowd. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/show_summer.png"
+  },
+  {
+    "id": "show_fall",
+    "category": "scene-composition",
+    "subject": "The fall show, the big one",
+    "description": "The fall show, the year's big reining event. Indoor arena, banners overhead, the rail lined with trainers and owners in pearl-snaps. A horse mid-slide, dirt flying. Spotlight at the far end. The crowd is quiet because the run is good.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, dramatic arena light, motion blur on the horse. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/show_fall.png"
+  },
+  {
+    "id": "auction_spring",
+    "category": "scene-composition",
+    "subject": "The spring auction",
+    "description": "The spring horse auction at the sale barn. The ring is set, the auctioneer on the stand, bidders in the seats, the ringmen watching the crowd. A bay yearling in the ring. The smell of hay and sweat and the public-address speaker cutting in and out.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, fluorescent sale-barn light, dust. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/auction_spring.png"
+  },
+  {
+    "id": "auction_fall",
+    "category": "scene-composition",
+    "subject": "The fall production sale",
+    "description": "The fall production sale, bigger and more polished. The catalog horses walk in one at a time, the announcer reads the pedigree, the bidders have their numbers ready. A black stallion in the ring, the auctioneer's chant in the air.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, fluorescent sale-barn light, fall dark outside. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/auction_fall.png"
+  },
+  {
+    "id": "funeral_winter",
+    "category": "scene-composition",
+    "subject": "The funeral, deep winter",
+    "description": "A funeral at the small rural church in winter. Snow on the ground, the hearse at the curb, mourners in dark coats filing in. The church is small and wooden and lit from inside. Coffee on tailgates in the parking lot after.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, winter grey sky, warm interior light. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/funeral_winter.png"
+  },
+  {
+    "id": "funeral_summer",
+    "category": "scene-composition",
+    "subject": "The funeral, summer",
+    "description": "A summer funeral, the same church but no snow. The grass is high in the cemetery. The folding chairs are out under the cottonwoods. Mourners in summer clothes. The family sits in the front row.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, summer afternoon light, green cottonwoods. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/rivals/funeral_summer.png"
+  },
+
+  {
+    "id": "banner_cobb",
+    "category": "banner-sprite",
+    "subject": "The Cobb Blood ranch banner",
+    "description": "A weathered ranch banner hanging from a fence post on the creek parcel. The Cobb Blood brand (a stylized C-B lockup, single-bar) painted in faded iron-oxide red on raw canvas, frayed at the edges, sun-bleached. The creek runs behind.",
+    "style": "Neo-Western painterly banner sprite, 4:5 aspect ratio, weathered canvas, faded ranch livery. Sheridan-true quality.",
+    "outPath": "assets/brand/banners/banner_cobb.png"
+  },
+  {
+    "id": "banner_william",
+    "category": "banner-sprite",
+    "subject": "The William Blood show-grounds banner",
+    "description": "A cleaner show-grounds banner on a white rail at the show-grounds parcel. The William Blood brand (a stylized W-B lockup, single-bar) painted in fresh black on white canvas, properly hemmed, less weathered — William maintains his operation. The show arena is in the background.",
+    "style": "Neo-Western painterly banner sprite, 4:5 aspect ratio, cleaner show-grounds livery. Sheridan-true quality.",
+    "outPath": "assets/brand/banners/banner_william.png"
+  },
+  {
+    "id": "banner_edith",
+    "category": "banner-sprite",
+    "subject": "The Edith Crane ridge banner",
+    "description": "A small, well-cared-for banner on the ridge. The Crane-Blood lockup (C + small B over it) painted in muted iron-on on dark wool. The ridge rises behind. Edith's banner is dignified rather than showy.",
+    "style": "Neo-Western painterly banner sprite, 4:5 aspect ratio, dignified ranch livery on wool. Sheridan-true quality.",
+    "outPath": "assets/brand/banners/banner_edith.png"
+  },
+  {
+    "id": "banner_ash_coulee",
+    "category": "banner-sprite",
+    "subject": "The Ash Coulee Nation banner",
+    "description": "The Ash Coulee Nation ranch banner — large, well-maintained, painted in earth pigments on hide. A stylized horse-and-sun motif. It hangs from the corner of a barn on the Ash Coulee Nation's parcel west of the ranch.",
+    "style": "Neo-Western painterly banner sprite, 4:5 aspect ratio, hide-and-pigment livery. Sheridan-true quality.",
+    "outPath": "assets/brand/banners/banner_ash_coulee.png"
+  }
+]

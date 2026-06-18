@@ -1,0 +1,186 @@
+[
+  {
+    "id": "mae_neutral",
+    "category": "hand-portrait",
+    "subject": "Mae Calder, head trainer at a horse ranch",
+    "description": "Woman in her early 40s, lean and weathered. Sun-darkened skin, crow's feet, strong jaw. Hair pulled back in a tight working braid. Wearing a faded denim work shirt, the collar soft from wear. No makeup. Expression is steady and direct, the look of someone who has trained enough colts to know what the horse is going to do before it does.",
+    "mood": "neutral",
+    "style": "Neo-Western painterly portrait, warm late-afternoon ranch light, weathered wood corral behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/mae_neutral.png"
+  },
+  {
+    "id": "mae_concerned",
+    "category": "hand-portrait",
+    "subject": "Mae Calder, head trainer at a horse ranch",
+    "description": "Same woman — early 40s, weathered, strong jaw, hair in a working braid, faded denim shirt. Expression is tight: brow slightly furrowed, mouth set, eyes watching something off-frame with the focused concern of a horseman who has seen this go wrong before.",
+    "mood": "concerned",
+    "style": "Neo-Western painterly portrait, late-afternoon ranch light, weathered wood corral behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/mae_concerned.png"
+  },
+  {
+    "id": "mae_arguing",
+    "category": "hand-portrait",
+    "subject": "Mae Calder, head trainer at a horse ranch",
+    "description": "Same woman — early 40s, weathered, strong jaw, hair in a working braid, faded denim shirt. Expression is hard: jaw forward, eyes locked on whoever she's talking to, the look of a hand about to draw a line in the dirt. The kind of face that ends conversations.",
+    "mood": "arguing",
+    "style": "Neo-Western painterly portrait, late-afternoon ranch light, weathered wood corral behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/mae_arguing.png"
+  },
+  {
+    "id": "eli_neutral",
+    "category": "hand-portrait",
+    "subject": "Eli Rusk, ranch hand",
+    "description": "Man in his late 50s, weathered brown face, gray stubble, deep lines around the eyes and mouth from a life lived outdoors. Quiet eyes — the kind that have watched weather and horses for forty years. Wearing a soft chambray shirt, sleeves rolled, rope-burned hands. Expression is reserved, patient, listening more than speaking.",
+    "mood": "neutral",
+    "style": "Neo-Western painterly portrait, warm ranch light at golden hour, weathered wood fence post behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/eli_neutral.png"
+  },
+  {
+    "id": "eli_concerned",
+    "category": "hand-portrait",
+    "subject": "Eli Rusk, ranch hand",
+    "description": "Same man — late 50s, weathered face, gray stubble, quiet eyes, chambray shirt with rope-burned hands. Expression is reluctant but worried — the look of someone who wants to say the thing and won't. Brow slightly drawn, mouth closed tight.",
+    "mood": "concerned",
+    "style": "Neo-Western painterly portrait, golden hour ranch light, weathered wood fence post behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/eli_concerned.png"
+  },
+  {
+    "id": "eli_arguing",
+    "category": "hand-portrait",
+    "subject": "Eli Rusk, ranch hand",
+    "description": "Same man — late 50s, weathered face, gray stubble, quiet eyes, chambray shirt with rope-burned hands. Expression is the rarest thing on his face: words. He's saying the thing he's been holding back. Jaw set, eyes steady, the look of someone who finally can't not speak.",
+    "mood": "arguing",
+    "style": "Neo-Western painterly portrait, golden hour ranch light, weathered wood fence post behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/eli_arguing.png"
+  },
+  {
+    "id": "reyes_neutral",
+    "category": "hand-portrait",
+    "subject": "Reyes Two Horses, stallion handler",
+    "description": "Man in his mid-30s, Native American, strong and patient face. Black hair worn back, deep brown skin, high cheekbones. Quiet authority — the way he holds himself reads 'I read horses for a living'. Wearing a clean dark work shirt, faded jeans, hands that look like they belong to a stallion handler. Expression is calm and present.",
+    "mood": "neutral",
+    "style": "Neo-Western painterly portrait, soft morning light through stable doorway, weathered wood and hay dust behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/reyes_neutral.png"
+  },
+  {
+    "id": "reyes_concerned",
+    "category": "hand-portrait",
+    "subject": "Reyes Two Horses, stallion handler",
+    "description": "Same man — mid-30s, Native American, strong patient face, deep brown skin, high cheekbones, dark work shirt. Expression has shifted: the calm is now watchful. He's listening to the stallion in the next stall, or to something the player said. The face of a man who doesn't miss much.",
+    "mood": "concerned",
+    "style": "Neo-Western painterly portrait, soft morning light through stable doorway, weathered wood and hay dust behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/reyes_concerned.png"
+  },
+  {
+    "id": "reyes_arguing",
+    "category": "hand-portrait",
+    "subject": "Reyes Two Horses, stallion handler",
+    "description": "Same man — mid-30s, Native American, strong patient face, dark work shirt. Expression is direct and grounded: he's not angry, he's certain. The look of someone who has watched a horse tell him the truth and is now telling the player the same thing.",
+    "mood": "arguing",
+    "style": "Neo-Western painterly portrait, soft morning light through stable doorway, weathered wood and hay dust behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/reyes_arguing.png"
+  },
+  {
+    "id": "elena_neutral",
+    "category": "hand-portrait",
+    "subject": "Elena Marsh, bookkeeper",
+    "description": "Woman in her mid-30s, dark hair cut sharp at the jaw, sharp cheekbones, the kind of face that wears reading glasses well. Olive skin, no-nonsense mouth, dark eyes that look like they've read every column in the ledger twice. Wearing a clean collared shirt, sleeve buttons done. A city transplant at the ranch, two winters in, the dust starting to settle on her.",
+    "mood": "neutral",
+    "style": "Neo-Western painterly portrait, warm desk-lamp light, an open ledger and coffee cup blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/elena_neutral.png"
+  },
+  {
+    "id": "elena_concerned",
+    "category": "hand-portrait",
+    "subject": "Elena Marsh, bookkeeper",
+    "description": "Same woman — mid-30s, sharp dark hair, sharp cheekbones, dark eyes. Expression is careful: she's about to deliver a number she knows the player doesn't want to hear. Reading glasses slightly low on her nose. The look of someone who likes the numbers less than she lets on.",
+    "mood": "concerned",
+    "style": "Neo-Western painterly portrait, warm desk-lamp light, an open ledger and coffee cup blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/elena_concerned.png"
+  },
+  {
+    "id": "elena_arguing",
+    "category": "hand-portrait",
+    "subject": "Elena Marsh, bookkeeper",
+    "description": "Same woman — mid-30s, sharp dark hair, sharp cheekbones, dark eyes. Expression is dry and unblinking: she has the receipt, the spreadsheet, the column, and she is not arguing with the player's feelings — only with their numbers.",
+    "mood": "arguing",
+    "style": "Neo-Western painterly portrait, warm desk-lamp light, an open ledger and coffee cup blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/elena_arguing.png"
+  },
+  {
+    "id": "cordell-voss_neutral",
+    "category": "hand-portrait",
+    "subject": "Dr. Cordell Voss, veterinarian",
+    "description": "Man in his early 60s, gray hair combed back, clean white beard, the kind of face that reads as a country doctor even before you see the medical bag. Kind, calm eyes; lines that come from years of bending over animals. Wearing a clean button-down shirt under a worn canvas jacket. Expression is patient and present.",
+    "mood": "neutral",
+    "style": "Neo-Western painterly portrait, late-afternoon clinic light, leather medical bag and stethoscope blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/cordell-voss_neutral.png"
+  },
+  {
+    "id": "cordell-voss_concerned",
+    "category": "hand-portrait",
+    "subject": "Dr. Cordell Voss, veterinarian",
+    "description": "Same man — early 60s, gray hair combed back, clean white beard, kind eyes. Expression has gone clinical: he's listening, his gaze level, the look of a vet who has heard what the player said and is now thinking about what it means for the horse.",
+    "mood": "concerned",
+    "style": "Neo-Western painterly portrait, late-afternoon clinic light, leather medical bag and stethoscope blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/cordell-voss_concerned.png"
+  },
+  {
+    "id": "cordell-voss_arguing",
+    "category": "hand-portrait",
+    "subject": "Dr. Cordell Voss, veterinarian",
+    "description": "Same man — early 60s, gray hair combed back, clean white beard, kind eyes. Expression is gentle but firm: he's giving the prognosis out loud because that's the job. The look of a man who charges what he charges and tells the truth either way.",
+    "mood": "arguing",
+    "style": "Neo-Western painterly portrait, late-afternoon clinic light, leather medical bag and stethoscope blurred behind. Head and shoulders. 4:5 aspect ratio.",
+    "outPath": "assets/people/hands/cordell-voss_arguing.png"
+  },
+
+  {
+    "id": "bunkhouse_spring",
+    "category": "scene-composition",
+    "subject": "The bunkhouse kitchen, early spring",
+    "description": "The interior of a working ranch bunkhouse kitchen table at dawn. Rough pine walls, a woodstove ticking, coffee on the stove. The kitchen table dominates the frame — heavy, scarred, four chairs. Window light is new and cool, the grass outside is greening up. Muddy boots by the door. A radio in the corner. Quiet, hopeful, the season breaking.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, soft pre-dawn light through the window. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/bunkhouse_spring.png"
+  },
+  {
+    "id": "bunkhouse_summer",
+    "category": "scene-composition",
+    "subject": "The bunkhouse kitchen, high summer",
+    "description": "The bunkhouse kitchen at mid-morning in August. Hot light slanting through the window, dust in the beam. The same table — coffee sweating in mugs, the radio on, a hat hung on a chairback. The work has been going since five. Tired and steady.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, hot late-summer morning light. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/bunkhouse_summer.png"
+  },
+  {
+    "id": "bunkhouse_fall",
+    "category": "scene-composition",
+    "subject": "The bunkhouse kitchen, autumn",
+    "description": "The bunkhouse kitchen on a late autumn evening. The woodstove is hot. Outside the window, the cottonwoods are turning. The table is set for four — plates scraped, coffee poured, the long day's work behind them. The radio is on low. Warm amber light, the season turning.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, warm amber lamp and stove light. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/bunkhouse_fall.png"
+  },
+  {
+    "id": "bunkhouse_winter",
+    "category": "scene-composition",
+    "subject": "The bunkhouse kitchen, deep winter",
+    "description": "The bunkhouse kitchen on a deep winter night. The woodstove is the only real light. Snow piled outside the frosted window. The table is empty except for a coffee cup and a closed ledger. The radio is off. Cold and still and held.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, dark woodstove light, frosted window. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/bunkhouse_winter.png"
+  },
+  {
+    "id": "kitchen_table_summer",
+    "category": "scene-composition",
+    "subject": "The kitchen table, a hard conversation, summer",
+    "description": "Tighter crop on the kitchen table — three hands at the table, the player across from them. Summer light, dust, the radio on. A scene of reckoning: someone has been let go, someone is being told something hard. The chairs are pulled in close.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, summer midday light, tight interior framing. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/kitchen_table_summer.png"
+  },
+  {
+    "id": "kitchen_table_winter",
+    "category": "scene-composition",
+    "subject": "The kitchen table, a hard conversation, winter",
+    "description": "Tighter crop on the kitchen table — the same three hands, the player across, winter night. Woodstove light on their faces. The conversation is a quiet one. There's a vet's call on the radio. Outside, the snow falls.",
+    "style": "Neo-Western painterly scene composition, 16:9 widescreen, warm interior light against cold window. Cinematic Sheridan-true quality.",
+    "outPath": "assets/scenes/bunkhouse/kitchen_table_winter.png"
+  }
+]

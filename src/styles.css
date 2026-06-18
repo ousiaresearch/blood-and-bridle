@@ -2254,3 +2254,30 @@ main.shell.is-turning {
   background: rgba(185, 90, 70, 0.18);
   border-color: var(--red);
 }
+
+/* --- Kitchen shortcuts panel (moral moments in action panel) ----- */
+.kitchen-shortcuts {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.kitchen-shortcuts .eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.kitchen-shortcuts .eyebrow .hint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.kitchen-shortcuts .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

@@ -854,6 +854,17 @@ function render() {
               </button>
             `).join('')}
           </div>
+
+          <div class="kitchen-shortcuts">
+            <p class="eyebrow">Moral moments <span class="hint">— at the kitchen table</span></p>
+            <div class="actions">
+              ${game.horses.length > 0 ? `<button class="action action--danger" data-kitchen-skip="farrier" title="${game.cash < game.horses.length * 90 ? 'You can\'t afford the farrier this season.' : 'Bring it up at the kitchen table.'}">Skip the farrier</button>` : ''}
+              ${game.hands.some((h) => h.status === 'working' && !h.perCall) ? `<button class="action action--danger" data-kitchen-skip="wages">Delay hand wages</button>` : ''}
+              ${game.day % 90 === 0 ? `<button class="action action--danger" data-kitchen-skip="property_tax">Skip the property tax</button>` : ''}
+              ${game.horses.some((h) => h.health <= 40) ? `<button class="action action--danger" data-kitchen-skip="veterinary">Skip the vet</button>` : ''}
+            </div>
+          </div>
+
           <p class="hint">Each action advances one in-game day. The ranch has five years to prove itself.</p>
         </aside>
       </section>
@@ -1046,6 +1057,19 @@ function bindEvents() {
     audio.play('click');
     openKitchenSceneFor('moral:farrier');
   });
+
+  // Moral-skip buttons in the action panel. Each opens the kitchen
+  // table scene for the matching trigger; the player's choice lands
+  // effects via applyKitchenChoice (which routes moralRisk through
+  // the existing skipObligation reducer).
+  for (const btn of document.querySelectorAll('[data-kitchen-skip]')) {
+    btn.addEventListener('click', () => {
+      const category = btn.getAttribute('data-kitchen-skip');
+      audio.resume();
+      audio.play('click');
+      openKitchenSceneFor(`moral:${category}`);
+    });
+  }
 
   document.querySelector('[data-reset]')?.addEventListener('click', () => {
     audio.resume();
