@@ -20,6 +20,9 @@ import {
 import { silhouetteFor, ribbonFor } from './silhouettes.js';
 import { preloadPortraits, preloadCodex, renderPortrait, getPortraitForHorse, startIdleAnimation } from './portraits.js';
 import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtrackVolume, stopSoundtrack } from './soundtrack.js';
+import { openKitchenTable } from './kitchen-table.js';
+import { sceneForTrigger } from './scenes.js';
+import { adjustCorners, recomputeOverallReputation } from './reputation.js';
 import { showModal, closeModal } from './modal.js';
 import { renderHorseDetail } from './horse-detail.js';
 import { buildMemorial, renderMemorial, renderMemorialHall } from './memorial.js';
@@ -175,6 +178,108 @@ function openRanchProfile() {
 function openCodex() {
   const html = renderCodex(game);
   showModal(html, { title: 'Codex of the Code' });
+}
+
+// Open a kitchen table scene by trigger. Used by the demo button and,
+// in future, by the action pipeline when moral choices fire. The
+// applyEffect callback translates scene choice effects (cash, country,
+// crew, moralRisk, etc.) into game-state mutations through the
+// existing applyAction reducer.
+function openKitchenSceneFor(trigger, override = {}) {
+  const scene = sceneForTrigger(trigger);
+  if (!scene) return;
+  openKitchenTable(scene, game, (effects, sceneId, choiceId) => {
+    applyKitchenChoice(effects, sceneId, choiceId, override);
+  });
+}
+
+// Translate a kitchen-table choice's effects into game-state mutations.
+// Most effects mutate the game directly because the kitchen table IS
+// the kitchen table — a critical scene where the player has chosen.
+// The exceptions:
+//   - moralRisk → routed through applyAction('skipObligation') so the
+//     existing moral-consequence queue continues to work as designed.
+//   - gameOver → routed through applyAction('endGame') if/when that
+//     action exists, otherwise mutates the flag directly.
+// Other effects land directly on game state. The dashboard re-render
+// at the end picks them up.
+function applyKitchenChoice(effects, sceneId, choiceId, override = {}) {
+  const notes = [];
+  // Cash: direct mutation. The ledger entry is written by the next
+  // daily-tick's addIncome/addExpense call (or skipped if we don't
+  // want a ledger entry for kitchen-table choices — small choices).
+  if (typeof effects.cash === 'number' && effects.cash !== 0) {
+    game.cash += effects.cash;
+    notes.push(`cash ${effects.cash > 0 ? '+' : ''}$${effects.cash.toLocaleString()}`);
+  }
+  // Reputation corners.
+  const cornerEffect = {};
+  for (const k of ['country', 'horsemen', 'bank', 'crew']) {
+    if (typeof effects[k] === 'number' && effects[k] !== 0) cornerEffect[k] = effects[k];
+  }
+  if (Object.keys(cornerEffect).length > 0) {
+    const newCorners = adjustCorners(game.reputationCorners, cornerEffect);
+    game.reputationCorners = newCorners;
+    game.reputation = recomputeOverallReputation(newCorners);
+    for (const [k, v] of Object.entries(cornerEffect)) {
+      notes.push(`${k} ${v > 0 ? '+' : ''}${v}`);
+    }
+  }
+  // Moral-risk queue: hand the choice to the existing moral skip flow
+  // so consequences fire on the next season tick as designed.
+  if (effects.moralRisk) {
+    applyAction(game, { type: 'skipObligation', category: effects.moralRisk, horseId: override.horseId ?? null });
+    notes.push(`moral risk: ${effects.moralRisk}`);
+  }
+  // Day-worker gone: remove from dayWorkers list immediately.
+  if (effects.dayWorkerGone) {
+    const before = (game.dayWorkers ?? []).length;
+    game.dayWorkers = (game.dayWorkers ?? []).filter((w) => w.id !== effects.dayWorkerGone);
+    if (game.dayWorkers.length < before) notes.push(`day-worker gone: ${effects.dayWorkerGone}`);
+  }
+  // Hire a hand: bump the day-worker to a full hand.
+  if (effects.hireHand) {
+    const dw = (game.dayWorkers ?? []).find((w) => w.id === effects.hireHand);
+    if (dw) {
+      const newHand = {
+        ...dw,
+        status: 'working',
+        hoursPerWeek: 40,
+        wage: effects.wageCostPerSeason ?? 1600,
+        morale: 65,
+        hoursThisWeek: 0,
+        injury: null,
+      };
+      game.hands = [...(game.hands ?? []), newHand];
+      game.dayWorkers = game.dayWorkers.filter((w) => w.id !== effects.hireHand);
+      notes.push(`hired ${dw.name}`);
+    }
+  }
+  // Parcel changes.
+  if (effects.gainParcel && game.parcels) {
+    game.parcels = game.parcels.map((p) => p.id === effects.gainParcel ? { ...p, currentOwner: 'player' } : p);
+    notes.push(`gained parcel: ${effects.gainParcel}`);
+  }
+  if (effects.loseParcel && game.parcels) {
+    game.parcels = game.parcels.map((p) => p.id === effects.loseParcel ? { ...p, currentOwner: 'developer' } : p);
+    notes.push(`lost parcel: ${effects.loseParcel}`);
+  }
+  // Loan: cash already covered above. Track debt for future repayment.
+  if (typeof effects.loanDebt === 'number') {
+    game.loans = [...(game.loans ?? []), { amount: effects.loanDebt, takenDay: game.day, sceneId }];
+    notes.push(`loan +$${effects.loanDebt.toLocaleString()}`);
+  }
+  // End-of-season continuation / sell-out.
+  if (effects.gameOver === 'sellout') {
+    game.soldOut = true;
+    notes.push('sold out');
+  }
+  // Log it.
+  if (notes.length > 0 && Array.isArray(game.log)) {
+    game.log = [`[kitchen table] ${sceneId} → ${choiceId}: ${notes.join(', ')}`, ...game.log];
+  }
+  // Re-render the dashboard.
+  render();
 }
 
 function renderHorse(horse, selectedHorseId) {
@@ -673,6 +778,7 @@ function render() {
         <div class="hero-actions">
           <button class="reset" data-ranch-profile title="Set the ranch name and the brand">Ranch</button>
           <button class="reset" data-codex title="The earned code of the West">Codex</button>
+          <button class="reset" data-kitchen-table title="The hands at the kitchen table">Kitchen</button>
           <button class="audio-toggle ${audio.isMuted() ? 'is-muted' : ''}" data-audio-toggle title="Click to cycle: Sound off → Sound on → Sound + Ambient">${audio.isMuted() ? 'Sound off' : (audioAmbientEnabled ? 'Sound + Amb' : 'Sound on')}</button>
           <button class="reset" data-toggle-share-card>${ui.showShareCard ? 'Hide card' : 'Share card'}</button>
           <button class="reset" data-share-link>Share link</button>
@@ -929,6 +1035,16 @@ function bindEvents() {
     audio.resume();
     audio.play('click');
     openCodex();
+  });
+
+  // Open the kitchen table scene (demo button — wires up a moral
+  // scene so the kitchen-table system can be exercised end-to-end).
+  // Production wiring will intercept the skipObligation action and
+  // route through this same scene trigger.
+  document.querySelector('[data-kitchen-table]')?.addEventListener('click', () => {
+    audio.resume();
+    audio.play('click');
+    openKitchenSceneFor('moral:farrier');
   });
 
   document.querySelector('[data-reset]')?.addEventListener('click', () => {
