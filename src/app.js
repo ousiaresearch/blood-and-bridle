@@ -18,7 +18,7 @@ import {
   suggestFilename,
 } from './dynasty.js';
 import { silhouetteFor, ribbonFor } from './silhouettes.js';
-import { preloadPortraits, renderPortrait, getPortraitForHorse, startIdleAnimation } from './portraits.js';
+import { preloadPortraits, preloadCodex, renderPortrait, getPortraitForHorse, startIdleAnimation } from './portraits.js';
 import { soundtrack, playForSeason, playForMood, setSoundtrackMuted, setSoundtrackVolume, stopSoundtrack } from './soundtrack.js';
 import { showModal, closeModal } from './modal.js';
 import { renderHorseDetail } from './horse-detail.js';
@@ -110,7 +110,11 @@ function stageClass(stageId) {
   return `life-stage life-stage--${stageId ?? 'dead'}`;
 }
 
-function openHorseDetail(horse) {
+async function openHorseDetail(horse) {
+  // Just-in-time preload: if the codex module isn't loaded yet (e.g. the
+  // player opened a modal before preloadPortraits() resolved), fetch it
+  // now so the modal's big cinematic portrait paints immediately.
+  preloadCodex().catch(() => {});
   const html = renderHorseDetail(horse, game) + renderLegendaryBlock(horse, game);
   showModal(html, { title: horse.name });
 }
