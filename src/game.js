@@ -20,7 +20,8 @@ import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutori
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
 import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
-import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner } from './reputation.js';
+import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner, crewDepartureRisk } from './reputation.js';
+import { createInitialHands, findHand, canDoTask, consumeHandHours, taskHours, resetWeeklyHours, tickHandInjuries, adjustHandsMorale, totalMonthlyWages, rollHandDepartures, workingHandCount, HAND_STATUS } from './labor.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -100,11 +101,17 @@ export function createNewGame() {
     ranchBrand: DEFAULT_BRAND_ID,
     foundedDay: 1,
     legendaryUnlockedDay: legendary.legendary.unlockedDay,
+    // Legacy `staff` field — the original 3-hand view. Kept for
+    // backward compat with existing actions and tests. The new
+    // 5-hand system lives in `hands` below.
     staff: [
       { id: 'mae', name: 'Mae Calder', role: 'Head trainer', skill: 9, loyalty: 77, note: 'Can make a horse brave, but will not forgive cruelty.' },
       { id: 'eli', name: 'Eli Rusk', role: 'Ranch hand', skill: 6, loyalty: 58, note: 'Knows every fence line and every debt rumor.' },
       { id: 'dr-voss', name: 'Dr. Voss', role: 'Veterinarian', skill: 8, loyalty: 63, note: 'Expensive, honest, worth it when legs are at stake.' },
     ],
+    // Five hands: Mae, Eli, Reyes, Elena, Voss. Full schema with
+    // skills matrix, hours per week, morale, status, injury, backstory.
+    hands: createInitialHands(),
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -195,6 +202,8 @@ function maybeFireSeasonal(game) {
   let g = { ...game };
   // Auto-complete the "free" tutorial step on day 10
   if (g.day >= 10) g = markStepComplete(g, 'free');
+  // Tick hand injuries daily (countdown to recovery)
+  if (g.hands) g = { ...g, hands: tickHandInjuries(g.hands) };
   // Year tick on year boundary
   if (isYearBoundary(g)) {
     // Snapshot the herd before the tick so we can detect who left
@@ -293,6 +302,31 @@ function maybeFireSeasonal(game) {
       }
     }
     g = { ...g, collapsedCornerSeasons: newCollapsedSeasons };
+    // Hand departures: each season, roll for hands leaving based on
+    // crew corner and individual morale. A collapsed crew corner is
+    // a guaranteed departure.
+    if (g.hands) {
+      const crewCorner = g.reputationCorners?.crew ?? 50;
+      const crewRisk = crewDepartureRisk(crewCorner);
+      const beforeHands = g.hands.filter((h) => h.status === HAND_STATUS.WORKING).length;
+      const afterHands = rollHandDepartures(g.hands, crewRisk);
+      const lostHands = beforeHands - afterHands.filter((h) => h.status === HAND_STATUS.WORKING).length;
+      if (lostHands > 0) {
+        const lostNames = afterHands
+          .filter((h) => h.status === HAND_STATUS.GONE && g.hands.find((x) => x.id === h.id)?.status === HAND_STATUS.WORKING)
+          .map((h) => h.name)
+          .join(' and ');
+        g = {
+          ...g,
+          hands: afterHands,
+          log: [`${lostNames} walked off the place. The bunkhouse is short.`, ...g.log].slice(0, 20),
+        };
+      } else {
+        g = { ...g, hands: afterHands };
+      }
+    }
+    // Reset weekly hours at season boundary (rough alignment)
+    if (g.hands) g = { ...g, hands: resetWeeklyHours(g.hands) };
     g = tickEvents(g);
     // Contract offer: every 30 days (which aligns with season boundaries)
     const offer = generateContractOffer(g);
@@ -319,7 +353,8 @@ export function applyAction(game, action) {
   switch (action.type) {
     case 'train': {
       const horse = findHorse(working, action.horseId);
-      const staff = findStaff(working, action.staffId ?? 'mae');
+      const staffId = action.staffId ?? 'mae';
+      const staff = findStaff(working, staffId);
       if (!isTrainable(horse)) {
         const stage = getLifeStage(horse);
         throw new Error(`${horse.name} is too ${stage?.id === 'foal' || stage?.id === 'weanling' ? 'young' : 'old'} to train (${stage?.label}).`);
@@ -327,6 +362,14 @@ export function applyAction(game, action) {
       // Legendary gate: the picturebook horse cannot be ridden before unlock day.
       if (!isLegendaryRidden(working, horse)) {
         throw new Error(`${horse.name} will not be ridden before day ${horse.legendary.unlockedDay}. She decides.`);
+      }
+      // Labor-hours: the selected hand must be available, able, and
+      // have hours left this week. (Phase 1.4)
+      if (working.hands) {
+        const hand = findHand(working.hands, staffId);
+        const can = canDoTask(hand, 'train');
+        if (!can.ok) throw new Error(can.reason);
+        working.hands = working.hands.map((h) => h.id === staffId ? consumeHandHours(h, 'train') : h);
       }
       const skillBonus = Math.max(3, Math.round(staff.skill / 2));
       working.cash -= TRAINING_COST;
@@ -348,6 +391,15 @@ export function applyAction(game, action) {
     case 'rotatePasture': {
       working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress - 13) }));
       working.parcels = working.parcels.map((p) => ({ ...p, forage: clamp(p.forage + 9) }));
+      if (working.hands) {
+        // Rotation requires any hand with fencing skill. Mae or Eli.
+        const eligibleHandId = working.hands.find((h) => (h.skills?.fencing ?? 0) >= 5)?.id ?? 'eli';
+        const hand = findHand(working.hands, eligibleHandId);
+        const can = canDoTask(hand, 'rotatePasture');
+        if (can.ok) {
+          working.hands = working.hands.map((h) => h.id === eligibleHandId ? consumeHandHours(h, 'rotatePasture') : h);
+        }
+      }
       working = markStepComplete(working, 'rotate');
       working = dailyUpkeep(working, 'Rotated the herd through fresh pasture.');
       break;
@@ -355,6 +407,12 @@ export function applyAction(game, action) {
     case 'vetCare': {
       const horse = findHorse(working, action.horseId);
       if (working.cash < VET_COST) throw new Error('Not enough cash for vet care.');
+      if (working.hands) {
+        const hand = findHand(working.hands, 'cordell-voss');
+        const can = canDoTask(hand, 'vetCare');
+        if (!can.ok) throw new Error(can.reason);
+        working.hands = working.hands.map((h) => h.id === 'cordell-voss' ? consumeHandHours(h, 'vetCare') : h);
+      }
       working.cash -= VET_COST;
       working = withCornerAdjust(working, { bank: 1, crew: 2 }); // paid the vet, hands see you care
       working.horses = working.horses.map((h) => h.id === horse.id
@@ -462,12 +520,24 @@ export function applyAction(game, action) {
       if (!isTrainable(horse)) throw new Error(`${horse.name} is too young or old for advanced training.`);
       const stage = getLifeStage(horse);
       if (stage?.id !== 'campaigner') throw new Error(`Only campaigners can take advanced training. ${horse.name} is a ${stage?.label ?? 'unknown'}.`);
+      if (working.hands) {
+        const hand = findHand(working.hands, 'mae');
+        const can = canDoTask(hand, 'maeAdvancedTraining');
+        if (!can.ok) throw new Error(can.reason);
+        working.hands = working.hands.map((h) => h.id === 'mae' ? consumeHandHours(h, 'maeAdvancedTraining') : h);
+      }
       working.cash -= 50;
       working.horses = working.horses.map((h) => h.id === horse.id ? maeAdvancedTraining(h) : h);
       working = dailyUpkeep(working, `Mae pushed ${horse.name} through an advanced session.`);
       break;
     }
     case 'eliFindHayDeal': {
+      if (working.hands) {
+        const hand = findHand(working.hands, 'eli');
+        const can = canDoTask(hand, 'eliFindHayDeal');
+        if (!can.ok) throw new Error(can.reason);
+        working.hands = working.hands.map((h) => h.id === 'eli' ? consumeHandHours(h, 'eliFindHayDeal') : h);
+      }
       working.cash -= 200;
       working.hayDealDaysLeft = 30;
       working = dailyUpkeep(working, 'Eli found a hay deal. Feed costs are down for 30 days.');
@@ -475,6 +545,12 @@ export function applyAction(game, action) {
     }
     case 'vossPreventiveCare': {
       if (working.cash < 300) throw new Error('Need $300 for preventive care.');
+      if (working.hands) {
+        const hand = findHand(working.hands, 'cordell-voss');
+        const can = canDoTask(hand, 'vossPreventiveCare');
+        if (!can.ok) throw new Error(can.reason);
+        working.hands = working.hands.map((h) => h.id === 'cordell-voss' ? consumeHandHours(h, 'vossPreventiveCare') : h);
+      }
       working.cash -= 300;
       working.horses = vossPreventiveCare(working.horses);
       recordNpcMemory(working, 'vet-voss', 'consulted', 1);
@@ -526,6 +602,20 @@ export function applyAction(game, action) {
       const def = IMPROVEMENT_COSTS[improvement];
       working.parcels = newParcels;
       working.cash -= def.cash;
+      // Labor-hours: improvements consume the worker-hours defined in
+      // the IMPROVEMENT_COSTS table. Eli is the default for fence /
+      // clearing work; for drainage / irrigation, whoever has the
+      // higher combined skill is selected.
+      if (working.hands) {
+        const laborHours = def.laborHours;
+        // Find the best hand for this terrain's improvement
+        const bestHand = working.hands
+          .filter((h) => h.status === HAND_STATUS.WORKING)
+          .sort((a, b) => (b.skills?.fencing ?? 0) - (a.skills?.fencing ?? 0))[0];
+        if (bestHand && bestHand.hoursThisWeek + laborHours <= bestHand.hoursPerWeek) {
+          working.hands = working.hands.map((h) => h.id === bestHand.id ? consumeHandHours(h, 'improveParcel', laborHours) : h);
+        }
+      }
       // Land improvements are a country play. The neighbors see you
       // mending fences. The bank sees the spend. The crew is steady.
       working = withCornerAdjust(working, { country: 3, bank: -1, crew: 1 });
