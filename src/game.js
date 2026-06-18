@@ -20,6 +20,7 @@ import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutori
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
 import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
+import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner } from './reputation.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -28,6 +29,17 @@ const SHOW_WINNINGS = 6000;
 const MAX_DAY = 30 * 5; // 5 years
 
 function clone(v) { return JSON.parse(JSON.stringify(v)); }
+
+// Apply corner adjustments and recompute the legacy single `reputation`
+// field. Pure helper used by every action that touches reputation.
+function withCornerAdjust(game, deltas) {
+  const newCorners = adjustCorners(game.reputationCorners, deltas);
+  return {
+    ...game,
+    reputationCorners: newCorners,
+    reputation: recomputeOverallReputation(newCorners),
+  };
+}
 
 function pickName(pool, used, sex) {
   const prefix = sex === 'male' ? 'His' : 'Her';
@@ -66,7 +78,13 @@ export function createNewGame() {
     maxDay: MAX_DAY,
     cash: 18500,
     legacy: 62,
+    // The single `reputation` field is the binding-constraint reading:
+    // it is the minimum of the four corners. Callers should adjust
+    // corners via adjustCorners and recompute via recomputeOverallReputation.
     reputation: 38,
+    // The four-cornered reputation. Phase 1.3.
+    reputationCorners: createInitialReputation(),
+    collapsedCornerSeasons: { horsemen: 0, country: 0, bank: 0, crew: 0 },
     developerPressure: 54,
     crisis: {
       id: 'prove-ranch',
@@ -262,6 +280,19 @@ function maybeFireSeasonal(game) {
     if (hazardResult.parcelHazardLog.length > 0) {
       g = { ...g, log: [...hazardResult.parcelHazardLog, ...g.log].slice(0, 20) };
     }
+    // Corner collapse tracking: when a corner hits 0, increment the
+    // season counter. After 3 consecutive seasons at 0, the corner
+    // is collapsed (Phase 4.2 will surface the ending variant).
+    const corners = g.reputationCorners;
+    const newCollapsedSeasons = { ...(g.collapsedCornerSeasons ?? {}) };
+    for (const corner of ['horsemen', 'country', 'bank', 'crew']) {
+      if ((corners?.[corner] ?? 0) <= 0) {
+        newCollapsedSeasons[corner] = (newCollapsedSeasons[corner] ?? 0) + 1;
+      } else {
+        newCollapsedSeasons[corner] = 0;
+      }
+    }
+    g = { ...g, collapsedCornerSeasons: newCollapsedSeasons };
     g = tickEvents(g);
     // Contract offer: every 30 days (which aligns with season boundaries)
     const offer = generateContractOffer(g);
@@ -325,7 +356,7 @@ export function applyAction(game, action) {
       const horse = findHorse(working, action.horseId);
       if (working.cash < VET_COST) throw new Error('Not enough cash for vet care.');
       working.cash -= VET_COST;
-      working.reputation = clamp(working.reputation + 3);
+      working = withCornerAdjust(working, { bank: 1, crew: 2 }); // paid the vet, hands see you care
       working.horses = working.horses.map((h) => h.id === horse.id
         ? { ...h, injured: false, health: clamp(h.health + 28), stress: clamp(h.stress - 8) }
         : h);
@@ -342,6 +373,9 @@ export function applyAction(game, action) {
       if (!legCheck.ok) throw new Error(legCheck.reason);
       working.cash += horse.value;
       working.legacy = clamp(working.legacy - 12);
+      // Selling a horse reads as a defeat. Horsemen notice, the crew
+      // feels it, the country hears. The bank is briefly happy.
+      working = withCornerAdjust(working, { horsemen: -2, crew: -4, bank: 1 });
       working.staff = working.staff.map((s) => ({ ...s, loyalty: clamp(s.loyalty - (s.id === 'mae' ? 12 : 6)) }));
       const memorial = buildMemorial(horse, working, { kind: 'sold', circumstance: `Sold privately at age ${horse.age} for $${horse.value.toLocaleString()}.` });
       working.horses = working.horses.filter((h) => h.id !== horse.id);
@@ -368,7 +402,10 @@ export function applyAction(game, action) {
       working.cash -= show.entryFee;
       const result = runShowdown(horse, show, working.ranchUpgrades ?? {});
       working.cash += result.payout;
-      working.reputation = Math.max(0, Math.min(100, working.reputation + result.reputationDelta));
+      // Show result feeds the horsemen corner primarily; the crew gets
+      // a small bump from proving the horse on the circuit.
+      const horsemenDelta = result.reputationDelta ?? 0;
+      working = withCornerAdjust(working, { horsemen: horsemenDelta, crew: horsemenDelta > 0 ? 1 : -1 });
       working.legacy = Math.max(0, Math.min(100, working.legacy + result.legacyDelta));
       working.horses = working.horses.map((h) => h.id === horse.id
         ? { ...h, stress: Math.min(100, h.stress + 12), bond: Math.min(100, h.bond + (result.playerPlace === 1 ? 4 : 1)) }
@@ -381,6 +418,9 @@ export function applyAction(game, action) {
     case 'refuseDeveloper': {
       working.legacy = clamp(working.legacy + 9);
       working.developerPressure = clamp(working.developerPressure + 8);
+      // Refusing the developer is a country-and-horsemen play. The
+      // bank briefly resents the foregone cash.
+      working = withCornerAdjust(working, { country: 4, horsemen: 1, bank: -1 });
       recordNpcMemory(working, 'dev-coleman', 'refused');
       adjustRelationship('dev-coleman', -8);
       adjustPatience('dev-coleman', -10);
@@ -395,6 +435,10 @@ export function applyAction(game, action) {
       working.developerPressure = 0;
       working.parcels = working.parcels.filter((p) => p.id !== 'west-meadow');
       working.crisis = { ...working.crisis, resolved: 'sold-to-developer' };
+      // The bank loves the cash. The country, the horsemen, and the
+      // crew all lose a little. This is the high-cash, low-reputation
+      // play. Sheridan: the moment the ranch stops being a ranch.
+      working = withCornerAdjust(working, { bank: 8, country: -10, horsemen: -4, crew: -3 });
       recordNpcMemory(working, 'dev-coleman', 'signed');
       adjustRelationship('dev-coleman', 30);
       working = dailyUpkeep(working, 'Signed the west meadow over to Reyes. The bank is happy. The legacy is thinner.');
@@ -482,6 +526,9 @@ export function applyAction(game, action) {
       const def = IMPROVEMENT_COSTS[improvement];
       working.parcels = newParcels;
       working.cash -= def.cash;
+      // Land improvements are a country play. The neighbors see you
+      // mending fences. The bank sees the spend. The crew is steady.
+      working = withCornerAdjust(working, { country: 3, bank: -1, crew: 1 });
       working = dailyUpkeep(working, `${def.label}. The land remembers.`);
       break;
     }

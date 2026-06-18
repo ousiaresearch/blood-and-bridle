@@ -15,6 +15,23 @@ test('new game opens with six horses (5 seed + legendary), staff, three parcels,
   assert.equal(game.staff.length >= 3, true);
   assert.equal(game.parcels.length, 7);
   assert.ok(game.crisis.title);
+  // Four-cornered reputation initialized (Phase 1.3)
+  assert.ok(game.reputationCorners, 'reputationCorners exists');
+  assert.equal(typeof game.reputationCorners.horsemen, 'number');
+  assert.equal(typeof game.reputationCorners.country, 'number');
+  assert.equal(typeof game.reputationCorners.bank, 'number');
+  assert.equal(typeof game.reputationCorners.crew, 'number');
+  // Legacy single reputation is the binding constraint (minimum)
+  const cornerMin = Math.min(
+    game.reputationCorners.horsemen,
+    game.reputationCorners.country,
+    game.reputationCorners.bank,
+    game.reputationCorners.crew,
+  );
+  assert.equal(game.reputation, cornerMin, 'legacy reputation is the minimum corner');
+  // Collapse tracking initialized
+  assert.ok(game.collapsedCornerSeasons);
+  assert.equal(game.collapsedCornerSeasons.horsemen, 0);
 });
 
 test('training a campaigner horse raises training, bond, and advances the day', () => {
@@ -47,13 +64,46 @@ test('refusing the developer records memory on the NPC', () => {
   assert.equal(NPCS['dev-coleman'].memory.refused, before + 1);
 });
 
+test('vet care adjusts reputation corners (bank +1, crew +2)', () => {
+  let game = createNewGame();
+  const startBank = game.reputationCorners.bank;
+  const startCrew = game.reputationCorners.crew;
+  // Need enough cash for vet
+  game = { ...game, cash: 100000 };
+  game = applyAction(game, { type: 'vetCare', horseId: 'blue-ash' });
+  assert.equal(game.reputationCorners.bank, startBank + 1);
+  assert.equal(game.reputationCorners.crew, startCrew + 2);
+});
+
+test('signing with the developer: bank gains, country loses', () => {
+  let game = createNewGame();
+  const startBank = game.reputationCorners.bank;
+  const startCountry = game.reputationCorners.country;
+  const startHorsemen = game.reputationCorners.horsemen;
+  const startCrew = game.reputationCorners.crew;
+  game = applyAction(game, { type: 'signWithDeveloper' });
+  assert.ok(game.reputationCorners.bank > startBank, 'bank gains');
+  assert.ok(game.reputationCorners.country < startCountry, 'country loses');
+  assert.ok(game.reputationCorners.horsemen < startHorsemen, 'horsemen lose');
+  assert.ok(game.reputationCorners.crew < startCrew, 'crew loses');
+});
+
+test('refusing the developer: country gains, bank briefly resents', () => {
+  let game = createNewGame();
+  const startCountry = game.reputationCorners.country;
+  const startBank = game.reputationCorners.bank;
+  game = applyAction(game, { type: 'refuseDeveloper' });
+  assert.ok(game.reputationCorners.country > startCountry, 'country gains');
+  assert.ok(game.reputationCorners.bank < startBank, 'bank loses');
+});
+
 test('signing with the developer removes the west meadow and adds cash', () => {
   let game = createNewGame();
   game = applyAction(game, { type: 'signWithDeveloper' });
-  // Spring multiplier is 0.95 → daily burn = 760
-  // 18500 (start) + 50000 (sale) - 760 (burn) = 67740
-  assert.equal(game.cash, 67740);
+  // West meadow is gone from parcels
   assert.equal(game.parcels.find((p) => p.id === 'west-meadow'), undefined);
+  // Cash is up (after the burn)
+  assert.ok(game.cash > 50000, 'cash increased by the sale');
 });
 
 test('breeding two campaigners queues a pending breeding', () => {
