@@ -28,6 +28,9 @@ import { createInitialLedger, addExpense, addIncome, tickSeasonalEconomy, create
 import { createMoralState, skipObligation, recordSkip, tickMoralConsequences, skippedSavings, skipWarning, MORAL_CATEGORIES } from './moral.js';
 import { CRISIS_TYPES, detectCrisisTriggers, pickCrisisToFire, resolveCrisis } from './crisis.js';
 import { applyHeirTransition } from './heir.js';
+import { createInitialWeather, tickWeather, weatherNarrative, WEATHER_TYPES } from './weather-system.js';
+import { BUYER_DEFS, findBuyer, marketOffer, marketSentiment, dispersalSale } from './market.js';
+import { COMMUNITY_MEMBERS, availableCommunity, departedCommunity, communityNarrative, SERVICE_COSTS, COMMUNITY_EVENTS, eventsForMonth } from './community.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -138,6 +141,10 @@ export function createNewGame() {
     // consequences. Phase 3.
     moralState: createMoralState(),
     foreclosurePending: false,
+    // Weather system: type + severity + history. Phase 5.
+    weather: createInitialWeather(),
+    // Cattlemen's association membership
+    cattlemenMember: false,
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -230,6 +237,13 @@ function maybeFireSeasonal(game) {
   if (g.day >= 10) g = markStepComplete(g, 'free');
   // Tick hand injuries daily (countdown to recovery)
   if (g.hands) g = { ...g, hands: tickHandInjuries(g.hands) };
+  // Tick weather at year boundary
+    if (g.weather && isYearBoundary(g)) {
+      const year = Math.floor((g.day - 1) / 120) + 1;
+      g = { ...g, weather: tickWeather(g.weather, year) };
+      const narrative = weatherNarrative(g.weather);
+      g = { ...g, log: [`Year ${year}: ${narrative}`, ...g.log].slice(0, 20) };
+    }
   // Year tick on year boundary
   if (isYearBoundary(g)) {
     // Snapshot the herd before the tick so we can detect who left
