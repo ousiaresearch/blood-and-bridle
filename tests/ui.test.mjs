@@ -61,7 +61,10 @@ test('ranch verdict shifts from vulnerable to defensible when the player proves 
     ...game,
     cash: 50000,
     legacy: 80,
+    // Phase 1.3: reputation is now derived from corners. Set the
+    // corners so the binding constraint (minimum) lands at 65+.
     reputation: 65,
+    reputationCorners: { horsemen: 70, country: 65, bank: 70, crew: 70 },
     horses: game.horses.map((horse) => horse.id === 'blue-ash'
       ? { ...horse, training: 90, bond: 88, health: 95, stress: 10 }
       : horse),

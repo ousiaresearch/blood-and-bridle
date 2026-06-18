@@ -22,6 +22,8 @@ import { DEFAULT_BRAND_ID } from './brand.js';
 import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
 import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner, crewDepartureRisk } from './reputation.js';
 import { createInitialHands, findHand, canDoTask, consumeHandHours, taskHours, resetWeeklyHours, tickHandInjuries, adjustHandsMorale, totalMonthlyWages, rollHandDepartures, workingHandCount, HAND_STATUS } from './labor.js';
+import { createInitialDayWorkers, findDayWorker, rollDayWorkerAvailability, hireDayWorker, dayWorkerCost, resetDayWorkerHours, tickDayWorkerSeasons, canPromoteDayWorker, promoteDayWorker, bestDayWorkerFor, DAY_WORKER_TASKS, DAY_WORKER_TASK_NAMES } from './day-workers.js';
+import { dayWorkerAvailability } from './reputation.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -112,6 +114,10 @@ export function createNewGame() {
     // Five hands: Mae, Eli, Reyes, Elena, Voss. Full schema with
     // skills matrix, hours per week, morale, status, injury, backstory.
     hands: createInitialHands(),
+    // Day-workers: the country corner made tangible. 4 recurring
+    // outside laborers whose availability scales with the country
+    // corner. Promotion to hand is the growth moment.
+    dayWorkers: createInitialDayWorkers(),
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -302,6 +308,30 @@ function maybeFireSeasonal(game) {
       }
     }
     g = { ...g, collapsedCornerSeasons: newCollapsedSeasons };
+    // Day-worker availability: the country corner decides who shows up.
+    // Each day-worker in the static roster (gate met) rolls for whether
+    // they're available this season. Seasons worked increments for
+    // those who showed up.
+    if (g.dayWorkers) {
+      const countryCorner = g.reputationCorners?.country ?? 50;
+      const rolled = rollDayWorkerAvailability(g.dayWorkers, countryCorner, dayWorkerAvailability);
+      const ticked = tickDayWorkerSeasons(rolled);
+      g = { ...g, dayWorkers: ticked };
+      // Log: who's here this season
+      const here = ticked.filter((d) => d.availableThisSeason).map((d) => d.name);
+      const missing = ticked.filter((d) => !d.promoted && !d.availableThisSeason && d.availabilityGate <= countryCorner).map((d) => d.name);
+      const inRoster = ticked.filter((d) => !d.promoted && d.availabilityGate <= countryCorner).length;
+      const inPasture = ticked.filter((d) => !d.promoted && d.availabilityGate > countryCorner).length;
+      const logLines = [];
+      if (here.length > 0) logLines.push(`Day-help on the place: ${here.join(', ')}.`);
+      if (missing.length > 0) logLines.push(`No sign of ${missing.join(' or ')} this season.`);
+      if (inPasture > 0 && countryCorner < 30) {
+        logLines.push(`The country is shut. No one new will come.`);
+      }
+      if (logLines.length > 0) {
+        g = { ...g, log: [...logLines, ...g.log].slice(0, 20) };
+      }
+    }
     // Hand departures: each season, roll for hands leaving based on
     // crew corner and individual morale. A collapsed crew corner is
     // a guaranteed departure.
@@ -327,6 +357,7 @@ function maybeFireSeasonal(game) {
     }
     // Reset weekly hours at season boundary (rough alignment)
     if (g.hands) g = { ...g, hands: resetWeeklyHours(g.hands) };
+    if (g.dayWorkers) g = { ...g, dayWorkers: resetDayWorkerHours(g.dayWorkers) };
     g = tickEvents(g);
     // Contract offer: every 30 days (which aligns with season boundaries)
     const offer = generateContractOffer(g);
@@ -392,12 +423,17 @@ export function applyAction(game, action) {
       working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress - 13) }));
       working.parcels = working.parcels.map((p) => ({ ...p, forage: clamp(p.forage + 9) }));
       if (working.hands) {
-        // Rotation requires any hand with fencing skill. Mae or Eli.
-        const eligibleHandId = working.hands.find((h) => (h.skills?.fencing ?? 0) >= 5)?.id ?? 'eli';
-        const hand = findHand(working.hands, eligibleHandId);
-        const can = canDoTask(hand, 'rotatePasture');
-        if (can.ok) {
-          working.hands = working.hands.map((h) => h.id === eligibleHandId ? consumeHandHours(h, 'rotatePasture') : h);
+        // Rotation: try each working hand in turn (highest fencing first).
+        // First hand with hours available takes the work. If none, the
+        // rotation still happens — the labor system soft-fails.
+        const candidates = [...working.hands]
+          .filter((h) => h.status === HAND_STATUS.WORKING && (h.skills?.fencing ?? 0) >= 5)
+          .sort((a, b) => (b.skills?.fencing ?? 0) - (a.skills?.fencing ?? 0));
+        for (const c of candidates) {
+          if (c.hoursThisWeek + 8 <= c.hoursPerWeek) {
+            working.hands = working.hands.map((h) => h.id === c.id ? consumeHandHours(h, 'rotatePasture') : h);
+            break;
+          }
         }
       }
       working = markStepComplete(working, 'rotate');
@@ -594,6 +630,33 @@ export function applyAction(game, action) {
       const parcel = working.parcels.find((p) => p.id === action.parcelId);
       // (parcel purchasing handled in map.js — see buyAvailableParcel)
       working = dailyUpkeep(working, working.log[0] ?? 'Parcel decision recorded.');
+      break;
+    }
+    case 'hireDayWorker': {
+      const { dayWorkerId, task } = action;
+      const dw = findDayWorker(working.dayWorkers, dayWorkerId);
+      const cost = dayWorkerCost(dw, task);
+      if (working.cash < cost) throw new Error(`Need $${cost} to hire ${dw.name} for ${task}.`);
+      working.cash -= cost;
+      working.dayWorkers = hireDayWorker(working.dayWorkers, dayWorkerId, task);
+      working = withCornerAdjust(working, { country: 1 }); // hiring locals helps the country
+      working = dailyUpkeep(working, `${dw.name} worked ${DAY_WORKER_TASKS[task].label.toLowerCase()} for $${cost}.`);
+      break;
+    }
+    case 'promoteDayWorker': {
+      const { dayWorkerId } = action;
+      const dw = findDayWorker(working.dayWorkers, dayWorkerId);
+      const countryCorner = working.reputationCorners?.country ?? 0;
+      // Vacancy = at most 5 working hands (the original 5 minus any GONE)
+      const workingHandCount2 = working.hands.filter((h) => h.status === HAND_STATUS.WORKING).length;
+      const hasVacancy = workingHandCount2 < 5;
+      const check = canPromoteDayWorker(dw, countryCorner, hasVacancy);
+      if (!check.ok) throw new Error(check.reason);
+      const result = promoteDayWorker(working.dayWorkers, dayWorkerId, working.hands);
+      working.dayWorkers = result.dayWorkers;
+      working.hands = result.hands;
+      working = withCornerAdjust(working, { country: 5 }); // commitment to the place
+      working = dailyUpkeep(working, result.log);
       break;
     }
     case 'improveParcel': {
