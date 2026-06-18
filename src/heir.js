@@ -12,6 +12,8 @@
 //
 // Pure module. No DOM. No localStorage.
 
+import { pickHeirArchetype } from './rival-portraits.js';
+
 // Heir selection: by seniority. Mae is first (longest-tenured hand),
 // then Eli, then Reyes, then Elena, then Voss (the vet — last resort).
 const HEIR_PRIORITY = ['mae', 'eli', 'reyes', 'elena', 'cordell-voss'];
@@ -93,6 +95,11 @@ export function applyHeirTransition(game) {
     ? { ...h, morale: Math.max(70, h.morale), hoursThisWeek: 0, status: 'working' }
     : h);
 
+  // Pick the heir archetype for this generation. Deterministic by
+  // (heir id + generation count) so a save/load preserves identity.
+  const generationCount = (game.generationCount ?? 1) + 1;
+  const archetype = pickHeirArchetype(result.heir.id, generationCount);
+
   return {
     ...game,
     hands: newHands,
@@ -106,7 +113,11 @@ export function applyHeirTransition(game) {
     ownerName: result.heir.name,
     log: [result.narrative, ...(game.log ?? [])].slice(0, 20),
     heirTransitionPending: false,
-    generationCount: (game.generationCount ?? 1) + 1,
+    generationCount,
+    // Heir archetype — drives the heir portrait and the heir-
+    // arrival kitchen scene. Stored so save/load preserves identity.
+    heirArchetypeKey: archetype?.key ?? null,
+    heirArchetypeMood: 'neutral',
   };
 }
 

@@ -115,6 +115,7 @@ export const COMMUNITY_MEMBERS = Object.freeze([
     services: ['show_circuit', 'family_connection'],
     frequency: 'always',
     family: true,
+    portraitId: 'william-blood', // Phase 12 — Codex portrait
   },
   {
     // Phase 10 — the aunt. Married away to John Crane. The Cranes run
@@ -127,6 +128,7 @@ export const COMMUNITY_MEMBERS = Object.freeze([
     services: ['family_connection', 'cattle_neighbor'],
     frequency: 'always',
     family: true,
+    portraitId: 'edith-crane', // Phase 12 — Codex portrait
   },
   {
     // Phase 10 — the Ash Coulee foreman. He shows up at the auction
@@ -138,6 +140,7 @@ export const COMMUNITY_MEMBERS = Object.freeze([
     description: 'Runs the cattle operation on the reservation. Buys at auction. Pays fair.',
     services: ['auction_buyer', 'cattle_neighbor', 'hay_trade'],
     frequency: 'seasonal',
+    portraitId: 'henry-whitehorse', // Phase 12 — Codex portrait
   },
 ]);
 

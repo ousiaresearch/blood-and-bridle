@@ -464,6 +464,111 @@ export const KITCHEN_SCENES = Object.freeze([
       { id: 'pass', label: 'Pass. We can\'t afford the debt.', effects: { bank: +1 } },
     ],
   },
+// ── Heir transition scenes (Phase 13) ───────────────────────────
+  {
+    // The first heir to take over — when the player transitions, the
+    // heir sits at the kitchen table. The hands are still there. The
+    // heir has to speak.
+    id: 'heir-arrival',
+    label: 'The heir takes over',
+    trigger: 'event:heirArrival',
+    season: 'any',
+    background: '/assets/scenes/heirs/heir_arrival.png',
+    setup: 'The coffee is fresh. The table is set for one more than usual.',
+    speakers: [
+      {
+        handId: 'mae',
+        topic: 'newHand',
+        composition: 'open-and-line',
+        topicLines: {
+          neutral: 'They\'ve been watching you for ten years. They know the operation.',
+          advocating: 'They\'ve been watching you for ten years. They know the operation better than you did at their age.',
+        },
+      },
+      {
+        handId: 'eli',
+        topic: 'newHand',
+        composition: 'singleton',
+        topicLines: {
+          neutral: 'The bank is going to want to meet them.',
+          advocating: 'The bank is going to want to meet them. Take the meeting yourself, the first time.',
+        },
+      },
+    ],
+    choices: [
+      { id: 'pass-the-brand', label: 'Pass the brand.', effects: { transitionToHeir: true, legacy: +2 } },
+      { id: 'decline',        label: 'Not yet. One more season.', effects: { legacy: -1 } },
+    ],
+  },
+  {
+    // The heir hands off the ranch to THEIR heir. Two generations in.
+    // Used only after at least one heir transition has happened.
+    id: 'heir-departure',
+    label: 'The heir hands off',
+    trigger: 'event:heirDeparture',
+    season: 'any',
+    background: '/assets/scenes/heirs/heir_departure.png',
+    setup: 'Same table. New face across it. The brand is the same.',
+    speakers: [
+      {
+        handId: 'elena',
+        topic: 'developerDeal',
+        composition: 'line-and-close',
+        topicLines: {
+          neutral: 'The next one will want the same things you wanted. The math is the math.',
+          advocating: 'The next one will want the same things you wanted. The math is the math. Don\'t forget the math.',
+        },
+      },
+      {
+        handId: 'mae',
+        topic: 'sellHorse',
+        composition: 'singleton',
+        topicLines: {
+          neutral: 'The horses don\'t know the difference.',
+          advocating: 'The horses don\'t know the difference. The hands will.',
+        },
+      },
+    ],
+    choices: [
+      { id: 'hand-off', label: 'Hand it off.', effects: { transitionToHeir: true, legacy: +3 } },
+      { id: 'stay',     label: 'One more year in the chair.', effects: { legacy: -1, country: -1 } },
+    ],
+  },
+  {
+    // The heir sits at the kitchen table with the hands. The brand
+    // is the same but the chair is empty where the original owner
+    // used to sit.
+    id: 'heir-kitchen-table',
+    label: 'At the kitchen table, again',
+    trigger: 'event:heirKitchenTable',
+    season: 'any',
+    background: '/assets/scenes/heirs/heir_kitchen_table.png',
+    setup: 'The brand is in the same place. The chair is empty. The hands are quiet.',
+    speakers: [
+      {
+        handId: 'reyes',
+        topic: 'skipTraining',
+        composition: 'singleton',
+        topicLines: {
+          neutral: 'The stallions are the same. They don\'t care who\'s in the chair.',
+          advocating: 'The stallions are the same. They don\'t care who\'s in the chair. That\'s the point.',
+        },
+      },
+      {
+        handId: 'mae',
+        topic: 'newHand',
+        composition: 'open-and-line',
+        topicLines: {
+          neutral: 'I\'ve been here longer than you. You\'ll be alright.',
+          advocating: 'I\'ve been here longer than you. You\'ll be alright. Listen to the hands, listen to the horses.',
+        },
+      },
+    ],
+    choices: [
+      { id: 'continue-the-work', label: 'Continue the work.', effects: { legacy: +1, country: +2 } },
+      { id: 'sit-quiet',         label: 'Sit with it for a minute.', effects: { country: +1 } },
+    ],
+  },
 ]);
 
 // Lookup.

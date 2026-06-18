@@ -7,6 +7,7 @@ import { RIVALS } from './rivals.js';
 import { AVAILABLE_PARCELS } from './map.js';
 import { checkEnding } from './endings.js';
 import { getShowCalendar, getUpcomingShow, showDay, SHOW_CATEGORIES, getShowPrestigeLabel } from './shows.js';
+import { COMMUNITY_MEMBERS, availableCommunity, departedCommunity } from './community.js';
 
 export function formatMoney(amount) {
   const absolute = Math.abs(amount).toLocaleString();
@@ -110,6 +111,10 @@ export function buildDashboardModel(game) {
     availableParcels: AVAILABLE_PARCELS.filter((p) => !game.parcels.find((gp) => gp.id === p.id)),
     npcs: Object.values(NPCS).map((npc) => ({ ...npc, line: `${npc.name} · ${npc.role} · Relationship ${npc.relationship} · Patience ${npc.patience}` })),
     rivals: RIVALS.map((r) => ({ ...r, line: `${r.name} · Cash $${r.cash.toLocaleString()} · Reputation ${r.reputation} · Herd ${r.herd.length}` })),
+    community: {
+      available: availableCommunity(game.reputationCorners?.country ?? 0),
+      departed: departedCommunity(game.reputationCorners?.country ?? 0),
+    },
     actions: getAvailableActions(game),
     log: game.log,
     firedEvents: game.firedEvents ?? [],

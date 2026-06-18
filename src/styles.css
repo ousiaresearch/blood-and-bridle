@@ -2281,3 +2281,179 @@ main.shell.is-turning {
   flex-direction: column;
   gap: 6px;
 }
+
+/* ── Phase 12 — rival portraits in auction preview ──────────────── */
+.auction-bidders {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.auction-bidder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: background 120ms ease;
+}
+.auction-bidder--top {
+  background: var(--accent-soft, rgba(180, 142, 75, 0.12));
+  border-color: var(--accent, rgba(180, 142, 75, 0.4));
+}
+.auction-bidder-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+.auction-bidder-offer {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.rival-portrait {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--rule, rgba(255,255,255,0.12));
+  background: var(--bg-alt, #1f1814);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.rival-portrait--sm { width: 28px; height: 28px; }
+.rival-portrait--md { width: 36px; height: 36px; }
+.rival-portrait--lg { width: 48px; height: 48px; }
+.rival-portrait--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-alt, #1f1814);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ── Phase 12 — rivals list & community list in region panel ───── */
+.rivals-list,
+.community-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rivals-list-item,
+.community-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--rule-faint, rgba(255,255,255,0.06));
+}
+.community-list-item:last-child {
+  border-bottom: none;
+}
+.rivals-list-info,
+.community-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.84rem;
+  flex: 1;
+}
+.community-list-info small {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.community-list-item--departed em {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ── Phase 13 — heir portrait in kitchen-table scene header ────── */
+.kt-heir-portrait {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  margin: 0 0 14px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 6px;
+  border: 1px solid var(--rule, rgba(255,255,255,0.10));
+}
+.kt-heir-portrait .heir-portrait {
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--accent, rgba(180, 142, 75, 0.5));
+}
+.kt-heir-portrait-caption {
+  margin: 0;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.heir-portrait--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-alt, #1f1814);
+  color: var(--muted);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* ── Phase 14 — brand surfaces (title card, ranch profile, letterhead) */
+.brand-surface {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.brand-surface--title-card {
+  /* Set on .hero-backdrop via inline style — no override needed here */
+}
+.brand-surface--ranch-profile {
+  /* Ranch-profile hero: shows the hay barn. The CSS below is in the
+     .ranch-profile-hero-surface rule. */
+}
+.ranch-profile-hero-surface {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 4px 4px 0 0;
+  margin: -16px -16px 16px;
+}
+.letterhead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.letterhead-jacket {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Phase 14 — hero backdrop (gate surface) ──────────────────── */
+.hero-backdrop {
+  background-size: cover;
+  background-position: center;
+  opacity: 0.85;
+  filter: saturate(1.05) contrast(1.04);
+}

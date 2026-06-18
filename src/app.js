@@ -27,7 +27,8 @@ import { showModal, closeModal } from './modal.js';
 import { renderHorseDetail } from './horse-detail.js';
 import { buildMemorial, renderMemorial, renderMemorialHall } from './memorial.js';
 import { renderCodex } from './codex.js';
-import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } from './brand.js';
+import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById, renderBrandSurface, renderBrandScene, pickTitleCardSurface } from './brand.js';
+import { renderRivalPortrait, renderHeirPortrait } from './rival-portraits.js';
 import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
 import { fireSeasonCard } from './time-jump.js';
 import { SHERIDAN_INTRO } from './blood-family.js';
@@ -190,7 +191,7 @@ function openKitchenSceneFor(trigger, override = {}) {
   if (!scene) return;
   openKitchenTable(scene, game, (effects, sceneId, choiceId) => {
     applyKitchenChoice(effects, sceneId, choiceId, override);
-  });
+  }, { audio });
 }
 
 // Translate a kitchen-table choice's effects into game-state mutations.
@@ -273,6 +274,26 @@ function applyKitchenChoice(effects, sceneId, choiceId, override = {}) {
   if (effects.gameOver === 'sellout') {
     game.soldOut = true;
     notes.push('sold out');
+  }
+  // Heir transition — runs the applyAction('transitionToHeir')
+  // reducer, then fires the heir-kitchen-table scene so the new
+  // owner sits down with the hands. If we've already had an heir
+  // transition, fire heir-departure instead (chain of generations).
+  if (effects.transitionToHeir) {
+    applyAction(game, { type: 'transitionToHeir' });
+    notes.push('transitioned to the heir');
+    // Re-open the heir kitchen-table scene so the player sees the
+    // heir across the table from them. The scene shows the heir's
+    // portrait (rendered via the heir scene's special header).
+    const generationCount = game.generationCount ?? 1;
+    const nextSceneId = generationCount >= 2 ? 'heir-departure' : 'heir-kitchen-table';
+    const nextScene = sceneForTrigger(`event:${nextSceneId === 'heir-departure' ? 'heirDeparture' : 'heirKitchenTable'}`);
+    if (nextScene) {
+      // Slight defer so the modal close animation lands first.
+      setTimeout(() => openKitchenTable(nextScene, game, (eff, sid, cid) => {
+        applyKitchenChoice(eff, sid, cid, override);
+      }, { audio }), 50);
+    }
   }
   // Log it.
   if (notes.length > 0 && Array.isArray(game.log)) {
@@ -597,8 +618,22 @@ function renderAuctionPreview() {
           <small>Training ${horse.training} · bond ${horse.bond} · $${(horse.value ?? 0).toLocaleString()}</small>
         </div>
       </div>
-      <ul>
-        ${result.allBids.map((b) => `<li><strong>${escapeHtml(b.name)}</strong> · $${b.offer.toLocaleString()}${b === result.topBid ? ' · top bid' : ''}</li>`).join('')}
+      <ul class="auction-bidders">
+        ${result.allBids.map((b) => {
+          // Phase 12 — rival bidders get a Codex portrait. The mood
+          // tells the player who wants the horse most (neutral=curious,
+          // concerned=losing, arguing=won-and-now-haggling).
+          const portraitHtml = b.portraitId
+            ? renderRivalPortrait(b.portraitId, { size: 'sm', context: 'auction' })
+            : '';
+          return `<li class="auction-bidder ${b === result.topBid ? 'auction-bidder--top' : ''}">
+            ${portraitHtml}
+            <span class="auction-bidder-info">
+              <strong>${escapeHtml(b.name)}</strong>
+              <span class="auction-bidder-offer">$${b.offer.toLocaleString()}${b === result.topBid ? ' · top bid' : ''}</span>
+            </span>
+          </li>`;
+        }).join('')}
       </ul>
       <button class="action action--danger" data-list-auction>List ${escapeHtml(horse.name)} at auction</button>
     </section>
@@ -766,7 +801,7 @@ function render() {
     ${renderSheridanIntro()}
     <main class="shell">
       <section class="hero hero--title-card">
-        <div class="hero-backdrop" aria-hidden="true"></div>
+        <div class="hero-backdrop" aria-hidden="true" style="background-image: url('${escapeAttr(pickTitleCardSurface({ isNight: false }).imagePath)}')"></div>
         <div class="hero-brand-block">
           <div class="hero-brand-mark">${renderBrandGlyph(game.ranchBrand, 'hero-brand-glyph')}</div>
           <div class="hero-brand-text">
@@ -900,7 +935,39 @@ function render() {
         <article class="panel">
           <p class="eyebrow">Region</p>
           <h2>Rival ranches</h2>
-          <ul>${model.rivals.map((r) => `<li>${escapeHtml(r.line)}</li>`).join('')}</ul>
+          <ul class="rivals-list">
+            ${model.rivals.map((r) => {
+              // Phase 12 — rival portraits surface here so the player
+              // sees the family faces they compete against.
+              const portraitHtml = r.portraitId
+                ? renderRivalPortrait(r.portraitId, { size: 'sm', context: 'community', name: r.name })
+                : '';
+              return `<li class="rivals-list-item">
+                ${portraitHtml}
+                <span class="rivals-list-info">${escapeHtml(r.line)}</span>
+              </li>`;
+            }).join('')}
+          </ul>
+          <h3>Neighbors</h3>
+          <ul class="community-list">
+            ${model.community.available.map((m) => {
+              const portraitHtml = m.portraitId
+                ? renderRivalPortrait(m.portraitId, { size: 'sm', context: 'community', name: m.name })
+                : '';
+              return `<li class="community-list-item">
+                ${portraitHtml}
+                <span class="community-list-info">
+                  <strong>${escapeHtml(m.name)}</strong>
+                  <small>${escapeHtml(m.role)}${m.family ? ' · family' : ''}</small>
+                </span>
+              </li>`;
+            }).join('')}
+            ${model.community.departed.length > 0 ? `<li class="community-list-item community-list-item--departed">
+              <span class="community-list-info">
+                <em>${model.community.departed.length} neighbor${model.community.departed.length === 1 ? '' : 's'} gone since the country corner dropped.</em>
+              </span>
+            </li>` : ''}
+          </ul>
         </article>
         <article class="panel log-panel">
           <p class="eyebrow">Ledger</p>

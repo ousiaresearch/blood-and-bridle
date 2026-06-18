@@ -82,3 +82,63 @@ test('openKitchenTable returns null for null scene', () => {
   const result = openKitchenTable(null, { hands: [] }, () => {});
   assert.equal(result, null);
 });
+
+// Phase 13 — heir portrait renders into the kitchen-table header for
+// heir scenes when the game state has an heirArchetypeKey.
+test('renderKitchenTable includes heir portrait for heir-arrival scene', () => {
+  const scene = sceneById('heir-arrival');
+  const game = {
+    hands: [
+      { id: 'mae', morale: 60 },
+      { id: 'eli', morale: 60 },
+    ],
+    heirArchetypeKey: 'son',
+    heirArchetypeMood: 'neutral',
+    ownerName: 'Your son',
+  };
+  const html = renderKitchenTable(scene, game);
+  assert.match(html, /kt-heir-portrait/);
+  assert.match(html, /data-heir-archetype="son"/);
+  assert.match(html, /data-mood="neutral"/);
+  assert.match(html, /Your son/);
+});
+
+test('renderKitchenTable does NOT include heir portrait for non-heir scenes', () => {
+  const scene = sceneById('skip-farrier');
+  const game = {
+    hands: [{ id: 'mae', morale: 60 }],
+    heirArchetypeKey: 'son',
+    heirArchetypeMood: 'neutral',
+    ownerName: 'Your son',
+  };
+  const html = renderKitchenTable(scene, game);
+  assert.doesNotMatch(html, /kt-heir-portrait/);
+});
+
+test('renderKitchenTable omits heir portrait when archetype key is missing', () => {
+  const scene = sceneById('heir-arrival');
+  const game = {
+    hands: [{ id: 'mae', morale: 60 }],
+    // no heirArchetypeKey
+    ownerName: 'The heir',
+  };
+  const html = renderKitchenTable(scene, game);
+  assert.doesNotMatch(html, /kt-heir-portrait-img/);
+});
+
+test('renderKitchenTable renders heir-kitchen-table scene with portrait', () => {
+  const scene = sceneById('heir-kitchen-table');
+  const game = {
+    hands: [
+      { id: 'mae', morale: 60 },
+      { id: 'reyes', morale: 60 },
+    ],
+    heirArchetypeKey: 'daughter',
+    heirArchetypeMood: 'neutral',
+    ownerName: 'Your daughter',
+  };
+  const html = renderKitchenTable(scene, game);
+  assert.match(html, /data-heir-archetype="daughter"/);
+  assert.match(html, /kt-speaker--reyes/);
+  assert.match(html, /kt-speaker--mae/);
+});

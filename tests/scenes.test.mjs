@@ -10,13 +10,14 @@ import { HAND_VOICES } from '../src/hands-voice.js';
 
 test('KITCHEN_SCENES covers the planned scenes', () => {
   // 12 from the plan + buy-west-meadow (added because it ties directly
-  // to a phase-10 parcel decision) = 13.
-  assert.equal(KITCHEN_SCENES.length, 13);
+  // to a phase-10 parcel decision) + 3 heir scenes (Phase 13) = 16.
+  assert.equal(KITCHEN_SCENES.length, 16);
   const expected = [
     'skip-farrier', 'delay-wages', 'skip-tax', 'skip-vet',
     'fire-tucker', 'give-eli-winter-off', 'promote-tucker',
     'take-loan', 'sell-mare', 'sell-stallion', 'sign-contract',
     'end-season-broke', 'buy-west-meadow',
+    'heir-arrival', 'heir-departure', 'heir-kitchen-table',
   ];
   for (const id of expected) {
     assert.ok(sceneById(id), `${id} exists`);

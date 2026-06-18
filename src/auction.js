@@ -37,6 +37,7 @@ export const BIDDERS = [
     archetype: 'dispersaler',
     budget: 18000,
     taste: { gait_quality: 0.5, temperament_stability: 0.8, heart: 0.7, bone_density: 0.7, conformation: 0.5 },
+    portraitId: 'cobb-blood', // Phase 12 — Codex portrait; mood chosen at render time
   },
   {
     // Phase 10 — the Ash Coulee foreman. He buys for the tribal
@@ -46,6 +47,7 @@ export const BIDDERS = [
     archetype: 'working-ranch',
     budget: 24000,
     taste: { gait_quality: 0.4, temperament_stability: 0.9, heart: 0.6, bone_density: 0.8, conformation: 0.5 },
+    portraitId: 'henry-whitehorse', // Phase 12 — Codex portrait; mood chosen at render time
   },
 ];
 

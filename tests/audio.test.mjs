@@ -360,3 +360,60 @@ test('all new procedural sounds handle missing AudioContext gracefully', () => {
     assert.equal(result, null, `${name} should return null without AudioContext`);
   }
 });
+
+// ── Phase 14 — ambient stinger cues (kitchen table / bunkhouse) ──
+
+test('Phase 14 stinger cues are exposed in the SOUNDS catalog', () => {
+  for (const name of ['chairScrape', 'coffeePour', 'doorClose', 'radioHum', 'windDistant']) {
+    assert.ok(__INTERNAL__.SOUNDS[name], `missing stinger: ${name}`);
+  }
+});
+
+test('chairScrape is a noise burst (filter sweep)', () => {
+  assert.equal(__INTERNAL__.SOUNDS.chairScrape.type, 'noise');
+  assert.ok(__INTERNAL__.SOUNDS.chairScrape.filterStart > __INTERNAL__.SOUNDS.chairScrape.filterEnd,
+    'sweeps down (wood-on-wood)');
+});
+
+test('coffeePour is a soft tone', () => {
+  assert.equal(__INTERNAL__.SOUNDS.coffeePour.type, 'tone');
+  assert.ok(__INTERNAL__.SOUNDS.coffeePour.dur < 1.0, 'short duration');
+});
+
+test('doorClose is a two-note transient sequence', () => {
+  assert.equal(__INTERNAL__.SOUNDS.doorClose.type, 'seq');
+  assert.equal(__INTERNAL__.SOUNDS.doorClose.notes.length, 2);
+  assert.ok(__INTERNAL__.SOUNDS.doorClose.notes[0].freq > __INTERNAL__.SOUNDS.doorClose.notes[1].freq,
+    'click transient then low thud');
+});
+
+test('radioHum is a long, soft tone', () => {
+  assert.equal(__INTERNAL__.SOUNDS.radioHum.type, 'tone');
+  assert.ok(__INTERNAL__.SOUNDS.radioHum.dur > 1.0, 'radio sustains');
+  assert.ok(__INTERNAL__.SOUNDS.radioHum.gain <= 0.05, 'plays softly (sits under speech)');
+});
+
+test('windDistant is a long noise burst with slow sweep', () => {
+  assert.equal(__INTERNAL__.SOUNDS.windDistant.type, 'noise');
+  assert.ok(__INTERNAL__.SOUNDS.windDistant.dur > 2.0, 'sustained');
+  assert.ok(__INTERNAL__.SOUNDS.windDistant.filterEnd > __INTERNAL__.SOUNDS.windDistant.filterStart,
+    'sweeps up (distant wind)');
+});
+
+test('all Phase 14 stingers handle missing AudioContext gracefully', () => {
+  const engine = createAudioEngine({ audioContextFactory: () => null });
+  for (const name of ['chairScrape', 'coffeePour', 'doorClose', 'radioHum', 'windDistant']) {
+    const result = engine.play(name);
+    assert.equal(result, null, `${name} should return null without AudioContext`);
+  }
+});
+
+test('Phase 14 stingers respect the mute flag', () => {
+  const { engine, calls } = makeEngine();
+  engine.setMuted(true);
+  for (const name of ['chairScrape', 'doorClose']) {
+    calls.oscillators.length = 0;
+    engine.play(name);
+    assert.equal(calls.oscillators.length, 0, `${name} should not play while muted`);
+  }
+});

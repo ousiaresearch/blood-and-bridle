@@ -60,6 +60,22 @@ const SOUNDS = {
   stamp:        { type: 'seq',    notes: [{ freq: 2200, dur: 0.02 }, { freq: 80, dur: 0.18 }], gain: 0.18, wave: 'sine', spacing: 0.04 },
   // Bowed-cello stinger: the theme that plays during the time-jump card.
   celloStinger: { type: 'bowed',  freq: 110, dur: 2.50, gain: 0.16, partials: [1, 2.003], vibratoHz: 4.0, vibratoCents: 14 },
+  // ── Phase 14 ambient stinger cues (kitchen table / bunkhouse) ─
+  // chairScrape: a wooden chair pushed back. Short noise burst with
+  // downward bandpass sweep — the bark of wood on a wood floor.
+  chairScrape: { type: 'noise',  dur: 0.28, gain: 0.10, filterStart: 1400, filterEnd: 320, filterQ: 4, sweep: 'down' },
+  // coffeePour: a soft descending tone (pitch dropping) with low-pass
+  // filter — the sound of a stream thinning out.
+  coffeePour:  { type: 'tone',   freq: 360,  dur: 0.40, gain: 0.08, wave: 'triangle' },
+  // doorClose: a single dull thud (low-frequency) with a tiny click
+  // transient (the latch catching).
+  doorClose:   { type: 'seq',    notes: [{ freq: 2400, dur: 0.015 }, { freq: 90, dur: 0.20 }], gain: 0.12, wave: 'sine', spacing: 0.02 },
+  // radioHum: an oscillating tone with vibrato — the "talking" of an
+  // AM radio two rooms away. Plays softly so it sits under speech.
+  radioHum:    { type: 'tone',   freq: 220,  dur: 1.20, gain: 0.04, wave: 'sine' },
+  // windDistant: long noise with slow bandpass drift. Plays softly
+  // during outdoor scenes and winter overnights.
+  windDistant: { type: 'noise',  dur: 2.20, gain: 0.05, filterStart: 320, filterEnd: 1100, filterQ: 1.2, sweep: 'up' },
 };
 
 const AMBIENT_PRESETS = {
