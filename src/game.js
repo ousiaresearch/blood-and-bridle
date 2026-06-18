@@ -31,6 +31,9 @@ import { applyHeirTransition } from './heir.js';
 import { createInitialWeather, tickWeather, weatherNarrative, WEATHER_TYPES } from './weather-system.js';
 import { BUYER_DEFS, findBuyer, marketOffer, marketSentiment, dispersalSale } from './market.js';
 import { COMMUNITY_MEMBERS, availableCommunity, departedCommunity, communityNarrative, SERVICE_COSTS, COMMUNITY_EVENTS, eventsForMonth } from './community.js';
+import { createPlayer, agePlayer, injurePlayer, tickPlayerInjury, canPlayerContinue, describePlayerBody, PLAYER_STARTING_AGE } from './player.js';
+import { HAND_BACKSTORIES, handSilence, seasonSilence, hasSharedStory, markStoryShared } from './hand-stories.js';
+import { createInitialPersonalLife, marry, haveChild, ageChildren, ageParents, detectPersonalMilestones, describePersonalLife, PARTNER_TEMPLATES } from './personal.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -145,6 +148,12 @@ export function createNewGame() {
     weather: createInitialWeather(),
     // Cattlemen's association membership
     cattlemenMember: false,
+    // The player: aging body. Phase 7.
+    player: createPlayer(),
+    // Personal life: partner, children, parents. Phase 7.
+    personalLife: createInitialPersonalLife(),
+    // Pregnancy tracking: array of pregnancy objects.
+    pregnancies: [],
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -237,6 +246,8 @@ function maybeFireSeasonal(game) {
   if (g.day >= 10) g = markStepComplete(g, 'free');
   // Tick hand injuries daily (countdown to recovery)
   if (g.hands) g = { ...g, hands: tickHandInjuries(g.hands) };
+  // Tick player injury daily (countdown to recovery)
+  if (g.player) g = { ...g, player: tickPlayerInjury(g.player) };
   // Tick weather at year boundary
     if (g.weather && isYearBoundary(g)) {
       const year = Math.floor((g.day - 1) / 120) + 1;
