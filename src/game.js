@@ -20,10 +20,11 @@ import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutori
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
 import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
-import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner, crewDepartureRisk } from './reputation.js';
+import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner, crewDepartureRisk, loanTerms } from './reputation.js';
 import { createInitialHands, findHand, canDoTask, consumeHandHours, taskHours, resetWeeklyHours, tickHandInjuries, adjustHandsMorale, totalMonthlyWages, rollHandDepartures, workingHandCount, HAND_STATUS } from './labor.js';
 import { createInitialDayWorkers, findDayWorker, rollDayWorkerAvailability, hireDayWorker, dayWorkerCost, resetDayWorkerHours, tickDayWorkerSeasons, canPromoteDayWorker, promoteDayWorker, bestDayWorkerFor, DAY_WORKER_TASKS, DAY_WORKER_TASK_NAMES } from './day-workers.js';
 import { dayWorkerAvailability } from './reputation.js';
+import { createInitialLedger, addExpense, addIncome, tickSeasonalEconomy, createLoan, repayLoan, totalLoanDebt, isInsolvent, insolvencyWarning, EXPENSE_CATEGORIES, INCOME_CATEGORIES, horsePriceMultiplier } from './economy.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -118,6 +119,18 @@ export function createNewGame() {
     // outside laborers whose availability scales with the country
     // corner. Promotion to hand is the growth moment.
     dayWorkers: createInitialDayWorkers(),
+    // Economy ledger: every expense and income tracked. Phase 2.
+    ledger: createInitialLedger(),
+    // Loans: outstanding bank debt. Empty by default.
+    loans: [],
+    // Insolvency counter: increments each season cash is below -$1000.
+    // Resets when cash recovers. 3 seasons = bankruptcy.
+    insolventSeasons: 0,
+    // Optional insurance coverage.
+    insuranceEnabled: false,
+    // Stallion for stud fee income (set when a stallion is bonded).
+    stallionId: null,
+    stallionBonded: false,
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -262,6 +275,16 @@ function maybeFireSeasonal(game) {
     // Apply cash cost
     if (hazardResult.parcelCost > 0) {
       g = { ...g, cash: g.cash - hazardResult.parcelCost };
+      g = {
+        ...g,
+        ledger: addExpense(g.ledger, {
+          category: EXPENSE_CATEGORIES.HAZARD,
+          amount: hazardResult.parcelCost,
+          season: getSeason(g),
+          day: g.day,
+          note: 'Parcel hazard cleanup',
+        }),
+      };
     }
     // Apply injuries (health drop) — non-cumulative: injured horses
     // get health -15 if not already injured.
@@ -308,6 +331,21 @@ function maybeFireSeasonal(game) {
       }
     }
     g = { ...g, collapsedCornerSeasons: newCollapsedSeasons };
+    // Seasonal economy tick: every season boundary, the ranch's
+    // scheduled expenses and income fire. Feed, wages, farrier,
+    // property tax, equipment, hay harvest, stud fees, grazing lease.
+    // weatherSeverity is amplified when a global disaster fires.
+    const econResult = tickSeasonalEconomy({ ...g, ledger: g.ledger }, weatherSeverity);
+    g = {
+      ...g,
+      cash: g.cash + econResult.cashDelta,
+      ledger: econResult.ledger,
+      loans: econResult.loans,
+      insolventSeasons: econResult.insolventSeasons,
+    };
+    if (econResult.logLines.length > 0) {
+      g = { ...g, log: [...econResult.logLines, ...g.log].slice(0, 20) };
+    }
     // Day-worker availability: the country corner decides who shows up.
     // Each day-worker in the static roster (gate met) rolls for whether
     // they're available this season. Seasons worked increments for
@@ -465,13 +503,24 @@ export function applyAction(game, action) {
       // Legendary gate: the picturebook horse cannot be sold before bonded.
       const legCheck = canSellLegendary(working, horse);
       if (!legCheck.ok) throw new Error(legCheck.reason);
-      working.cash += horse.value;
+      // Apply horsemen-corner price multiplier
+      const horsemenCorner = working.reputationCorners?.horsemen ?? 50;
+      const priceMult = horsePriceMultiplier(horsemenCorner);
+      const salePrice = Math.round(horse.value * priceMult);
+      working.cash += salePrice;
+      working.ledger = addIncome(working.ledger, {
+        category: INCOME_CATEGORIES.HORSE_SALE,
+        amount: salePrice,
+        season: getSeason(working),
+        day: working.day,
+        note: `Sold ${horse.name} privately (${Math.round(priceMult * 100)}% of value)`,
+      });
       working.legacy = clamp(working.legacy - 12);
       // Selling a horse reads as a defeat. Horsemen notice, the crew
       // feels it, the country hears. The bank is briefly happy.
       working = withCornerAdjust(working, { horsemen: -2, crew: -4, bank: 1 });
       working.staff = working.staff.map((s) => ({ ...s, loyalty: clamp(s.loyalty - (s.id === 'mae' ? 12 : 6)) }));
-      const memorial = buildMemorial(horse, working, { kind: 'sold', circumstance: `Sold privately at age ${horse.age} for $${horse.value.toLocaleString()}.` });
+      const memorial = buildMemorial(horse, working, { kind: 'sold', circumstance: `Sold privately at age ${horse.age} for $${salePrice.toLocaleString()}.` });
       working.horses = working.horses.filter((h) => h.id !== horse.id);
       working.memorials = [...(working.memorials ?? []), memorial].slice(-20);
       working = dailyUpkeep(working, `Sold ${horse.name}. The books look cleaner. The barn sounds wrong.`);
@@ -501,6 +550,23 @@ export function applyAction(game, action) {
       const horsemenDelta = result.reputationDelta ?? 0;
       working = withCornerAdjust(working, { horsemen: horsemenDelta, crew: horsemenDelta > 0 ? 1 : -1 });
       working.legacy = Math.max(0, Math.min(100, working.legacy + result.legacyDelta));
+      // Log the entry fee and prize to the ledger.
+      working.ledger = addExpense(working.ledger, {
+        category: EXPENSE_CATEGORIES.OTHER,
+        amount: show.entryFee,
+        season: getSeason(working),
+        day: working.day,
+        note: `Entry fee: ${show.title}`,
+      });
+      if (result.payout > 0) {
+        working.ledger = addIncome(working.ledger, {
+          category: INCOME_CATEGORIES.SHOW_WINNINGS,
+          amount: result.payout,
+          season: getSeason(working),
+          day: working.day,
+          note: `Show prize: ${show.title}`,
+        });
+      }
       working.horses = working.horses.map((h) => h.id === horse.id
         ? { ...h, stress: Math.min(100, h.stress + 12), bond: Math.min(100, h.bond + (result.playerPlace === 1 ? 4 : 1)) }
         : h);
@@ -524,7 +590,15 @@ export function applyAction(game, action) {
     case 'signWithDeveloper': {
       const parcel = working.parcels.find((p) => p.id === 'west-meadow');
       if (!parcel) throw new Error('West meadow is no longer in your hands.');
-      working.cash += 50000;
+      const salePrice = 50000;
+      working.cash += salePrice;
+      working.ledger = addIncome(working.ledger, {
+        category: INCOME_CATEGORIES.DEVELOPER_SALE,
+        amount: salePrice,
+        season: getSeason(working),
+        day: working.day,
+        note: 'Sold west meadow to the developer',
+      });
       working.legacy = clamp(working.legacy - 25);
       working.developerPressure = 0;
       working.parcels = working.parcels.filter((p) => p.id !== 'west-meadow');
@@ -542,6 +616,13 @@ export function applyAction(game, action) {
       working.cash += 2200;
       working.legacy = clamp(working.legacy - 3);
       working.horses = working.horses.map((h) => ({ ...h, stress: clamp(h.stress + 5) }));
+      working.ledger = addIncome(working.ledger, {
+        category: INCOME_CATEGORIES.BOARDING,
+        amount: 2200,
+        season: getSeason(working),
+        day: working.day,
+        note: 'Took three outside boarders',
+      });
       working = dailyUpkeep(working, 'Took three outside boarders for cash flow.');
       break;
     }
@@ -619,6 +700,13 @@ export function applyAction(game, action) {
       const result = runAuction(horse);
       working.cash += result.topBid.offer;
       working.legacy = clamp(working.legacy - 6);
+      working.ledger = addIncome(working.ledger, {
+        category: INCOME_CATEGORIES.AUCTION_SALE,
+        amount: result.topBid.offer,
+        season: getSeason(working),
+        day: working.day,
+        note: `Sold ${horse.name} at auction to ${result.topBid.name}`,
+      });
       const memorial = buildMemorial(horse, working, { kind: 'auctioned', circumstance: `Sold at auction to ${result.topBid.name} for $${result.topBid.offer.toLocaleString()}.` });
       working.horses = working.horses.filter((h) => h.id !== horse.id);
       working.memorials = [...(working.memorials ?? []), memorial].slice(-20);
@@ -657,6 +745,58 @@ export function applyAction(game, action) {
       working.hands = result.hands;
       working = withCornerAdjust(working, { country: 5 }); // commitment to the place
       working = dailyUpkeep(working, result.log);
+      break;
+    }
+    case 'bankLoan': {
+      const { amount } = action;
+      const bankCorner = working.reputationCorners?.bank ?? 0;
+      const terms = loanTerms(bankCorner);
+      if (!terms.available) throw new Error('The bank will not lend to you.');
+      const outstanding = totalLoanDebt(working.loans);
+      if (outstanding + amount > terms.maxLoan) {
+        throw new Error(`The bank will only lend $${(terms.maxLoan - outstanding).toLocaleString()} more.`);
+      }
+      const newLoan = createLoan(amount, terms.interestRate, 90, working.day); // 90-day term
+      working.loans = [...(working.loans ?? []), newLoan];
+      working.cash += amount;
+      working.ledger = addIncome(working.ledger, {
+        category: INCOME_CATEGORIES.LOAN_DISBURSEMENT,
+        amount,
+        season: getSeason(working),
+        day: working.day,
+        note: `Bank loan at ${(terms.interestRate * 100).toFixed(1)}% APR`,
+      });
+      // Bank corner gains from borrowing (you trust them with their money)
+      working = withCornerAdjust(working, { bank: 2 });
+      working = dailyUpkeep(working, `Borrowed $${amount.toLocaleString()} from the bank at ${(terms.interestRate * 100).toFixed(1)}% APR.`);
+      break;
+    }
+    case 'repayLoan': {
+      const { loanId, amount } = action;
+      const loanIdx = working.loans.findIndex((l) => l.id === loanId);
+      if (loanIdx < 0) throw new Error(`Loan not found: ${loanId}`);
+      const loan = working.loans[loanIdx];
+      if (amount > working.cash) throw new Error(`Need $${amount.toLocaleString()} to repay.`);
+      const { loan: newLoan, amountToPrincipal } = repayLoan(loan, amount);
+      working.loans = working.loans.map((l, i) => i === loanIdx ? newLoan : l);
+      working.cash -= amountToPrincipal;
+      working.ledger = addExpense(working.ledger, {
+        category: EXPENSE_CATEGORIES.LOAN_FEE,
+        amount: amountToPrincipal,
+        season: getSeason(working),
+        day: working.day,
+        note: `Loan repayment`,
+      });
+      // Bank corner gains from repaying
+      working = withCornerAdjust(working, { bank: 1 });
+      working = dailyUpkeep(working, `Repaid $${amountToPrincipal.toLocaleString()} on the loan.`);
+      break;
+    }
+    case 'toggleInsurance': {
+      working.insuranceEnabled = !working.insuranceEnabled;
+      working = dailyUpkeep(working, working.insuranceEnabled
+        ? 'Bought insurance from the county agent. The premium is due quarterly.'
+        : 'Let the insurance lapse. The risk is yours now.');
       break;
     }
     case 'improveParcel': {
@@ -747,6 +887,7 @@ export function getGameSummary(game) {
 }
 
 export function isGameOver(game) {
+  if (isInsolvent(game)) return true;
   return game.day > game.maxDay || game.cash < -1000 || game.legacy <= 0 || game.horses.length === 0;
 }
 
