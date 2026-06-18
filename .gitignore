@@ -4,6 +4,11 @@
 scripts/.pixellab-state.json
 scripts/.idle-state.json
 scripts/.soundtrack-state.json
+scripts/phase*-manifest.state.json
+assets/phase*.gen.log
+assets/horses-codex/.state.json
+assets/horses-codex/.gen.log
+assets/horses-codex/.progress.txt
 
 # Legacy portrait set kept aside for reference after the breed-specific
 # generation superseded it. Not loaded by the game.

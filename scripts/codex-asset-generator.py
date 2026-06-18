@@ -172,6 +172,9 @@ def main():
     else:
         state = {"manifest": str(manifest_path), "done": [], "failed": []}
         done_ids = set()
+    # Persist immediately so a SIGTERM at second 0 leaves a usable file
+    # for resume.
+    state_path.write_text(json.dumps(state, indent=2))
 
     todo = [e for e in entries if e["id"] not in done_ids]
     print(f"[startup] Total: {len(entries)}, done: {len(done_ids)}, todo: {len(todo)}", flush=True)
