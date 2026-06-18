@@ -25,6 +25,9 @@ import { createInitialHands, findHand, canDoTask, consumeHandHours, taskHours, r
 import { createInitialDayWorkers, findDayWorker, rollDayWorkerAvailability, hireDayWorker, dayWorkerCost, resetDayWorkerHours, tickDayWorkerSeasons, canPromoteDayWorker, promoteDayWorker, bestDayWorkerFor, DAY_WORKER_TASKS, DAY_WORKER_TASK_NAMES } from './day-workers.js';
 import { dayWorkerAvailability } from './reputation.js';
 import { createInitialLedger, addExpense, addIncome, tickSeasonalEconomy, createLoan, repayLoan, totalLoanDebt, isInsolvent, insolvencyWarning, EXPENSE_CATEGORIES, INCOME_CATEGORIES, horsePriceMultiplier } from './economy.js';
+import { createMoralState, skipObligation, recordSkip, tickMoralConsequences, skippedSavings, skipWarning, MORAL_CATEGORIES } from './moral.js';
+import { CRISIS_TYPES, detectCrisisTriggers, pickCrisisToFire, resolveCrisis } from './crisis.js';
+import { applyHeirTransition } from './heir.js';
 
 const DAILY_BURN_BASE = 800;
 const TRAINING_COST = 20;
@@ -131,6 +134,10 @@ export function createNewGame() {
     // Stallion for stud fee income (set when a stallion is bonded).
     stallionId: null,
     stallionBonded: false,
+    // The moral economy: skipped obligations and their delayed
+    // consequences. Phase 3.
+    moralState: createMoralState(),
+    foreclosurePending: false,
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
@@ -345,6 +352,62 @@ function maybeFireSeasonal(game) {
     };
     if (econResult.logLines.length > 0) {
       g = { ...g, log: [...econResult.logLines, ...g.log].slice(0, 20) };
+    }
+    // Moral consequences: every season, the skipped obligations fire
+    // their delayed effects. Foot rot, hand departures, foreclosure.
+    if (g.moralState && g.moralState.skips.length > 0) {
+      const moralResult = tickMoralConsequences(g.moralState, g);
+      g = { ...g, moralState: moralResult.moralState };
+      if (moralResult.horseEffects.length > 0) {
+        for (const eff of moralResult.horseEffects) {
+          if (eff.remove) {
+            // Horse died from skipped vet
+            const horse = g.horses.find((h) => h.id === eff.horseId);
+            if (horse) {
+              const memorial = buildMemorial(horse, g, { kind: 'death', circumstance: 'The vet should have been called.' });
+              g = {
+                ...g,
+                horses: g.horses.filter((h) => h.id !== eff.horseId),
+                memorials: [...(g.memorials ?? []), memorial].slice(-20),
+                legacy: clamp(g.legacy - 4),
+              };
+            }
+          } else {
+            // Horse injured
+            g = {
+              ...g,
+              horses: g.horses.map((h) => h.id === eff.horseId
+                ? { ...h, health: clamp(h.health + (eff.healthDelta ?? 0)), stress: clamp(h.stress + (eff.stressDelta ?? 0)) }
+                : h),
+            };
+          }
+        }
+      }
+      if (moralResult.handEffects.length > 0) {
+        for (const eff of moralResult.handEffects) {
+          if (eff.type === 'departure') {
+            g = {
+              ...g,
+              hands: g.hands.map((h) => h.id === eff.handId ? { ...h, status: HAND_STATUS.GONE } : h),
+            };
+          }
+        }
+      }
+      if (Object.keys(moralResult.cornerAdjustments).length > 0) {
+        g = withCornerAdjust(g, moralResult.cornerAdjustments);
+      }
+      if (moralResult.logLines.length > 0) {
+        g = { ...g, log: [...moralResult.logLines, ...g.log].slice(0, 20) };
+      }
+    }
+    // Crisis detection: every season, check if conditions are met
+    // for a crisis to fire. The player gets to choose.
+    if (!g.pendingCrisis && Math.random() < 0.15) {
+      const triggers = detectCrisisTriggers(g);
+      const crisis = pickCrisisToFire(triggers, g.day);
+      if (crisis) {
+        g = { ...g, pendingCrisis: crisis };
+      }
     }
     // Day-worker availability: the country corner decides who shows up.
     // Each day-worker in the static roster (gate met) rolls for whether
@@ -797,6 +860,48 @@ export function applyAction(game, action) {
       working = dailyUpkeep(working, working.insuranceEnabled
         ? 'Bought insurance from the county agent. The premium is due quarterly.'
         : 'Let the insurance lapse. The risk is yours now.');
+      break;
+    }
+    case 'resolveCrisis': {
+      if (!working.pendingCrisis) throw new Error('No crisis to resolve.');
+      const result = resolveCrisis(working.pendingCrisis, action.optionIndex, working);
+      working = result.game;
+      working = withCornerAdjust(working, result.cornerDeltas ?? {});
+      working.pendingCrisis = null;
+      working.log = [result.log, ...working.log].slice(0, 20);
+      working = dailyUpkeep(working, working.log[0]);
+      break;
+    }
+    case 'dismissCrisis': {
+      working.pendingCrisis = null;
+      working = dailyUpkeep(working, 'Dismissed the crisis without action.');
+      break;
+    }
+    case 'transitionToHeir': {
+      working = applyHeirTransition(working);
+      working = dailyUpkeep(working, working.log[0] ?? 'Transitioned to the heir.');
+      break;
+    }
+    case 'skipObligation': {
+      const { category, horseId } = action;
+      const skip = skipObligation(working, category, horseId);
+      working.cash += skip.savings;
+      working.moralState = recordSkip(working.moralState, {
+        ...skip,
+        category,
+        day: working.day,
+        season: getSeason(working),
+      });
+      // The skip has immediate reputation consequences too.
+      working = withCornerAdjust(working, skip.consequence.reputationEffect ?? {});
+      working.ledger = addIncome(working.ledger, {
+        category: 'skipped_obligation',
+        amount: skip.savings,
+        season: getSeason(working),
+        day: working.day,
+        note: `Skipped: ${skip.consequence.label}`,
+      });
+      working = dailyUpkeep(working, `${skip.consequence.logLine} Saved $${skip.savings.toLocaleString()}.`);
       break;
     }
     case 'improveParcel': {
