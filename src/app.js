@@ -27,6 +27,7 @@ import { renderCodex } from './codex.js';
 import { renderBrandGlyph, renderRanchProfile, renderLetterhead, brandById } from './brand.js';
 import { isLegendaryRidden, findLegendary, renderLegendaryBlock } from './legendary.js';
 import { fireSeasonCard } from './time-jump.js';
+import { SHERIDAN_INTRO } from './blood-family.js';
 import { renderPasture } from './pasture.js';
 import { personalMonologue } from './monologue.js';
 import { renderAuthenticityBanner } from './authenticity.js';
@@ -50,6 +51,7 @@ startIdleAnimation().catch(() => {});
 let soundtrackInitialized = false;
 
 let lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
+let sheridanIntroShown = false;
 let pendingShareSnapshot = (() => {
   try {
     return typeof location !== 'undefined' ? parseShareLink(location.hash) : null;
@@ -84,6 +86,14 @@ function escapeHtml(value) {
 
 function bar(value, tone = 'neutral') {
   return `<div class="bar bar--${tone}"><span style="width: ${Math.max(0, Math.min(100, value))}%"></span></div>`;
+}
+
+function renderSheridanIntro() {
+  if (sheridanIntroShown) return '';
+  const lines = SHERIDAN_INTRO.lines
+    .map((l) => `<p class="sheridan-intro-line">${escapeHtml(l)}</p>`)
+    .join('');
+  return `<aside class="sheridan-intro" role="note" aria-label="The dispersal">${lines}</aside>`;
 }
 
 function renderMetric(metric) {
@@ -633,7 +643,18 @@ function render() {
   }
   lastRendered.seasonIndex = tjcCurrentIndex;
 
+  // Phase 10 — the Sheridan intro. First-person, voiced. Plays once on
+  // first render, then the flag flips. The bowed-cello memorial tone
+  // plays at low volume when the intro is on screen.
+  if (!sheridanIntroShown) {
+    sheridanIntroShown = true;
+    audio.resume();
+    audio.play('celloStinger');
+    setTimeout(() => render(), SHERIDAN_INTRO.durationMs);
+  }
+
   root.innerHTML = `
+    ${renderSheridanIntro()}
     <main class="shell">
       <section class="hero">
         <div class="hero-brand-block">

@@ -186,27 +186,40 @@ export const HAZARD_LOSS = Object.freeze({
 // Build initial parcels array for a new game. Backward compatible with
 // the existing 3-parcel format (west-meadow is offered by the developer
 // and not in the initial set).
-export function createInitialParcels() {
-  return PARCEL_DEFS.map((def) => ({
-    id: def.id,
-    name: def.name,
-    x: def.x,
-    y: def.y,
-    forage: def.baseForage,
-    water: def.baseWater,
-    threat: def.threat,
-    // New fields (Group F deepening):
-    acres: def.acres,
-    terrain: def.terrain,
-    state: PARCEL_STATE.DEFAULT,
-    improvement: null,                // 'drained' | 'cleared' | etc.
-    hazard: TERRAIN_HAZARD[def.terrain],
-    feedCapacity: def.baseFeedCapacity,
-    riskModifier: def.riskModifier,
-    leased: def.leased ?? false,
-    offLimits: def.offLimits ?? false,
-    monthlyFee: def.monthlyFee ?? 0,
-  }));
+//
+// Phase 10 — the dispersal. Each parcel has a previousOwner field that
+// traces who held it after Wade Blood's death. The player has 2
+// (home, back-forty). The other 4 working parcels went to family or
+// to Blackwood Development. West-meadow is the developer's pending
+// offer. The PARCEL_DISPERSAL table comes from blood-family.js.
+export function createInitialParcels(dispersal = null) {
+  return PARCEL_DEFS.map((def) => {
+    const disp = dispersal?.[def.id];
+    return {
+      id: def.id,
+      name: def.name,
+      x: def.x,
+      y: def.y,
+      forage: def.baseForage,
+      water: def.baseWater,
+      threat: def.threat,
+      // New fields (Group F deepening):
+      acres: def.acres,
+      terrain: def.terrain,
+      state: PARCEL_STATE.DEFAULT,
+      improvement: null,                // 'drained' | 'cleared' | etc.
+      hazard: TERRAIN_HAZARD[def.terrain],
+      feedCapacity: def.baseFeedCapacity,
+      riskModifier: def.riskModifier,
+      leased: def.leased ?? false,
+      offLimits: def.offLimits ?? false,
+      monthlyFee: def.monthlyFee ?? 0,
+      // Phase 10 — the dispersal:
+      previousOwner: disp?.previousOwner ?? 'Blood & Bridle',
+      previousOwnerNote: disp?.previousOwnerNote ?? 'Original Blood & Bridle land.',
+      currentOwner: disp?.currentOwner ?? 'You',
+    };
+  });
 }
 
 // Add a newly purchased parcel. Used by map.buyAvailableParcel.

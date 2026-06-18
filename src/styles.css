@@ -1493,6 +1493,39 @@ h1, h2, .modal-title, .codex-collection-head h2 {
   transition: opacity 0.8s ease-out;
   pointer-events: none;
 }
+
+/* --- Sheridan intro (Phase 10) ------------------------------------
+   The dispersal. Four lines, first-person, voiced. Plays once on
+   first render. The bowed-cello memorial tone plays at low volume.
+   Sits over the dashboard at the title card, not full-screen. */
+.sheridan-intro {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.55) 100%);
+  animation: sheridan-intro-fade 4s ease-in-out forwards;
+}
+@keyframes sheridan-intro-fade {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.sheridan-intro-line {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+  line-height: 1.6;
+  color: #f5ead7;
+  margin: 0.15em 0;
+  text-align: center;
+  text-shadow: 0 0 14px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.95);
+  letter-spacing: 0.01em;
+}
 .time-jump--visible { opacity: 1; }
 .time-jump--fading { opacity: 0; transition: opacity 0.8s ease-in; }
 .time-jump-inner {

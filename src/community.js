@@ -104,6 +104,41 @@ export const COMMUNITY_MEMBERS = Object.freeze([
     services: ['community_gathering', 'funerals', 'weddings'],
     frequency: 'sunday',
   },
+  {
+    // Phase 10 — the uncle. Runs the show-grounds. Competes on the
+    // circuit. Pays his own way. Not a rival in the antagonist sense.
+    id: 'neighbor-william-blood',
+    name: 'William Blood',
+    role: 'Uncle (show-grounds)',
+    relationshipGate: 0,
+    description: 'The uncle. Keeps the show circuit going. You will see him at the shows.',
+    services: ['show_circuit', 'family_connection'],
+    frequency: 'always',
+    family: true,
+  },
+  {
+    // Phase 10 — the aunt. Married away to John Crane. The Cranes run
+    // cattle on the ridge. They do not say much at the brandings.
+    id: 'neighbor-edith-crane',
+    name: 'Edith Crane',
+    role: 'Aunt (ridge cattle)',
+    relationshipGate: 0,
+    description: 'The aunt. Married John Crane in 1981. The Cranes run cattle on the ridge.',
+    services: ['family_connection', 'cattle_neighbor'],
+    frequency: 'always',
+    family: true,
+  },
+  {
+    // Phase 10 — the Ash Coulee foreman. He shows up at the auction
+    // and at the brandings. He is a real rancher with a real operation.
+    id: 'neighbor-ash-coulee',
+    name: 'Henry Whitehorse',
+    role: 'Ash Coulee ranch foreman',
+    relationshipGate: 10,
+    description: 'Runs the cattle operation on the reservation. Buys at auction. Pays fair.',
+    services: ['auction_buyer', 'cattle_neighbor', 'hay_trade'],
+    frequency: 'seasonal',
+  },
 ]);
 
 // Get community members who are accessible at the current country corner.

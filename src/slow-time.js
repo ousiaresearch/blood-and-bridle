@@ -9,7 +9,14 @@
 // Sheridan silences. McMurtry fragments. The game is the spaces
 // between the action.
 //
+// Phase 10 — the dispersal. Two of the eight slow moments now carry
+// a family-mention line. Sheridan version: the family has voices.
+// They show up in the bunkhouse. They do not ask for help and they
+// do not offer it. They exist.
+//
 // Pure module. No DOM. No localStorage.
+
+import { FAMILY_MENTION_LINES } from './blood-family.js';
 
 // Types of slow moments
 export const SLOW_MOMENTS = Object.freeze({
@@ -41,6 +48,12 @@ export const SLOW_MOMENT_LIBRARY = Object.freeze([
     fragment: 'Bunkhouse scene. Eli is fixing the door. Mae is sharpening a knife. Reyes is asleep in the chair. Elena is reading the ledger. The coffee is hot enough to scald.',
   },
   {
+    type: SLOW_MOMENTS.BUNKHOUSE,
+    seasons: ['Spring', 'Summer', 'Fall', 'Winter'],
+    fragment: 'Bunkhouse scene. Eli says your cousin Cobb came by. Asked about you. I told him you were busy. Nobody else says anything. The coffee is on.',
+    familyMention: true,
+  },
+  {
     type: SLOW_MOMENTS.RIDE_OUT,
     seasons: ['Spring', 'Summer', 'Fall'],
     fragment: 'You ride out for no reason. The fence is good. The mares are in the south pasture. The sun is on your face. There is no reason to be out here except to be out here.',
@@ -65,7 +78,22 @@ export const SLOW_MOMENT_LIBRARY = Object.freeze([
     seasons: ['Spring', 'Summer', 'Fall', 'Winter'],
     fragment: 'Morning. The hands come in from the barn. The coffee is poured. The eggs are on the table. Nobody says much. The radio is on but no one is listening.',
   },
+  {
+    type: SLOW_MOMENTS.MORNING_BREAKFAST,
+    seasons: ['Spring', 'Summer', 'Fall', 'Winter'],
+    fragment: 'Morning. The coffee is poured. Eli says William is showing a three-year-old at the county fair this weekend. The judge remembers him. Nobody says much.',
+    familyMention: true,
+  },
 ]);
+
+// Pick a family-mention line for use in weather/market news, bunkhouse
+// dialogue, or slow-time variation. Returns null if no lines are
+// available (shouldn't happen — the library is non-empty).
+export function pickFamilyMentionLine() {
+  if (!FAMILY_MENTION_LINES || FAMILY_MENTION_LINES.length === 0) return null;
+  const idx = Math.floor(Math.random() * FAMILY_MENTION_LINES.length);
+  return FAMILY_MENTION_LINES[idx];
+}
 
 // Pick a slow moment for the current season. Returns null if no
 // appropriate moment is in the library.

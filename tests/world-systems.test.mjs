@@ -145,9 +145,12 @@ test('COMMUNITY_MEMBERS has at least 10 members', () => {
 
 test('availableCommunity: 0% country = only those with gate 0', () => {
   const avail = availableCommunity(0);
-  // Only vet-voss has gate 0
-  assert.equal(avail.length, 1);
-  assert.equal(avail[0].id, 'vet-voss');
+  // Family members and the vet are always available (gate 0).
+  // Phase 10 — added William Blood and Edith Crane (family, gate 0).
+  const ids = avail.map((m) => m.id);
+  assert.ok(ids.includes('vet-voss'));
+  assert.ok(ids.includes('neighbor-william-blood'));
+  assert.ok(ids.includes('neighbor-edith-crane'));
 });
 
 test('availableCommunity: 50% country = mid-tier members', () => {

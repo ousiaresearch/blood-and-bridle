@@ -1,7 +1,6 @@
 // Auction house. Three personality-driven bidders compete on each listing.
 // Each bidder has a budget, taste profile, and ceiling for each trait.
-
-const BIDDERS = [
+export const BIDDERS = [
   {
     id: 'bidder-amaya',
     name: 'Amaya Quintero',
@@ -29,6 +28,24 @@ const BIDDERS = [
     archetype: 'show-circuit',
     budget: 38000,
     taste: { gait_quality: 0.85, temperament_stability: 0.5, heart: 0.85, bone_density: 0.6, conformation: 0.7 },
+  },
+  {
+    // Phase 10 — the cousin. Runs a small dispersaler operation out of
+    // the creek parcel. Pays fair, doesn't haggle on quality.
+    id: 'bidder-cobb',
+    name: 'Cobb Blood',
+    archetype: 'dispersaler',
+    budget: 18000,
+    taste: { gait_quality: 0.5, temperament_stability: 0.8, heart: 0.7, bone_density: 0.7, conformation: 0.5 },
+  },
+  {
+    // Phase 10 — the Ash Coulee foreman. He buys for the tribal
+    // operation. Working-ranch taste, fair prices.
+    id: 'bidder-whitehorse',
+    name: 'Henry Whitehorse',
+    archetype: 'working-ranch',
+    budget: 24000,
+    taste: { gait_quality: 0.4, temperament_stability: 0.9, heart: 0.6, bone_density: 0.8, conformation: 0.5 },
   },
 ];
 

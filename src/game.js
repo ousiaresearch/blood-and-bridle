@@ -19,6 +19,7 @@ import { generateLegendaryHorse, findLegendary, maybeBondLegendary, applyLegenda
 import { TUTORIAL_STEPS, getCurrentTutorialStep, markStepComplete, dismissTutorial } from './tutorial.js';
 import { buildMemorial } from './memorial.js';
 import { DEFAULT_BRAND_ID } from './brand.js';
+import { PARCEL_DISPERSAL } from './blood-family.js';
 import { TERRAIN, PARCEL_STATE, createInitialParcels, addParcel as addParcelDef, applyParcelImprovement, tickParcelHazards, hazardDeathCircumstance, IMPROVEMENT_COSTS } from './parcels.js';
 import { createInitialReputation, adjustCorners, recomputeOverallReputation, getCollapsedCorner, crewDepartureRisk, loanTerms } from './reputation.js';
 import { createInitialHands, findHand, canDoTask, consumeHandHours, taskHours, resetWeeklyHours, tickHandInjuries, adjustHandsMorale, totalMonthlyWages, rollHandDepartures, workingHandCount, HAND_STATUS } from './labor.js';
@@ -157,7 +158,7 @@ export function createNewGame() {
     // Seven parcels: 6 working parcels + west-meadow, which the developer
     // wants to buy. West-meadow is a regular parcel the player owns; the
     // developer's offer is on the table but unsigned.
-    parcels: createInitialParcels().concat([
+    parcels: createInitialParcels(PARCEL_DISPERSAL).concat([
       {
         id: 'west-meadow',
         name: 'West Meadow',
