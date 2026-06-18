@@ -656,7 +656,8 @@ function render() {
   root.innerHTML = `
     ${renderSheridanIntro()}
     <main class="shell">
-      <section class="hero">
+      <section class="hero hero--title-card">
+        <div class="hero-backdrop" aria-hidden="true"></div>
         <div class="hero-brand-block">
           <div class="hero-brand-mark">${renderBrandGlyph(game.ranchBrand, 'hero-brand-glyph')}</div>
           <div class="hero-brand-text">

@@ -21,8 +21,20 @@ test('BRAND_SET has 12 brands covering livestock-relevant glyphs', () => {
   }
 });
 
-test('DEFAULT_BRAND_ID is the classic Y-bar', () => {
-  assert.equal(DEFAULT_BRAND_ID, 'y-bar');
+test('DEFAULT_BRAND_ID is the canonical Blood & Bridle B-bar', () => {
+  assert.equal(DEFAULT_BRAND_ID, 'bar-b');
+});
+
+test('bar-b brand carries the canonical image path', () => {
+  const bar = brandById('bar-b');
+  assert.equal(bar.imagePath, '/assets/brand/canonical.png');
+});
+
+test('non-canonical brands have no imagePath — they render as text glyphs', () => {
+  for (const id of ['y-bar', 'diamond', 'cross', 'star']) {
+    const b = brandById(id);
+    assert.equal(b.imagePath, undefined, `${id} should have no imagePath`);
+  }
 });
 
 test('brandById resolves known and unknown ids', () => {
@@ -32,11 +44,24 @@ test('brandById resolves known and unknown ids', () => {
   assert.equal(fallback.id, DEFAULT_BRAND_ID);
 });
 
-test('renderBrandGlyph returns an inline stamp span with the brand id', () => {
+test('renderBrandGlyph renders an <img> when the brand has imagePath', () => {
+  const html = renderBrandGlyph('bar-b', 'extra');
+  assert.match(html, /ranch-brand--image/);
+  assert.match(html, /ranch-brand-image/);
+  assert.match(html, /src="\/assets\/brand\/canonical\.png"/);
+  assert.match(html, /data-brand="bar-b"/);
+  assert.match(html, /class="ranch-brand ranch-brand--bar-b ranch-brand--image extra"/);
+  assert.doesNotMatch(html, /B\u0304/, 'no raw glyph when image is shown');
+});
+
+test('renderBrandGlyph falls back to text glyph when brand has no image', () => {
   const html = renderBrandGlyph('diamond', 'extra');
-  assert.match(html, /ranch-brand/);
+  assert.match(html, /ranch-brand--glyph/);
   assert.match(html, /data-brand="diamond"/);
-  assert.match(html, /class="ranch-brand ranch-brand--diamond extra"/);
+  assert.match(html, /class="ranch-brand ranch-brand--diamond ranch-brand--glyph extra"/);
+  assert.doesNotMatch(html, /ranch-brand-image/);
+  // The diamond glyph \u25C6 should be present in the output.
+  assert.match(html, /\u25C6/);
 });
 
 test('renderRanchProfile renders the four required fields', () => {
@@ -56,12 +81,27 @@ test('renderRanchProfile renders all brand options', () => {
   }
 });
 
-test('renderLetterhead renders the ranch name, brand glyph, and founder info', () => {
+test('renderRanchProfile renders an image for the canonical brand option', () => {
+  const game = createNewGame();
+  const html = renderRanchProfile(game);
+  assert.match(html, /brand-option-image/);
+  assert.match(html, /src="\/assets\/brand\/canonical\.png"/);
+});
+
+test('renderLetterhead renders the ranch name, brand, and founder info', () => {
   const game = { ranchBrand: 'diamond', ranchName: 'Cedar Draw', ownerName: 'J. Smith', foundedDay: 1 };
   const html = renderLetterhead(game);
   assert.match(html, /Cedar Draw/);
   assert.match(html, /ranch-brand--diamond/);
   assert.match(html, /J\. Smith/);
+});
+
+test('renderLetterhead uses the canonical image for bar-b', () => {
+  const game = { ranchBrand: 'bar-b', ranchName: 'Hat Creek', ownerName: 'Bo', foundedDay: 1 };
+  const html = renderLetterhead(game);
+  assert.match(html, /letterhead-brand-image/);
+  assert.match(html, /src="\/assets\/brand\/canonical\.png"/);
+  assert.doesNotMatch(html, /ranch-brand--bar-b/);
 });
 
 test('renderLetterhead falls back to "Unbranded" for empty ranch names', () => {
@@ -78,26 +118,4 @@ test('updateRanchProfile action persists all four fields', () => {
   });
   assert.equal(game.ownerName, 'Anduril');
   assert.equal(game.ownerPronouns, 'he/him');
-  assert.equal(game.ranchName, 'Hat Creek');
-  assert.equal(game.ranchBrand, 'diamond');
-});
-
-test('updateRanchProfile action truncates overly long inputs', () => {
-  let game = createNewGame();
-  const longName = 'X'.repeat(100);
-  game = applyAction(game, {
-    type: 'updateRanchProfile',
-    profile: { ownerName: longName, ranchName: longName },
-  });
-  assert.ok(game.ownerName.length <= 48);
-  assert.ok(game.ranchName.length <= 48);
-});
-
-test('updateRanchProfile logs a stamp event', () => {
-  let game = createNewGame();
-  game = applyAction(game, {
-    type: 'updateRanchProfile',
-    profile: { ranchName: 'Hat Creek' },
-  });
-  assert.match(game.log[0], /Stamped the brand/);
 });

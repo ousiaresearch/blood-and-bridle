@@ -1,20 +1,20 @@
 // The player's ranch brand.
 //
-// Sheridan: wordmark and brand are unified. The Yellowstone Y with the
-// macron above is both the show title AND the cattle brand. For
-// Blood & Bridle, the player picks one symbol at save creation. The
-// symbol is stamped everywhere: header, ledger cover, bills of sale,
-// horse portrait hip stamps (UI-only), and the dynasty export cover.
+// Sheridan-true: wordmark and brand are unified. The chosen brand
+// travels everywhere — header, ledger cover, bills of sale, horse
+// portrait hip stamps (UI-only), dynasty export cover, title card.
 //
-// The brand set is a curated list of livestock-friendly glyphs. They
-// are renderable in any font that supports the Unicode range or as a
-// CSS-stamped character. We use real Unicode glyphs so the brand
-// travels through save/load without asset dependencies.
+// The canonical Blood & Bridle brand is Brand B: a B with a horizontal
+// bar below, burned into weathered wood. It has an `imagePath` so the
+// game renders the actual artwork rather than a Unicode glyph. The
+// remaining BRAND_SET entries stay as a curated picker — cattle-trade
+// tradition lets a ranch carry any symbol they please — but they render
+// as text glyphs (the .ranch-brand--glyph fallback).
 
 export const BRAND_SET = [
+  { id: 'bar-b',     symbol: 'B\u0304',  label: 'B bar',     hint: 'Blood & Bridle, branded. The canonical mark: B with a bar, burned into wood.', imagePath: '/assets/brand/canonical.png' },
   { id: 'y-bar',     symbol: 'Y\u0304',  label: 'Y bar',     hint: 'The classic. A capital Y with a bar above.' },
   { id: 'bar-y',     symbol: '\u0304Y',  label: 'Bar Y',     hint: 'Reversed. The bar leads, the Y follows.' },
-  { id: 'bar-b',     symbol: 'B\u0304',  label: 'B bar',     hint: 'Blood & Bridle, branded.' },
   { id: 'two-bars',  symbol: '=\u0304',  label: 'Twin bar',  hint: 'Two bars stacked. The fence line.' },
   { id: 'inverted-v',symbol: '\u2227',  label: 'Inverted V',hint: 'The pitchfork brand. Working ranch.' },
   { id: 'bar-seven', symbol: '7\u0304',  label: 'Bar seven', hint: 'Lucky. The seven brand.' },
@@ -26,7 +26,7 @@ export const BRAND_SET = [
   { id: 'wing',      symbol: '\u269D',   label: 'Wing',      hint: 'The Wing. Remington country.' },
 ];
 
-export const DEFAULT_BRAND_ID = 'y-bar';
+export const DEFAULT_BRAND_ID = 'bar-b';
 
 // Resolve a brand by id with a fallback to the default.
 export function brandById(id) {
@@ -36,12 +36,15 @@ export function brandById(id) {
 // Render the player's brand as an inline stamp. Used in headers,
 // bills of sale, the dynasty export, and the Ranch Profile modal.
 //
-// The macron above Y renders in most browsers via the combining
-// character. For fonts that lack combining mark support, the
-// --brand-fallback is used (CSS handles the visual).
+// Brands with an `imagePath` render as <img> (the artwork itself).
+// All other brands render as text glyphs (Unicode + combining mark),
+// which still travel through save/load with no asset dependency.
 export function renderBrandGlyph(brandId, extraClass = '') {
   const brand = brandById(brandId);
-  return `<span class="ranch-brand ranch-brand--${brand.id} ${extraClass}" data-brand="${brand.id}" aria-label="${brand.label}">${brand.symbol}</span>`;
+  if (brand.imagePath) {
+    return `<span class="ranch-brand ranch-brand--${brand.id} ranch-brand--image ${extraClass}" data-brand="${brand.id}" aria-label="${brand.label}"><img class="ranch-brand-image" src="${brand.imagePath}" alt="${brand.label}" /></span>`;
+  }
+  return `<span class="ranch-brand ranch-brand--${brand.id} ranch-brand--glyph ${extraClass}" data-brand="${brand.id}" aria-label="${brand.label}">${brand.symbol}</span>`;
 }
 
 // Build the Ranch Profile modal panel HTML. Used both at save creation
@@ -57,12 +60,15 @@ export function renderRanchProfile(game) {
   const ownerPronouns = game.ownerPronouns ?? '';
   const ranchName = game.ranchName ?? '';
 
-  const brandOptions = BRAND_SET.map((b) =>
-    `<button type="button" class="brand-option ${b.id === game.ranchBrand ? 'brand-option--selected' : ''}" data-brand-id="${b.id}" title="${b.hint}">
-      <span class="brand-option-glyph">${b.symbol}</span>
+  const brandOptions = BRAND_SET.map((b) => {
+    const inner = b.imagePath
+      ? `<img class="brand-option-image" src="${b.imagePath}" alt="${b.label}" />`
+      : `<span class="brand-option-glyph">${b.symbol}</span>`;
+    return `<button type="button" class="brand-option ${b.id === game.ranchBrand ? 'brand-option--selected' : ''}" data-brand-id="${b.id}" title="${b.hint}">
+      ${inner}
       <small>${b.label}</small>
-    </button>`
-  ).join('');
+    </button>`;
+  }).join('');
 
   return `
     <form class="ranch-profile" data-form="ranch-profile">
@@ -111,9 +117,13 @@ export function renderLetterhead(game) {
     ? `Est. day ${game.foundedDay}`
     : 'Est. day 1';
 
+  const brandMark = brand.imagePath
+    ? `<img class="letterhead-brand-image" src="${brand.imagePath}" alt="${brand.label}" />`
+    : `<div class="letterhead-brand ranch-brand--${brand.id}">${brand.symbol}</div>`;
+
   return `
     <div class="letterhead" data-brand="${brand.id}">
-      <div class="letterhead-brand ranch-brand--${brand.id}">${brand.symbol}</div>
+      ${brandMark}
       <div class="letterhead-text">
         <h3 class="letterhead-name">${escapeHtml(ranchName)}</h3>
         ${ownerName ? `<p class="letterhead-owner">${escapeHtml(ownerName)} · ${escapeHtml(game.ownerPronouns || '')}</p>` : ''}
