@@ -37,7 +37,15 @@ button { cursor: pointer; }
 .shell {
   width: min(1440px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 32px 0 56px;
+  padding: 32px 0 calc(56px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 720px) {
+  /* P0: bottom-nav is ~72px tall fixed-position. Give the shell enough
+     bottom padding so the last card never gets clipped under it. */
+  .shell {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .hero, .crisis, .metrics, .layout, .event-modal {
@@ -2653,7 +2661,94 @@ main.shell.is-turning {
   filter: saturate(1.05) contrast(1.04);
 }
 
-/* ── Phase 15 — Sheridan lift: brand-B material + texture ────────── */
+/* P1: tiered metrics — primary chips always visible, secondary behind disclosure. */
+.metrics--tiered {
+  display: block;
+}
+.metrics-primary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(201, 162, 90, 0.06), transparent 60%),
+    rgba(20, 14, 8, 0.4);
+}
+.metrics-primary .metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  text-align: center;
+  min-height: 0;
+}
+.metrics-primary .metric span {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.metrics-primary .metric strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--gold-3);
+  letter-spacing: 0.01em;
+}
+.metrics-disclosure {
+  margin-top: 8px;
+}
+.metrics-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  list-style: none;
+  cursor: pointer;
+  border: 1px dashed var(--rule);
+  border-radius: 6px;
+  color: var(--gold-3);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.metrics-disclosure > summary::-webkit-details-marker { display: none; }
+.metrics-disclosure > summary:hover { background: rgba(201, 162, 90, 0.05); }
+.metrics-disclosure .chevron { width: 14px; height: 14px; transition: transform 200ms ease; }
+.metrics-disclosure[open] > summary .chevron { transform: rotate(180deg); }
+.metrics-secondary {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.metrics-secondary .metric {
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 720px) {
+  .metrics-primary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .metrics-primary .metric strong {
+    font-size: 16px;
+  }
+}
+
+/* Phase 15 — Sheridan lift: brand-B material + texture ────────── */
 /* Hairline brand strip — burnt-iron accent at the top of every card.
    Pure CSS gradient, no asset, scales perfectly. */
 .panel::before {
@@ -2835,7 +2930,212 @@ main.shell.is-turning {
   border-radius: 2px;
   vertical-align: middle;
 }
-.action-label { display: inline; }
+/* P3: action button inline icon. Sits left of the label, uses currentColor
+   so it picks up the action weight's tone. */
+.action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.action-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(201, 162, 90, 0.06);
+  border: 1px solid var(--rule);
+  color: var(--gold-2);
+  flex-shrink: 0;
+}
+.action-icon svg { width: 16px; height: 16px; }
+.action--high-stakes .action-icon { color: #e6a39a; border-color: rgba(230, 163, 154, 0.3); }
+.action--specialty .action-icon { color: var(--gold-2); background: rgba(201, 162, 90, 0.12); }
+
+.action-label { display: inline; flex: 1; }
+
+/* P5: share card preview tile — collapsed default state shows what's inside. */
+.share-card-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(201, 162, 90, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(38, 26, 14, 0.5), rgba(20, 14, 8, 0.5));
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.share-card-preview:hover {
+  border-color: var(--gold-2);
+  transform: translateY(-1px);
+}
+.share-card-preview-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.32);
+}
+.share-card-preview-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.share-card-preview-title {
+  font-family: 'Rye', serif;
+  font-size: 18px;
+  color: var(--gold-3);
+  letter-spacing: 0.04em;
+}
+.share-card-preview-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.share-card-preview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.share-card-preview-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: rgba(20, 14, 8, 0.4);
+}
+.share-card-preview-stats span {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.share-card-preview-stats strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gold-3);
+}
+.share-card-preview-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 0;
+  border-top: 1px dashed var(--rule);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+.share-card-preview-cta svg { width: 16px; height: 16px; }
+
+/* P4: compact tutorial disclosure — single-line progress bar after dismiss. */
+.tutorial--compact {
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: rgba(20, 14, 8, 0.4);
+}
+.tutorial--compact > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.tutorial--compact > summary::-webkit-details-marker { display: none; }
+.tutorial-progress-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  flex: 0 0 auto;
+}
+.tutorial-progress-bar {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.tutorial-progress-pip {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(201, 162, 90, 0.18);
+}
+.tutorial-progress-pip.is-done {
+  background: var(--gold-2);
+}
+.tutorial--compact .chevron { width: 14px; height: 14px; flex-shrink: 0; }
+.tutorial--compact .tutorial-body {
+  padding: 0 14px 14px;
+  border-top: 1px dashed var(--rule);
+}
+.tutorial--compact .tutorial-body h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  margin: 12px 0 6px;
+}
+
+/* P2: selected-horse cinematic card — uses Codex 'xl' portrait when available. */
+.selected-horse-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: rgba(0, 0, 0, 0.32);
+}
+.selected-horse-portrait {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+.selected-horse-portrait-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover !important;
+  background-position: center !important;
+  display: block;
+}
+.selected-horse-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--rule);
+  background: rgba(20, 14, 8, 0.5);
+}
+.selected-horse-meta strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gold-3);
+  letter-spacing: 0.01em;
+}
+.selected-horse-meta small {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
 
 /* L3: empty-state card with icon */
 .lineage-empty-card {
@@ -2878,12 +3178,29 @@ main.shell.is-turning {
   right: 0;
   bottom: 0;
   z-index: 60;
+  /* P6: brand-B burnt-iron strip across the top of the nav, leather-textured
+     background that matches the rest of the chrome. */
   background: linear-gradient(180deg, rgba(20, 16, 12, 0.96), rgba(10, 8, 6, 0.98));
   border-top: 1px solid rgba(201, 162, 90, 0.35);
   box-shadow: 0 -8px 24px -10px rgba(0, 0, 0, 0.7);
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
   justify-content: space-around;
   align-items: stretch;
+}
+.bottom-nav::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 162, 90, 0.55) 25%,
+    rgba(70, 40, 18, 0.95) 50%,
+    rgba(201, 162, 90, 0.55) 75%,
+    transparent 100%
+  );
 }
 .bottom-nav-btn {
   flex: 1 1 0;

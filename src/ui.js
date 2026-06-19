@@ -74,13 +74,13 @@ export function buildDashboardModel(game) {
     pendingBreeding: game.pendingBreeding,
     lastShowResult: game.lastShowResult,
     metrics: [
-      { label: 'Year', value: `${getYear(game)}` },
-      { label: 'Season', value: getSeason(game) },
-      { label: 'Day', value: `${getDayOfSeason(game)}/${DAYS_PER_SEASON}` },
-      { label: 'Cash', value: formatMoney(game.cash) },
-      { label: 'Legacy', value: `${game.legacy}` },
-      { label: 'Reputation', value: `${game.reputation}` },
-      { label: 'Developer Pressure', value: `${game.developerPressure}` },
+      { label: 'Year', value: `${getYear(game)}`, tier: 'primary' },
+      { label: 'Season', value: getSeason(game), tier: 'primary' },
+      { label: 'Day', value: `${getDayOfSeason(game)}/${DAYS_PER_SEASON}`, tier: 'primary' },
+      { label: 'Cash', value: formatMoney(game.cash), tier: 'primary' },
+      { label: 'Legacy', value: `${game.legacy}`, tier: 'secondary' },
+      { label: 'Reputation', value: `${game.reputation}`, tier: 'primary' },
+      { label: 'Developer Pressure', value: `${game.developerPressure}`, tier: 'secondary' },
     ],
     horses: game.horses.map((horse) => {
       const stage = getLifeStage(horse);

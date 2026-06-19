@@ -43,7 +43,7 @@ const audio = createAudioEngine();
 let audioAmbientEnabled = false;
 
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine, showAllActions: false };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine, showAllActions: false, tutorialDismissed: false };
 
 // Preload portraits on startup
 preloadPortraits().catch(() => {});
@@ -140,26 +140,48 @@ function renderSheridanIntro() {
 // <=720px. Surface is always rendered (so handlers always wire correctly);
 // CSS hides it on desktop and the hero-actions row on mobile.
 function renderBottomNav() {
+  // P6: brand-iron icons. Hand-forged glyphs that match the burnt-iron
+  // aesthetic of the brand-B logo (no clean SaaS line icons). Each uses
+  // the same 1.7 stroke / square caps language.
+  const stroke = 'fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"';
   return `
     <nav class="bottom-nav" aria-label="Primary actions">
       <button class="bottom-nav-btn" data-ranch-profile aria-label="Ranch profile">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 L12 3 L21 12 V21 H14 V14 H10 V21 H3 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 19 V11 L12 5 L20 11 V19 H14 V14 H10 V19 Z" ${stroke}/>
+          <path d="M7 11 V19 M17 11 V19" ${stroke} stroke-width="1.2"/>
+        </svg>
         <span>Ranch</span>
       </button>
       <button class="bottom-nav-btn" data-codex aria-label="Codex of the Code">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 H17 A3 3 0 0 1 20 7 V20 L17 18 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 4 H17 A3 3 0 0 1 20 7 V20 L17 18 H4 Z" ${stroke}/>
+          <path d="M7 9 H15 M7 12 H13 M7 15 H11" ${stroke} stroke-width="1.2"/>
+        </svg>
         <span>Codex</span>
       </button>
       <button class="bottom-nav-btn" data-kitchen-table aria-label="Kitchen table">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 4 V20 M4 12 H20" stroke="currentColor" stroke-width="1.4"/></svg>
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9 H20 V11 H4 Z" ${stroke}/>
+          <path d="M5 11 V18 M19 11 V18" ${stroke}/>
+          <path d="M8 14 H16" ${stroke} stroke-width="1.2"/>
+          <path d="M9 5 L11 9 M15 5 L13 9" ${stroke} stroke-width="1.2"/>
+        </svg>
         <span>Kitchen</span>
       </button>
       <button class="bottom-nav-btn" data-audio-toggle aria-label="Toggle sound">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9 H9 L13 5 V19 L9 15 H5 Z M16 8 Q19 12 16 16 M18 5 Q22 12 18 19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 9 H9 L13 5 V19 L9 15 H5 Z" ${stroke}/>
+          <path d="M16 9 Q18 12 16 15" ${stroke}/>
+          <path d="M18 6 Q22 12 18 18" ${stroke}/>
+        </svg>
         <span>${audio.isMuted() ? 'Muted' : 'Sound'}</span>
       </button>
       <button class="bottom-nav-btn" data-more-sheet aria-label="More actions" aria-haspopup="true">
-        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5 V19 M5 12 H19" ${stroke}/>
+          <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+        </svg>
         <span>More</span>
       </button>
     </nav>
@@ -226,13 +248,86 @@ function renderOfflineIndicator() {
   `;
 }
 
+// P3: action button inline icon — small SVG glyph by category. Returns
+// the inner SVG markup (without an outer wrapper). All glyphs use the
+// brand-B line language: 1.6 stroke, square caps, no fills.
+function actionIcon(type) {
+  const stroke = 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+  switch (type) {
+    case 'train':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M5 8 L12 4 L19 8 V18 H5 Z" ${stroke}/><path d="M9 12 H15 M9 15 H13" ${stroke}/></svg>`;
+    case 'enterShow':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><circle cx="12" cy="9" r="5" ${stroke}/><path d="M8 13 L6 21 M16 13 L18 21 M9 9 L12 6 L15 9" ${stroke}/></svg>`;
+    case 'breed':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M4 12 C 6 7 10 7 12 12 C 14 17 18 17 20 12" ${stroke}/><circle cx="4" cy="12" r="2" ${stroke}/><circle cx="20" cy="12" r="2" ${stroke}/></svg>`;
+    case 'upgrade':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M3 21 H21 M5 21 V11 L12 6 L19 11 V21 M9 21 V14 H15 V21" ${stroke}/></svg>`;
+    case 'rotatePasture':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M4 18 Q9 6 14 12 Q19 18 21 14" ${stroke}/><path d="M21 14 V10 M21 14 H17" ${stroke}/></svg>`;
+    case 'takeBoarders':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><rect x="4" y="6" width="16" height="14" rx="1" ${stroke}/><path d="M4 10 H20 M9 6 V20 M15 6 V20" ${stroke}/></svg>`;
+    case 'vetCare':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><circle cx="12" cy="12" r="8" ${stroke}/><path d="M12 8 V16 M8 12 H16" ${stroke}/></svg>`;
+    case 'refuseDeveloper':
+    case 'signWithDeveloper':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><rect x="4" y="4" width="16" height="16" rx="1" ${stroke}/><path d="M8 9 H16 M8 13 H14 M8 17 H12" ${stroke}/></svg>`;
+    case 'sellHorse':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M5 8 H17 L21 12 L17 16 H5 Z" ${stroke}/><circle cx="8" cy="20" r="2" ${stroke}/><circle cx="16" cy="20" r="2" ${stroke}/></svg>`;
+    case 'listAtAuction':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M5 7 L19 7 L19 18 L5 18 Z" ${stroke}/><path d="M5 11 H19 M9 7 V18" ${stroke}/></svg>`;
+    case 'maeAdvancedTraining':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M5 18 L12 6 L19 18" ${stroke}/><path d="M8 14 H16" ${stroke}/><circle cx="12" cy="6" r="1.4" fill="currentColor"/></svg>`;
+    case 'vossPreventiveCare':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><rect x="4" y="9" width="16" height="11" rx="1.5" ${stroke}/><path d="M8 9 V6 A4 4 0 0 1 16 6 V9" ${stroke}/><path d="M12 13 V16" ${stroke}/></svg>`;
+    case 'eliFindHayDeal':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M5 14 L7 12 L9 14 L11 12 L13 14 L15 12 L17 14 L19 12" ${stroke}/><path d="M4 20 H20" ${stroke}/></svg>`;
+    case 'breedInfo':
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><circle cx="12" cy="12" r="8" ${stroke}/><path d="M12 8 V16 M8 12 H16" ${stroke}/></svg>`;
+    default:
+      return `<svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><circle cx="12" cy="12" r="6" ${stroke}/></svg>`;
+  }
+}
+
 function renderMetric(metric) {
   const flash = metric._flash ? ` ${metric._flash}` : '';
+  const tier = metric.tier ? ` metric--${metric.tier}` : '';
   return `
-    <article class="metric${flash}">
+    <article class="metric${flash}${tier}">
       <span>${escapeHtml(metric.label)}</span>
       <strong>${escapeHtml(metric.value)}</strong>
     </article>
+  `;
+}
+
+// P1: Split metrics into primary (always visible as chips) and secondary
+// (behind a disclosure). Reclaims ~600px of vertical space on mobile while
+// keeping every stat reachable.
+function renderMetricsTiered(model) {
+  const primary = model.metrics.filter((m) => m.tier === 'primary');
+  const secondary = model.metrics.filter((m) => m.tier === 'secondary');
+  return `
+    <section class="metrics metrics--tiered">
+      <div class="metrics-primary">
+        ${primary.map((m) => {
+          const cls = metricClass(m);
+          return renderMetric({ ...m, _flash: cls });
+        }).join('')}
+      </div>
+      ${secondary.length > 0 ? `
+        <details class="metrics-disclosure">
+          <summary>
+            <span>More stats</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="chevron"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </summary>
+          <div class="metrics-secondary">
+            ${secondary.map((m) => {
+              const cls = metricClass(m);
+              return renderMetric({ ...m, _flash: cls });
+            }).join('')}
+          </div>
+        </details>
+      ` : ''}
+    </section>
   `;
 }
 
@@ -529,9 +624,11 @@ function renderLineagePanel() {
     <div class="lineage">
       <div class="lineage-block lineage-block--self">
         <p class="eyebrow">Selected</p>
-        <div class="lineage-row">
-          ${renderPortrait(horse, { size: 'md' })}
-          <div>
+        <div class="selected-horse-card">
+          <div class="selected-horse-portrait">
+            ${renderPortrait(horse, { size: 'xl', className: 'selected-horse-portrait-img' })}
+          </div>
+          <div class="selected-horse-meta">
             <strong>${escapeHtml(horse.name)}</strong>
             <small>age ${horse.age} · ${escapeHtml(horse.role)}</small>
           </div>
@@ -623,6 +720,27 @@ function renderTutorialCard() {
   const stepIndex = TUTORIAL_STEPS.findIndex((s) => s.id === step.id);
   const total = TUTORIAL_STEPS.length;
   const progress = `${Math.min(completed.length, total)}/${total} steps complete`;
+  // P4: once a player has dismissed (or completed) the tutorial, shrink to
+  // a single inline progress bar instead of the full 5-step checklist.
+  const dismissed = ui.tutorialDismissed || completed.length > 0;
+  if (dismissed) {
+    return `
+      <details class="tutorial tutorial--compact">
+        <summary>
+          <span class="tutorial-progress-label">Tutorial · ${progress}</span>
+          <span class="tutorial-progress-bar" aria-hidden="true">
+            ${TUTORIAL_STEPS.map((s) => `<span class="tutorial-progress-pip ${completed.includes(s.id) ? 'is-done' : ''}"></span>`).join('')}
+          </span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="chevron"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </summary>
+        <div class="tutorial-body">
+          <h2>${escapeHtml(step.title)}</h2>
+          <p>${escapeHtml(step.body)}</p>
+          <p class="hint">${escapeHtml(step.hint)}</p>
+        </div>
+      </details>
+    `;
+  }
   return `
     <section class="tutorial">
       <div class="tutorial-head">
@@ -645,7 +763,32 @@ function renderTutorialCard() {
 }
 
 function renderShareCard() {
-  if (!ui.showShareCard) return '';
+  if (!ui.showShareCard) {
+    // P5: collapsed preview tile. Shows what the share card looks like at
+    // a glance without taking the full canvas, so users know what they're
+    // building toward when they tap "Share card".
+    const heroScore = scoreGame(game);
+    const horseCount = game.horses?.length ?? 0;
+    return `
+      <section class="share-card-preview" data-toggle-share-card role="button" tabindex="0" aria-label="Open share card">
+        <div class="share-card-preview-mock">
+          <div class="share-card-preview-strip">
+            <strong class="share-card-preview-title">Blood & Bridle</strong>
+            <span class="share-card-preview-meta">Year ${getYear(game)} ${getSeason(game)} · ${horseCount} horses · ${heroScore.toLocaleString()} pts</span>
+          </div>
+          <div class="share-card-preview-stats">
+            <div><span>Cash</span><strong>$${game.cash.toLocaleString()}</strong></div>
+            <div><span>Legacy</span><strong>${game.legacy}</strong></div>
+            <div><span>Rep</span><strong>${game.reputation}</strong></div>
+          </div>
+        </div>
+        <div class="share-card-preview-cta">
+          <span>Open share card</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12 H19 M13 6 L19 12 L13 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </section>
+    `;
+  }
   const top = [...(game.horses ?? [])]
     .sort((a, b) => (b.training ?? 0) - (a.training ?? 0))
     .slice(0, 3);
@@ -1080,10 +1223,7 @@ function render() {
       </section>
 
       <section class="metrics">
-        ${model.metrics.map((m) => {
-          const cls = metricClass(m);
-          return renderMetric({ ...m, _flash: cls });
-        }).join('')}
+        ${renderMetricsTiered(model)}
       </section>
 
       ${renderShareBanner()}
@@ -1150,6 +1290,7 @@ function render() {
                   if (action.type === recommended) cls.push('action--recommended');
                   html.push(`
                     <button class="${cls.join(' ')}" data-action="${escapeHtml(action.type)}" ${action.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${action.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
+                      <span class="action-icon" aria-hidden="true">${actionIcon(action.type)}</span>
                       <span class="action-label">${escapeHtml(action.label)}</span>
                       ${action.type === recommended ? '<span class="action-tag">RECOMMENDED</span>' : ''}
                     </button>
@@ -1640,6 +1781,7 @@ function bindEvents() {
 
   document.querySelectorAll('[data-dismiss-tutorial]').forEach((button) => {
     button.addEventListener('click', () => {
+      ui.tutorialDismissed = true; // P4: shrink to compact progress bar
       try {
         game = applyAction(game, { type: 'dismissTutorial' });
         saveGame();
