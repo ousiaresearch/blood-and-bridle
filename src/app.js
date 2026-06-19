@@ -251,6 +251,25 @@ function renderOfflineIndicator() {
 // P3: action button inline icon — small SVG glyph by category. Returns
 // the inner SVG markup (without an outer wrapper). All glyphs use the
 // brand-B line language: 1.6 stroke, square caps, no fills.
+// P1: metric flash class — hoisted to module scope so renderMetricsTiered
+// can call it. Takes the previous cash/day snapshots as args so we don't
+// depend on closure over lastRendered.
+function computeMetricClass(metric, previousCash, previousDay) {
+  if (metric.label === 'Day') {
+    if (previousDay != null && metric.value !== `${previousDay}/30`) return 'is-tick';
+    return '';
+  }
+  if (metric.label === 'Cash') {
+    if (previousCash != null) {
+      const numeric = Number(String(metric.value).replace(/[^0-9-]/g, ''));
+      if (Number.isFinite(numeric) && numeric > previousCash) return 'is-up';
+      if (Number.isFinite(numeric) && numeric < previousCash) return 'is-down';
+    }
+    return '';
+  }
+  return '';
+}
+
 function actionIcon(type) {
   const stroke = 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
   switch (type) {
@@ -301,15 +320,16 @@ function renderMetric(metric) {
 
 // P1: Split metrics into primary (always visible as chips) and secondary
 // (behind a disclosure). Reclaims ~600px of vertical space on mobile while
-// keeping every stat reachable.
-function renderMetricsTiered(model) {
+// keeping every stat reachable. previousCash/previousDay are passed in for
+// the flash-class computation.
+function renderMetricsTiered(model, previousCash, previousDay) {
   const primary = model.metrics.filter((m) => m.tier === 'primary');
   const secondary = model.metrics.filter((m) => m.tier === 'secondary');
   return `
     <section class="metrics metrics--tiered">
       <div class="metrics-primary">
         ${primary.map((m) => {
-          const cls = metricClass(m);
+          const cls = computeMetricClass(m, previousCash, previousDay);
           return renderMetric({ ...m, _flash: cls });
         }).join('')}
       </div>
@@ -321,7 +341,7 @@ function renderMetricsTiered(model) {
           </summary>
           <div class="metrics-secondary">
             ${secondary.map((m) => {
-              const cls = metricClass(m);
+              const cls = computeMetricClass(m, previousCash, previousDay);
               return renderMetric({ ...m, _flash: cls });
             }).join('')}
           </div>
@@ -1096,24 +1116,11 @@ function render() {
 
   // Compute deltas vs. previous render so we can attach flash classes.
   // Cash/legacy/reputation/dev-pressure all go up/down. Day ticks up.
+  // metricClass is now a module-level helper (computeMetricClass) so it
+  // can be called from renderMetricsTiered too.
   const previousCash = lastRendered.cash;
   const previousDay = lastRendered.day;
   const previousTutorial = lastRendered.tutorial ?? { dismissed: false, completedSteps: [] };
-  const metricClass = (metric) => {
-    if (metric.label === 'Day') {
-      if (previousDay != null && metric.value !== `${previousDay}/30`) return 'is-tick';
-      return '';
-    }
-    if (metric.label === 'Cash') {
-      if (previousCash != null) {
-        const numeric = Number(String(metric.value).replace(/[^0-9-]/g, ''));
-        if (Number.isFinite(numeric) && numeric > previousCash) return 'is-up';
-        if (Number.isFinite(numeric) && numeric < previousCash) return 'is-down';
-      }
-      return '';
-    }
-    return '';
-  };
 
   // New log entry = the first item in the log wasn't there last render
   const previousLogTop = lastRendered.logTop;
@@ -1223,7 +1230,7 @@ function render() {
       </section>
 
       <section class="metrics">
-        ${renderMetricsTiered(model)}
+        ${renderMetricsTiered(model, previousCash, previousDay)}
       </section>
 
       ${renderShareBanner()}
