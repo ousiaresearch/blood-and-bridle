@@ -43,7 +43,7 @@ const audio = createAudioEngine();
 let audioAmbientEnabled = false;
 
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
 
 // Preload portraits on startup
 preloadPortraits().catch(() => {});
@@ -98,6 +98,63 @@ function renderSheridanIntro() {
     .map((l) => `<p class="sheridan-intro-line">${escapeHtml(l)}</p>`)
     .join('');
   return `<aside class="sheridan-intro" role="note" aria-label="The dispersal">${lines}</aside>`;
+}
+
+// Phase 15 — mobile bottom-nav. Replaces the cramped top-right button row at
+// <=720px. Surface is always rendered (so handlers always wire correctly);
+// CSS hides it on desktop and the hero-actions row on mobile.
+function renderBottomNav() {
+  return `
+    <nav class="bottom-nav" aria-label="Primary actions">
+      <button class="bottom-nav-btn" data-ranch-profile aria-label="Ranch profile">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 L12 3 L21 12 V21 H14 V14 H10 V21 H3 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Ranch</span>
+      </button>
+      <button class="bottom-nav-btn" data-codex aria-label="Codex of the Code">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 H17 A3 3 0 0 1 20 7 V20 L17 18 H4 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>Codex</span>
+      </button>
+      <button class="bottom-nav-btn" data-kitchen-table aria-label="Kitchen table">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 4 V20 M4 12 H20" stroke="currentColor" stroke-width="1.4"/></svg>
+        <span>Kitchen</span>
+      </button>
+      <button class="bottom-nav-btn" data-audio-toggle aria-label="Toggle sound">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9 H9 L13 5 V19 L9 15 H5 Z M16 8 Q19 12 16 16 M18 5 Q22 12 18 19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span>${audio.isMuted() ? 'Muted' : 'Sound'}</span>
+      </button>
+      <button class="bottom-nav-btn" data-more-sheet aria-label="More actions" aria-haspopup="true">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+        <span>More</span>
+      </button>
+    </nav>
+  `;
+}
+
+// Secondary actions panel — slides up from bottom-nav on tap. Houses the
+// share/export/import/new-legacy/sound-cycle buttons that don't fit in 5.
+function renderMoreSheet() {
+  const open = ui.moreSheetOpen;
+  return `
+    <div class="more-sheet-backdrop ${open ? 'is-open' : ''}" data-more-sheet-close aria-hidden="${!open}"></div>
+    <aside class="more-sheet ${open ? 'is-open' : ''}" role="dialog" aria-label="More actions" aria-modal="false">
+      <div class="more-sheet-handle" aria-hidden="true"></div>
+      <button class="more-sheet-btn" data-toggle-share-card>
+        <span class="more-sheet-btn-label">${ui.showShareCard ? 'Hide share card' : 'Share card'}</span>
+      </button>
+      <button class="more-sheet-btn" data-share-link>
+        <span class="more-sheet-btn-label">Copy share link</span>
+      </button>
+      <button class="more-sheet-btn" data-export-dynasty>
+        <span class="more-sheet-btn-label">Export dynasty</span>
+      </button>
+      <button class="more-sheet-btn" data-import-dynasty>
+        <span class="more-sheet-btn-label">Import dynasty</span>
+      </button>
+      <button class="more-sheet-btn more-sheet-btn--danger" data-reset>
+        <span class="more-sheet-btn-label">Start a new legacy</span>
+      </button>
+    </aside>
+  `;
 }
 
 function renderMetric(metric) {
@@ -986,6 +1043,9 @@ function render() {
         </article>
       </section>
     </main>
+
+    ${renderBottomNav()}
+    ${renderMoreSheet()}
   `;
 
   // Side-effects after DOM is in place:
@@ -1101,29 +1161,34 @@ function playForOutcome(prevGame, nextGame, actionType) {
 }
 
 function bindEvents() {
-  // Open the Ranch Profile modal.
-  document.querySelector('[data-ranch-profile]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    openRanchProfile();
-  });
+  // Open the Ranch Profile modal. (Phase 15 — querySelectorAll so the
+  // bottom-nav button on mobile AND the hero-actions button on desktop
+  // both wire correctly.)
+  for (const btn of document.querySelectorAll('[data-ranch-profile]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      openRanchProfile();
+    });
+  }
 
   // Open the Codex of the Code.
-  document.querySelector('[data-codex]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    openCodex();
-  });
+  for (const btn of document.querySelectorAll('[data-codex]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      openCodex();
+    });
+  }
 
-  // Open the kitchen table scene (demo button — wires up a moral
-  // scene so the kitchen-table system can be exercised end-to-end).
-  // Production wiring will intercept the skipObligation action and
-  // route through this same scene trigger.
-  document.querySelector('[data-kitchen-table]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    openKitchenSceneFor('moral:farrier');
-  });
+  // Open the kitchen table scene.
+  for (const btn of document.querySelectorAll('[data-kitchen-table]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      openKitchenSceneFor('moral:farrier');
+    });
+  }
 
   // Moral-skip buttons in the action panel. Each opens the kitchen
   // table scene for the matching trigger; the player's choice lands
@@ -1138,38 +1203,42 @@ function bindEvents() {
     });
   }
 
-  document.querySelector('[data-reset]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    game = createNewGame();
-    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
-    lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
-    soundtrackInitialized = false;
-    stopSoundtrack();
-    saveGame();
-    render();
-  });
+  for (const btn of document.querySelectorAll('[data-reset]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      game = createNewGame();
+      ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
+      lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
+      soundtrackInitialized = false;
+      stopSoundtrack();
+      saveGame();
+      render();
+    });
+  }
 
-  document.querySelector('[data-audio-toggle]')?.addEventListener('click', () => {
-    audio.resume();
-    // Cycle: off → on+sfx → on+sfx+amb → off
-    if (audio.isMuted()) {
-      audio.setMuted(false);
-      audioAmbientEnabled = false;
-      audio.ambient('off');
-      setSoundtrackMuted(false); // soundtrack follows main mute
-    } else if (!audioAmbientEnabled) {
-      audioAmbientEnabled = true;
-      const preset = chooseAmbientPreset(game, { season: getSeason(game) });
-      audio.ambient(preset);
-      lastRendered.ambientPreset = preset;
-    } else {
-      audioAmbientEnabled = false;
-      audio.ambient('off');
-    }
-    audio.play('click');
-    render();
-  });
+  for (const btn of document.querySelectorAll('[data-audio-toggle]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      // Cycle: off → on+sfx → on+sfx+amb → off
+      if (audio.isMuted()) {
+        audio.setMuted(false);
+        audioAmbientEnabled = false;
+        audio.ambient('off');
+        setSoundtrackMuted(false); // soundtrack follows main mute
+      } else if (!audioAmbientEnabled) {
+        audioAmbientEnabled = true;
+        const preset = chooseAmbientPreset(game, { season: getSeason(game) });
+        audio.ambient(preset);
+        lastRendered.ambientPreset = preset;
+      } else {
+        audioAmbientEnabled = false;
+        audio.ambient('off');
+      }
+      audio.play('click');
+      render();
+    });
+  }
 
   document.querySelectorAll('[data-select-horse]').forEach((card) => {
     card.addEventListener('click', () => {
@@ -1339,103 +1408,111 @@ function bindEvents() {
     });
   });
 
-  document.querySelector('[data-toggle-share-card]')?.addEventListener('click', () => {
-    audio.play('click');
-    ui.showShareCard = !ui.showShareCard;
-    render();
-  });
-
-  document.querySelector('[data-export-dynasty]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    try {
-      const out = serializeGame(game);
-      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = suggestFilename(game);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      game = { ...game, log: [`Exported dynasty as ${a.download}.`, ...(game.log ?? [])].slice(0, 20) };
-      saveGame();
+  for (const btn of document.querySelectorAll('[data-toggle-share-card]')) {
+    btn.addEventListener('click', () => {
+      audio.play('click');
+      ui.showShareCard = !ui.showShareCard;
       render();
-    } catch (error) {
-      audio.play('error');
-      game = { ...game, log: [`Could not export: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
-      render();
-    }
-  });
-
-  document.querySelector('[data-import-dynasty]')?.addEventListener('click', () => {
-    audio.resume();
-    audio.play('click');
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json,.json';
-    input.style.display = 'none';
-    document.body.appendChild(input);
-    input.addEventListener('change', () => {
-      const file = input.files?.[0];
-      if (!file) { cleanup(); return; }
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const text = String(reader.result ?? '');
-          const result = parseJsonExport(text);
-          if (!result.ok) throw new Error(result.error);
-          game = result.game;
-          ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
-          lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
-          saveGame();
-          audio.play('confirm');
-          game = { ...game, log: [`Imported dynasty from ${file.name}.`, ...(game.log ?? [])].slice(0, 20) };
-          render();
-        } catch (error) {
-          audio.play('error');
-          game = { ...game, log: [`Could not import: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
-          render();
-        } finally {
-          cleanup();
-        }
-      };
-      reader.onerror = () => { audio.play('error'); cleanup(); };
-      reader.readAsText(file);
-      function cleanup() { try { document.body.removeChild(input); } catch {} }
     });
-    input.click();
-  });
+  }
 
-  document.querySelector('[data-share-link]')?.addEventListener('click', async () => {
-    audio.resume();
-    audio.play('click');
-    try {
-      const url = buildShareLink(game, window.location.origin + window.location.pathname);
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(url);
-        game = { ...game, log: [`Share link copied to clipboard.`, ...(game.log ?? [])].slice(0, 20) };
-        audio.play('confirm');
-      } else {
-        // Fallback: select-and-copy via a temporary textarea
-        const ta = document.createElement('textarea');
-        ta.value = url;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        game = { ...game, log: [`Share link copied.`, ...(game.log ?? [])].slice(0, 20) };
-        audio.play('confirm');
+  for (const btn of document.querySelectorAll('[data-export-dynasty]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      try {
+        const out = serializeGame(game);
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = suggestFilename(game);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        game = { ...game, log: [`Exported dynasty as ${a.download}.`, ...(game.log ?? [])].slice(0, 20) };
+        saveGame();
+        render();
+      } catch (error) {
+        audio.play('error');
+        game = { ...game, log: [`Could not export: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+        render();
       }
-      saveGame();
-      render();
-    } catch (error) {
-      audio.play('error');
-      game = { ...game, log: [`Could not share: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
-      render();
-    }
-  });
+    });
+  }
+
+  for (const btn of document.querySelectorAll('[data-import-dynasty]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json,.json';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+      input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file) { cleanup(); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const text = String(reader.result ?? '');
+            const result = parseJsonExport(text);
+            if (!result.ok) throw new Error(result.error);
+            game = result.game;
+            ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
+            lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
+            saveGame();
+            audio.play('confirm');
+            game = { ...game, log: [`Imported dynasty from ${file.name}.`, ...(game.log ?? [])].slice(0, 20) };
+            render();
+          } catch (error) {
+            audio.play('error');
+            game = { ...game, log: [`Could not import: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+            render();
+          } finally {
+            cleanup();
+          }
+        };
+        reader.onerror = () => { audio.play('error'); cleanup(); };
+        reader.readAsText(file);
+        function cleanup() { try { document.body.removeChild(input); } catch {} }
+      });
+      input.click();
+    });
+  }
+
+  for (const btn of document.querySelectorAll('[data-share-link]')) {
+    btn.addEventListener('click', async () => {
+      audio.resume();
+      audio.play('click');
+      try {
+        const url = buildShareLink(game, window.location.origin + window.location.pathname);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+          game = { ...game, log: [`Share link copied to clipboard.`, ...(game.log ?? [])].slice(0, 20) };
+          audio.play('confirm');
+        } else {
+          // Fallback: select-and-copy via a temporary textarea
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          game = { ...game, log: [`Share link copied.`, ...(game.log ?? [])].slice(0, 20) };
+          audio.play('confirm');
+        }
+        saveGame();
+        render();
+      } catch (error) {
+        audio.play('error');
+        game = { ...game, log: [`Could not share: ${error.message}`, ...(game.log ?? [])].slice(0, 20) };
+        render();
+      }
+    });
+  }
 
   document.querySelector('[data-import-shared]')?.addEventListener('click', () => {
     audio.resume();
@@ -1449,7 +1526,7 @@ function bindEvents() {
       game = { ...game, cash: game.cash + bonus };
       game = { ...game, log: [`Started a new legacy inspired by year ${snap.year} ${snap.season} (${snap.horseCount} horses, score ${snap.score.toLocaleString()}). Bonus: $${bonus.toLocaleString()}.`, ...(game.log ?? [])].slice(0, 20) };
     }
-    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false };
+    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
     lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
     try { history.replaceState(null, '', window.location.pathname); } catch {}
     pendingShareSnapshot = null;
@@ -1464,6 +1541,36 @@ function bindEvents() {
     pendingShareSnapshot = null;
     render();
   });
+
+  // Phase 15 — bottom-nav "More" sheet. Toggle open on tap of the
+  // bottom-nav More button, close on backdrop tap, and close before any
+  // sheet-btn fires its underlying action (capture-phase, so the close
+  // runs before the inner data-attr handler triggers a render).
+  for (const btn of document.querySelectorAll('[data-more-sheet]')) {
+    btn.addEventListener('click', () => {
+      audio.resume();
+      audio.play('click');
+      ui.moreSheetOpen = !ui.moreSheetOpen;
+      render();
+    });
+  }
+  for (const el of document.querySelectorAll('[data-more-sheet-close]')) {
+    el.addEventListener('click', () => {
+      if (ui.moreSheetOpen) {
+        ui.moreSheetOpen = false;
+        render();
+      }
+    });
+  }
+  // Capture-phase: any click on a sheet button should close the sheet
+  // first so the action's subsequent render() reflects the closed state.
+  for (const sheet of document.querySelectorAll('.more-sheet')) {
+    sheet.addEventListener('click', (e) => {
+      if (e.target.closest('.more-sheet-btn')) {
+        ui.moreSheetOpen = false;
+      }
+    }, true);
+  }
 }
 
 render();

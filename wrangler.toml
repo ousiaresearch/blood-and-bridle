@@ -11,7 +11,9 @@
 #
 # Subsequent deploys via `wrangler pages deploy . --project-name blood-and-bridle`
 # push the working tree directly without needing the dashboard integration.
+#
+# No `compatibility_date` — this is Pages (static), not Workers, so the
+# Workers runtime date is not consulted.
 
 name = "blood-and-bridle"
-compatibility_date = "2026-06-18"
 pages_build_output_dir = "."

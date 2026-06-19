@@ -1,6 +1,9 @@
 # Debug screenshots captured during local browser smoke-tests
 .screenshots/
 
+# Local Pages dev state (workerd scratch — re-runnable)
+.wrangler/
+
 # Local state files for asset generators (PixelLab character IDs, status,
 # cached download URLs, generation progress). Re-runnable; safe to delete
 # and rebuild by re-running the corresponding generator with --resume.
