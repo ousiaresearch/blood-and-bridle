@@ -1,0 +1,17 @@
+# Cloudflare Pages configuration for Blood & Bridle.
+#
+# This repo is a pure static site (index.html + src/*.js ES modules + assets/).
+# No build step required: Cloudflare serves the directory verbatim.
+#
+# When connecting via the Cloudflare dashboard ("Pages" → "Connect to Git"),
+# the build configuration should be:
+#   Framework preset:   None
+#   Build command:      (leave blank)
+#   Build output dir:   /
+#
+# Subsequent deploys via `wrangler pages deploy . --project-name blood-and-bridle`
+# push the working tree directly without needing the dashboard integration.
+
+name = "blood-and-bridle"
+compatibility_date = "2026-06-18"
+pages_build_output_dir = "."

@@ -1,0 +1,22 @@
+# Cloudflare Pages _headers file.
+# Format: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Long-cache hashed assets so revisits are instant.
+# We rely on file mtime (no hashes in filenames) so cache for a week and let
+# the browser revalidate on the next deploy.
+/assets/*
+  Cache-Control: public, max-age=604800, must-revalidate
+
+# Fonts and stylesheets from src/.
+/src/*
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# HTML at the root should never cache so deploys are seen immediately.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Allow embedding via iframe from any origin (for share previews etc).
+/
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
