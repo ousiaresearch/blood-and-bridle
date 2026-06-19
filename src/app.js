@@ -43,13 +43,49 @@ const audio = createAudioEngine();
 let audioAmbientEnabled = false;
 
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine };
 
 // Preload portraits on startup
 preloadPortraits().catch(() => {});
 // Start the rest-idle animation cycle after portraits are preloaded.
 // This is a no-op if /assets/horses/animations/index.js isn't generated yet.
 startIdleAnimation().catch(() => {});
+
+// Phase 15 — register service worker for PWA offline support. Skip in
+// dev / non-secure contexts where SWs don't work.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+// Phase 15 — PWA install prompt + offline indicator.
+// We capture the deferred BeforeInstallPromptEvent so we can show a
+// custom banner instead of the browser default. We also track online/
+// offline status and surface it in the header.
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  ui.installPromptReady = true;
+  render();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  ui.installPromptReady = false;
+  ui.installBannerDismissed = true;
+  render();
+});
+window.addEventListener('online', () => {
+  ui.isOffline = false;
+  render();
+});
+window.addEventListener('offline', () => {
+  ui.isOffline = true;
+  render();
+});
 
 // Initialize soundtrack on first user gesture (handled by audio.resume in playForOutcome)
 let soundtrackInitialized = false;
@@ -154,6 +190,39 @@ function renderMoreSheet() {
         <span class="more-sheet-btn-label">Start a new legacy</span>
       </button>
     </aside>
+  `;
+}
+
+// Phase 15 — PWA install banner. Shows when the browser fires
+// beforeinstallprompt and the player hasn't dismissed it. Tapping
+// Install triggers the saved prompt; tapping Later dismisses it for
+// the session.
+function renderInstallBanner() {
+  if (!ui.installPromptReady || ui.installBannerDismissed) return '';
+  return `
+    <aside class="install-banner" role="region" aria-label="Install Blood & Bridle">
+      <div class="install-banner-text">
+        <strong>Install on your phone</strong>
+        <small>Play offline. Add to your home screen.</small>
+      </div>
+      <div class="install-banner-actions">
+        <button class="install-banner-btn install-banner-btn--primary" data-install-app>Install</button>
+        <button class="install-banner-btn" data-dismiss-install>Not now</button>
+      </div>
+    </aside>
+  `;
+}
+
+// Phase 15 — offline indicator. Surfaces when navigator.onLine is false.
+// Positioned at the top of the page so the player knows their actions
+// won't persist (until the connection returns).
+function renderOfflineIndicator() {
+  if (!ui.isOffline) return '';
+  return `
+    <div class="offline-indicator" role="status">
+      <span class="offline-dot" aria-hidden="true"></span>
+      Offline · progress saves locally; sync when you reconnect
+    </div>
   `;
 }
 
@@ -390,22 +459,41 @@ function renderHorse(horse, selectedHorseId) {
 function renderLineagePanel() {
   const model = buildLineageModel(game, ui.selectedHorse);
   if (!model) return '<p class="hint">Pick a horse to see their lineage.</p>';
+  const horse = model.horse;
+  // Phase 15 — empty states get useful microcopy instead of "no data" blanks.
+  // The placeholder text telegraphs the next thing the player can do.
+  const parentsEmpty = model.parents.length === 0;
+  const offspringEmpty = model.offspring.length === 0;
+  const traitsEmpty = !horse.traitsLine || horse.traitsLine.trim() === '';
+  // Suggested next action depends on the horse's life stage:
+  const isYoung = horse.age <= 2;
+  const isCampaigner = horse.role?.toLowerCase().includes('campaigner') || horse.role?.toLowerCase().includes('show');
+  const traitsHint = isYoung
+    ? 'Foals inherit a mix of traits from sire and dam. Queue a breeding to make this horse a parent.'
+    : isCampaigner
+      ? 'Traits shape what this horse can win. Train and show to bring them forward.'
+      : 'Traits are baked in at birth — they reveal themselves as the horse matures.';
+  const parentsHint = 'Founded on the ranch — no recorded ancestry.';
+  const offspringHint = isCampaigner
+    ? 'Match this horse with a complementary stallion or mare to start a line.'
+    : 'No foals on the ground yet. Time and the right pairing will change that.';
   return `
     <div class="lineage">
       <div class="lineage-block lineage-block--self">
         <p class="eyebrow">Selected</p>
         <div class="lineage-row">
-          ${renderPortrait(model.horse, { size: 'md' })}
+          ${renderPortrait(horse, { size: 'md' })}
           <div>
-            <strong>${escapeHtml(model.horse.name)}</strong>
-            <small>age ${model.horse.age} · ${escapeHtml(model.horse.role)}</small>
+            <strong>${escapeHtml(horse.name)}</strong>
+            <small>age ${horse.age} · ${escapeHtml(horse.role)}</small>
           </div>
         </div>
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Parents</p>
-        ${model.parents.length === 0 ? '<p class="hint">No recorded parents.</p>' :
-          model.parents.map((p) => `
+        ${parentsEmpty
+          ? `<p class="lineage-empty">${escapeHtml(parentsHint)}</p>`
+          : model.parents.map((p) => `
             <div class="lineage-row lineage-row--link">
               ${renderPortrait(p, { size: 'sm' })}
               <button class="lineage-link" data-select-horse="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>
@@ -414,8 +502,9 @@ function renderLineagePanel() {
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Offspring</p>
-        ${model.offspring.length === 0 ? '<p class="hint">No offspring yet.</p>' :
-          model.offspring.map((o) => `
+        ${offspringEmpty
+          ? `<p class="lineage-empty">${escapeHtml(offspringHint)}</p>`
+          : model.offspring.map((o) => `
             <div class="lineage-row lineage-row--link">
               ${renderPortrait(o, { size: 'sm' })}
               <button class="lineage-link" data-select-horse="${escapeHtml(o.id)}">${escapeHtml(o.name)} · age ${o.age}</button>
@@ -424,7 +513,9 @@ function renderLineagePanel() {
       </div>
       <div class="lineage-block">
         <p class="eyebrow">Traits</p>
-        <small>${escapeHtml(model.horse.traitsLine ?? '')}</small>
+        ${traitsEmpty
+          ? `<p class="lineage-empty">${escapeHtml(traitsHint)}</p>`
+          : `<small>${escapeHtml(horse.traitsLine)}</small>`}
       </div>
     </div>
   `;
@@ -664,6 +755,13 @@ function renderAuctionPreview() {
   const horse = game.horses.find((h) => h.id === ui.selectedHorse);
   if (!horse) return '';
   const result = runAuction(horse);
+  const allBids = result.allBids;
+  // On mobile, only show top 3 with a "Show all bidders" toggle. Desktop
+  // shows all bidders inline.
+  const initialCount = 3;
+  const showAll = ui.auctionShowAll ?? false;
+  const visibleBids = showAll ? allBids : allBids.slice(0, initialCount);
+  const hiddenCount = allBids.length - visibleBids.length;
   return `
     <section class="panel">
       <p class="eyebrow">Auction preview for ${escapeHtml(horse.name)}</p>
@@ -676,12 +774,14 @@ function renderAuctionPreview() {
         </div>
       </div>
       <ul class="auction-bidders">
-        ${result.allBids.map((b) => {
+        ${visibleBids.map((b) => {
           // Phase 12 — rival bidders get a Codex portrait. The mood
           // tells the player who wants the horse most (neutral=curious,
           // concerned=losing, arguing=won-and-now-haggling).
+          // Phase 15 — portrait size bumped to 'md' so faces are readable
+          // on mobile without a tap.
           const portraitHtml = b.portraitId
-            ? renderRivalPortrait(b.portraitId, { size: 'sm', context: 'auction' })
+            ? renderRivalPortrait(b.portraitId, { size: 'md', context: 'auction' })
             : '';
           return `<li class="auction-bidder ${b === result.topBid ? 'auction-bidder--top' : ''}">
             ${portraitHtml}
@@ -692,6 +792,7 @@ function renderAuctionPreview() {
           </li>`;
         }).join('')}
       </ul>
+      ${hiddenCount > 0 ? `<button class="auction-toggle" data-toggle-auction>${showAll ? 'Hide' : 'Show all'} ${allBids.length} bidders</button>` : ''}
       <button class="action action--danger" data-list-auction>List ${escapeHtml(horse.name)} at auction</button>
     </section>
   `;
@@ -940,11 +1041,28 @@ function render() {
             </select>
           </label>
           <div class="actions">
-            ${model.actions.map((action) => `
-              <button class="action ${action.danger ? 'action--danger' : ''}" data-action="${escapeHtml(action.type)}" ${action.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${action.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
-                ${escapeHtml(action.label)}
-              </button>
-            `).join('')}
+            ${(() => {
+              // Phase 15 — render actions in priority groups with a
+              // divider before the high-stakes cluster.
+              const html = [];
+              let lastWeight = null;
+              for (const action of model.actions) {
+                if (lastWeight === 'management' && action.weight === 'high-stakes') {
+                  html.push('<hr class="actions-divider" aria-hidden="true" />');
+                }
+                const cls = ['action'];
+                if (action.weight) cls.push(`action--${action.weight}`);
+                if (action.danger) cls.push('action--danger');
+                if (action.weight === 'info') cls.push('action--info');
+                html.push(`
+                  <button class="${cls.join(' ')}" data-action="${escapeHtml(action.type)}" ${action.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${action.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
+                    ${escapeHtml(action.label)}
+                  </button>
+                `);
+                lastWeight = action.weight;
+              }
+              return html.join('');
+            })()}
           </div>
 
           <div class="kitchen-shortcuts">
@@ -964,57 +1082,84 @@ function render() {
       <section class="layout layout--lower">
         ${renderBreedingPanel()}
         ${renderAuctionPreview()}
-        <article class="panel">
-          <p class="eyebrow">Show circuit</p>
-          <h2>What's ahead</h2>
-          ${model.showCalendar.length === 0
-            ? '<p class="hint">No more shows on the calendar.</p>'
-            : `<ul>${model.showCalendar.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> · ${escapeHtml(s.categoryLabel)} · ${escapeHtml(s.prestigeLabel)} · ${s.status === 'today' ? '<strong>TODAY</strong>' : `in ${s.daysUntil} day${s.daysUntil === 1 ? '' : 's'}`} · $${s.entryFee} entry / $${s.prizePool.toLocaleString()} purse</li>`).join('')}</ul>`}
-          ${model.lastShowResult ? renderLastShowResult(model.lastShowResult) : ''}
-        </article>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">Show circuit</p>
+            <h2>What's ahead</h2>
+          </summary>
+          <article class="panel">
+            ${model.showCalendar.length === 0
+              ? '<p class="hint">No more shows on the calendar.</p>'
+              : `<ul>${model.showCalendar.map((s) => `<li><strong>${escapeHtml(s.title)}</strong> · ${escapeHtml(s.categoryLabel)} · ${escapeHtml(s.prestigeLabel)} · ${s.status === 'today' ? '<strong>TODAY</strong>' : `in ${s.daysUntil} day${s.daysUntil === 1 ? '' : 's'}`} · $${s.entryFee} entry / $${s.prizePool.toLocaleString()} purse</li>`).join('')}</ul>`}
+            ${model.lastShowResult ? renderLastShowResult(model.lastShowResult) : ''}
+          </article>
+        </details>
       </section>
 
       <section class="layout layout--lower">
-        <article class="panel">
-          <p class="eyebrow">Land</p>
-          <h2>Parcels & market</h2>
-          <ul>${model.parcels.map((line) => `<li>${escapeHtml(line.line)}</li>`).join('')}</ul>
-          ${renderParcelMarket(model)}
-        </article>
-        ${renderRanchUpgrades()}
-        ${renderContracts()}
-        <article class="panel">
-          <p class="eyebrow">People</p>
-          <h2>Staff & NPCs</h2>
-          <ul>${model.staff.map((s) => `<li>${escapeHtml(s.line)}</li>`).join('')}</ul>
-          <ul>${model.npcs.map((n) => `<li>${escapeHtml(n.line)}</li>`).join('')}</ul>
-        </article>
-        <article class="panel">
-          <p class="eyebrow">Region</p>
-          <h2>Rival ranches</h2>
-          <ul class="rivals-list">
-            ${model.rivals.map((r) => {
-              // Phase 12 — rival portraits surface here so the player
-              // sees the family faces they compete against.
-              const portraitHtml = r.portraitId
-                ? renderRivalPortrait(r.portraitId, { size: 'sm', context: 'community', name: r.name })
-                : '';
-              return `<li class="rivals-list-item">
-                ${portraitHtml}
-                <span class="rivals-list-info">${escapeHtml(r.line)}</span>
-              </li>`;
-            }).join('')}
-          </ul>
-          <h3>Neighbors</h3>
-          <ul class="community-list">
-            ${model.community.available.map((m) => {
-              const portraitHtml = m.portraitId
-                ? renderRivalPortrait(m.portraitId, { size: 'sm', context: 'community', name: m.name })
-                : '';
-              return `<li class="community-list-item">
-                ${portraitHtml}
-                <span class="community-list-info">
-                  <strong>${escapeHtml(m.name)}</strong>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">Land</p>
+            <h2>Parcels & market</h2>
+          </summary>
+          <article class="panel">
+            <ul>${model.parcels.map((line) => `<li>${escapeHtml(line.line)}</li>`).join('')}</ul>
+            ${renderParcelMarket(model)}
+          </article>
+        </details>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">Ranch</p>
+            <h2>Upgrades</h2>
+          </summary>
+          ${renderRanchUpgrades()}
+        </details>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">Contracts</p>
+            <h2>Boards & sales</h2>
+          </summary>
+          ${renderContracts()}
+        </details>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">People</p>
+            <h2>Staff & NPCs</h2>
+          </summary>
+          <article class="panel">
+            <ul>${model.staff.map((s) => `<li>${escapeHtml(s.line)}</li>`).join('')}</ul>
+            <ul>${model.npcs.map((n) => `<li>${escapeHtml(n.line)}</li>`).join('')}</ul>
+          </article>
+        </details>
+        <details class="lower-panel" open>
+          <summary>
+            <p class="eyebrow">Region</p>
+            <h2>Rival ranches</h2>
+          </summary>
+          <article class="panel">
+            <ul class="rivals-list">
+              ${model.rivals.map((r) => {
+                // Phase 12 — rival portraits surface here so the player
+                // sees the family faces they compete against.
+                const portraitHtml = r.portraitId
+                  ? renderRivalPortrait(r.portraitId, { size: 'sm', context: 'community', name: r.name })
+                  : '';
+                return `<li class="rivals-list-item">
+                  ${portraitHtml}
+                  <span class="rivals-list-info">${escapeHtml(r.line)}</span>
+                </li>`;
+              }).join('')}
+            </ul>
+            <h3>Neighbors</h3>
+            <ul class="community-list">
+              ${model.community.available.map((m) => {
+                const portraitHtml = m.portraitId
+                  ? renderRivalPortrait(m.portraitId, { size: 'sm', context: 'community', name: m.name })
+                  : '';
+                return `<li class="community-list-item">
+                  ${portraitHtml}
+                  <span class="community-list-info">
+                    <strong>${escapeHtml(m.name)}</strong>
                   <small>${escapeHtml(m.role)}${m.family ? ' · family' : ''}</small>
                 </span>
               </li>`;
@@ -1046,6 +1191,8 @@ function render() {
 
     ${renderBottomNav()}
     ${renderMoreSheet()}
+    ${renderInstallBanner()}
+    ${renderOfflineIndicator()}
   `;
 
   // Side-effects after DOM is in place:
@@ -1208,8 +1355,8 @@ function bindEvents() {
       audio.resume();
       audio.play('click');
       game = createNewGame();
-      ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
-      lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
+      ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine };
+          lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null, season: null };
       soundtrackInitialized = false;
       stopSoundtrack();
       saveGame();
@@ -1461,7 +1608,7 @@ function bindEvents() {
             const result = parseJsonExport(text);
             if (!result.ok) throw new Error(result.error);
             game = result.game;
-            ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
+            ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine };
             lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
             saveGame();
             audio.play('confirm');
@@ -1526,7 +1673,7 @@ function bindEvents() {
       game = { ...game, cash: game.cash + bonus };
       game = { ...game, log: [`Started a new legacy inspired by year ${snap.year} ${snap.season} (${snap.horseCount} horses, score ${snap.score.toLocaleString()}). Bonus: $${bonus.toLocaleString()}.`, ...(game.log ?? [])].slice(0, 20) };
     }
-    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false };
+    ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine };
     lastRendered = { cash: null, day: null, tutorial: { dismissed: false, completedSteps: [] }, lastShowResultId: null, ambientPreset: null };
     try { history.replaceState(null, '', window.location.pathname); } catch {}
     pendingShareSnapshot = null;
@@ -1562,6 +1709,35 @@ function bindEvents() {
       }
     });
   }
+  // Phase 15 — PWA install flow.
+  for (const btn of document.querySelectorAll('[data-install-app]')) {
+    btn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      try {
+        await deferredInstallPrompt.userChoice;
+      } catch {}
+      deferredInstallPrompt = null;
+      ui.installPromptReady = false;
+      ui.installBannerDismissed = true;
+      render();
+    });
+  }
+  for (const btn of document.querySelectorAll('[data-dismiss-install]')) {
+    btn.addEventListener('click', () => {
+      ui.installBannerDismissed = true;
+      render();
+    });
+  }
+
+  // Phase 15 — auction preview "show all bidders" toggle.
+  for (const btn of document.querySelectorAll('[data-toggle-auction]')) {
+    btn.addEventListener('click', () => {
+      ui.auctionShowAll = !ui.auctionShowAll;
+      render();
+    });
+  }
+
   // Capture-phase: any click on a sheet button should close the sheet
   // first so the action's subsequent render() reflects the closed state.
   for (const sheet of document.querySelectorAll('.more-sheet')) {

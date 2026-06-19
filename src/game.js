@@ -993,24 +993,41 @@ export function buyAvailableParcel(game, parcelDef) {
 export function getActiveCrisis(game) { return game.crisis; }
 
 export function getAvailableActions(game) {
+  // Phase 15 — each action gets a weight tag driving button grammar:
+  //   'primary'    — gold filled, the daily-loop action you take most
+  //   'specialty'  — handler-driven, costs extra, shown above the divider
+  //   'management' — ranch ops (default ghost button)
+  //   'high-stakes'— irreversible moments (refuse developer, sell, etc.)
+  //   'info'       — read-only status (foal due)
   const actions = [
-    { type: 'train', label: 'Train a horse', requiresHorse: true, requiresStaff: true },
-    { type: 'maeAdvancedTraining', label: "Mae's advanced session", requiresHorse: true, requiresStaff: false, requiresCampaigner: true },
-    { type: 'vossPreventiveCare', label: "Voss: herd preventive care", requiresHorse: false, requiresStaff: false },
-    { type: 'eliFindHayDeal', label: "Eli: find hay deal", requiresHorse: false, requiresStaff: false },
-    { type: 'upgrade', label: 'Build / upgrade ranch', requiresHorse: false, requiresStaff: false, isUpgrade: true },
-    { type: 'rotatePasture', label: 'Rotate pasture' },
-    { type: 'enterShow', label: 'Enter a show', requiresHorse: true },
-    { type: 'takeBoarders', label: 'Take outside boarders' },
-    { type: 'refuseDeveloper', label: 'Refuse the developer' },
-    { type: 'signWithDeveloper', label: 'Sign over the west meadow' },
-    { type: 'breed', label: 'Queue breeding', requiresTwoHorses: true },
+    { type: 'train',         label: 'Train a horse',           weight: 'primary',    requiresHorse: true,  requiresStaff: true },
+    { type: 'enterShow',     label: 'Enter a show',            weight: 'primary',    requiresHorse: true },
+    { type: 'breed',         label: 'Queue breeding',          weight: 'primary',    requiresTwoHorses: true },
+    { type: 'maeAdvancedTraining', label: "Mae's advanced session",         weight: 'specialty', requiresHorse: true, requiresCampaigner: true },
+    { type: 'vossPreventiveCare',  label: "Voss: herd preventive care",     weight: 'specialty' },
+    { type: 'eliFindHayDeal',      label: "Eli: find hay deal",             weight: 'specialty' },
+    { type: 'upgrade',       label: 'Build / upgrade ranch',   weight: 'management' },
+    { type: 'rotatePasture', label: 'Rotate pasture',          weight: 'management' },
+    { type: 'takeBoarders',  label: 'Take outside boarders',  weight: 'management' },
+    { type: 'vetCare',       label: 'Call the vet',            weight: 'management', requiresHorse: true },
+    { type: 'refuseDeveloper', label: 'Refuse the developer',  weight: 'high-stakes' },
+    { type: 'signWithDeveloper', label: 'Sign over the west meadow', weight: 'high-stakes' },
+    { type: 'sellHorse',     label: 'Sell a horse (private)', weight: 'high-stakes', requiresHorse: true },
+    { type: 'listAtAuction', label: 'List at auction',         weight: 'high-stakes', requiresHorse: true },
   ];
-  if (game.pendingBreeding) actions.push({ type: 'breedInfo', label: `Foal due: ${game.pendingBreeding.sireName} × ${game.pendingBreeding.damName}` });
-  if (game.cash >= VET_COST) actions.push({ type: 'vetCare', label: 'Call the vet', requiresHorse: true });
-  if (game.horses.length > 1) actions.push({ type: 'sellHorse', label: 'Sell a horse (private)', requiresHorse: true, danger: true });
-  if (game.horses.length > 0) actions.push({ type: 'listAtAuction', label: 'List at auction', requiresHorse: true, danger: true });
+  if (game.pendingBreeding) {
+    actions.push({ type: 'breedInfo', label: `Foal due: ${game.pendingBreeding.sireName} × ${game.pendingBreeding.damName}`, weight: 'info' });
+  }
+  // Hide actions whose prerequisites aren't met.
+  if (game.cash < VET_COST) removeAction(actions, 'vetCare');
+  if (game.horses.length <= 1) removeAction(actions, 'sellHorse');
+  if (game.horses.length === 0) removeAction(actions, 'listAtAuction');
   return actions;
+}
+
+function removeAction(actions, type) {
+  const idx = actions.findIndex((a) => a.type === type);
+  if (idx !== -1) actions.splice(idx, 1);
 }
 
 export function getGameSummary(game) {

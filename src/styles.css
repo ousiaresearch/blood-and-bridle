@@ -335,7 +335,82 @@ select {
 .action:disabled { opacity: 0.45; cursor: not-allowed; }
 .action--danger { border-color: rgba(185, 90, 70, 0.5); }
 
+/* Phase 15 — action weight grammar.
+   Primary: filled gold, the daily-loop actions (train / show / breed).
+   Specialty: ghost with subtle gold border (handler-driven extras).
+   Management: default ghost (ranch ops).
+   High-stakes: red border + amber text (irreversible moments).
+   Info: muted italic (read-only status). */
+.action--primary {
+  background: linear-gradient(180deg, rgba(201, 162, 90, 0.32), rgba(166, 130, 64, 0.22));
+  border: 1px solid rgba(201, 162, 90, 0.6);
+  color: var(--paper, #ece4d2);
+  font-weight: 600;
+  box-shadow: 0 2px 8px -4px rgba(201, 162, 90, 0.5);
+}
+.action--primary:hover {
+  background: linear-gradient(180deg, rgba(220, 178, 96, 0.42), rgba(186, 145, 72, 0.32));
+  border-color: var(--gold, #c9a25a);
+}
+.action--specialty {
+  border: 1px solid rgba(201, 162, 90, 0.35);
+  color: var(--gold, #c9a25a);
+}
+.action--specialty::before {
+  content: '★ ';
+  color: var(--gold, #c9a25a);
+  margin-right: 2px;
+}
+.action--management {
+  /* default ghost; no extra treatment */
+}
+.action--high-stakes {
+  border: 1px solid rgba(185, 90, 70, 0.5);
+  color: #e89a82;
+  font-style: italic;
+}
+.action--high-stakes:hover {
+  border-color: rgba(232, 154, 130, 0.7);
+  color: #f1b88f;
+}
+.action--info {
+  border-style: dashed;
+  opacity: 0.7;
+  font-style: italic;
+  cursor: default;
+}
+.action--info:hover {
+  border-color: rgba(201, 162, 90, 0.4);
+}
+
+.actions-divider {
+  border: 0;
+  border-top: 1px dashed rgba(201, 162, 90, 0.3);
+  margin: 4px 0;
+}
+
+/* On mobile, primary actions are larger / more thumb-friendly. */
+@media (max-width: 720px) {
+  .action--primary { min-height: 56px; padding: 14px 16px; font-size: 1.02rem; }
+  .action--high-stakes { padding: 12px 14px; }
+}
+
 .hint { margin-top: 14px; font-size: 0.92rem; }
+
+/* Phase 15 — empty-state microcopy in the lineage panel. Italic, muted,
+   sits in the place where data would be. Gives the player a sense of
+   what to do next instead of an unhelpful blank. */
+.lineage-empty {
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: rgba(20, 18, 14, 0.4);
+  border-left: 2px solid rgba(201, 162, 90, 0.35);
+  border-radius: 4px;
+  font-size: 0.84rem;
+  font-style: italic;
+  color: var(--muted, #b9ad95);
+  line-height: 1.45;
+}
 
 .breed-grid {
   display: grid;
@@ -2282,6 +2357,79 @@ main.shell.is-turning {
   gap: 6px;
 }
 
+/* ── Phase 15 — collapsible lower-panel (mobile only) ─────────────── */
+/* The lower-row sections (Land/Ranch/Contracts/People/Region/Show circuit)
+   use <details>/<summary> for native disclosure behavior. Desktop keeps
+   them all open via the `open` attribute. Mobile lets players collapse
+   what they don't need right now to keep the dashboard scannable. */
+.lower-panel {
+  margin-bottom: 12px;
+}
+.lower-panel > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 16px;
+  background: rgba(20, 18, 14, 0.5);
+  border: 1px solid rgba(201, 162, 90, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  user-select: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.lower-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.lower-panel > summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--gold, #c9a25a);
+  font-size: 0.9rem;
+  transition: transform 200ms ease;
+}
+.lower-panel:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+.lower-panel > summary:hover {
+  background: rgba(201, 162, 90, 0.08);
+  border-color: rgba(201, 162, 90, 0.4);
+}
+.lower-panel > summary > p.eyebrow {
+  margin: 0;
+}
+.lower-panel > summary > h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.lower-panel[open] > summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+.lower-panel[open] > summary + article.panel {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: -1px;
+}
+
+/* On desktop, hide the disclosure caret and keep all open. */
+@media (min-width: 721px) {
+  .lower-panel > summary::after { display: none; }
+  .lower-panel > summary {
+    cursor: default;
+    background: transparent;
+    border: 0;
+    padding: 0 0 8px;
+  }
+  .lower-panel > summary:hover {
+    background: transparent;
+    border: 0;
+  }
+  /* Make sure all are expanded on desktop regardless of [open]. */
+  .lower-panel > .panel { display: block; }
+}
+
 /* ── Phase 12 — rival portraits in auction preview ──────────────── */
 .auction-bidders {
   list-style: none;
@@ -2289,14 +2437,14 @@ main.shell.is-turning {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .auction-bidder {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 6px;
-  border-radius: 4px;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid transparent;
   transition: background 120ms ease;
 }
@@ -2308,11 +2456,54 @@ main.shell.is-turning {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
+  flex: 1;
 }
 .auction-bidder-offer {
-  color: var(--muted);
-  font-size: 0.78rem;
+  color: var(--gold, #c9a25a);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.auction-bidder--top .auction-bidder-offer {
+  color: var(--gold, #c9a25a);
+}
+.auction-toggle {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(201, 162, 90, 0.4);
+  color: var(--gold, #c9a25a);
+  padding: 8px 14px;
+  margin: 6px 0 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 120ms ease;
+}
+.auction-toggle:hover {
+  background: rgba(201, 162, 90, 0.08);
+  border-style: solid;
+}
+
+/* Phase 15 — on mobile, give bidder portraits more presence so faces
+   are recognizable at arm's length. */
+@media (max-width: 720px) {
+  .auction-bidder {
+    padding: 10px 12px;
+    gap: 14px;
+  }
+  .auction-bidder .rival-portrait {
+    width: 56px;
+    height: 56px;
+  }
+  .auction-bidder-info {
+    font-size: 1rem;
+  }
+  .auction-bidder-offer {
+    font-size: 0.92rem;
+  }
 }
 .rival-portrait {
   display: inline-block;
@@ -2595,4 +2786,105 @@ main.shell.is-turning {
 @media (prefers-reduced-motion: reduce) {
   .more-sheet,
   .more-sheet-backdrop { transition: none; }
+}
+
+/* ── Phase 15 — PWA install banner + offline indicator ─────────────── */
+.install-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, rgba(28, 22, 16, 0.98), rgba(14, 11, 8, 0.99));
+  border: 1px solid rgba(201, 162, 90, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.7);
+  max-width: calc(100vw - 32px);
+}
+@media (max-width: 720px) {
+  .install-banner {
+    bottom: 84px;
+    left: 16px;
+    right: 16px;
+    transform: none;
+    max-width: none;
+  }
+}
+.install-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.install-banner-text strong {
+  font-family: 'Rye', serif;
+  font-size: 0.92rem;
+  color: var(--gold, #c9a25a);
+  letter-spacing: 0.04em;
+}
+.install-banner-text small {
+  font-size: 0.78rem;
+  color: var(--muted, #b9ad95);
+}
+.install-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.install-banner-btn {
+  background: transparent;
+  border: 1px solid rgba(201, 162, 90, 0.4);
+  color: var(--paper, #ece4d2);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.install-banner-btn:hover {
+  background: rgba(201, 162, 90, 0.12);
+  border-color: var(--gold, #c9a25a);
+}
+.install-banner-btn--primary {
+  background: linear-gradient(180deg, rgba(201, 162, 90, 0.32), rgba(166, 130, 64, 0.22));
+  border-color: rgba(201, 162, 90, 0.6);
+  color: var(--gold, #c9a25a);
+  font-weight: 600;
+}
+.install-banner-btn--primary:hover {
+  background: linear-gradient(180deg, rgba(220, 178, 96, 0.42), rgba(186, 145, 72, 0.32));
+}
+
+.offline-indicator {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(60, 30, 18, 0.96), rgba(40, 18, 12, 0.96));
+  color: #f1b88f;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(232, 154, 130, 0.4);
+}
+.offline-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e89a82;
+  box-shadow: 0 0 6px rgba(232, 154, 130, 0.6);
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
