@@ -1,4 +1,4 @@
-import { applyAction, createNewGame, isGameOver, scoreGame, buyAvailableParcel } from './game.js';
+import { applyAction, createNewGame, isGameOver, scoreGame, buyAvailableParcel, recommendAction } from './game.js';
 import { buildDashboardModel } from './ui.js';
 import { buildLineageModel } from './lineage.js';
 import { runAuction } from './auction.js';
@@ -43,7 +43,7 @@ const audio = createAudioEngine();
 let audioAmbientEnabled = false;
 
 let game = loadGame();
-let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine };
+let ui = { selectedHorse: game.horses[0]?.id, selectedStaff: game.staff[0]?.id, breedSire: null, breedDam: null, view: 'ranch', lastFiredActionType: null, showShareCard: false, moreSheetOpen: false, auctionShowAll: false, installPromptReady: false, installBannerDismissed: false, isOffline: !navigator.onLine, showAllActions: false };
 
 // Preload portraits on startup
 preloadPortraits().catch(() => {});
@@ -456,6 +456,54 @@ function renderHorse(horse, selectedHorseId) {
   `;
 }
 
+// Phase 15 Sheridan lift — render the recommended-action card. Pulls the
+// top recommendation out of the action list and shows it as the day's first
+// thing the player sees. The remaining actions live behind a disclosure.
+function renderRecommendedAction(actions, game) {
+  const recType = recommendAction(game);
+  if (!recType) return '';
+  const rec = actions.find((a) => a.type === recType);
+  if (!rec) return '';
+  // Build a one-line reason tied to game state.
+  let reason = '';
+  switch (recType) {
+    case 'train':
+      reason = `Mae can put points on ${getSelectedHorseName()}.`;
+      break;
+    case 'enterShow':
+      reason = 'Show the world what this horse can do.';
+      break;
+    case 'breed':
+      reason = 'Build tomorrow\'s champion today.';
+      break;
+    case 'takeBoarders':
+      reason = 'Cash is short. Take outside boarders to refill the till.';
+      break;
+    case 'rotatePasture':
+      reason = 'Your pasture is tired. Rotate before it costs you.';
+      break;
+    default:
+      reason = rec.label;
+  }
+  return `
+    <div class="recommended-card">
+      <div class="recommended-card-meta">
+        <span class="recommended-tag">Recommended</span>
+        <span class="recommended-reason">${escapeHtml(reason)}</span>
+      </div>
+      <button class="recommended-cta" data-action="${escapeHtml(rec.type)}" ${rec.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${rec.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
+        <span>${escapeHtml(rec.label)}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12 H19 M13 6 L19 12 L13 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function getSelectedHorseName() {
+  const h = game.horses.find((x) => x.id === ui.selectedHorse);
+  return h ? h.name : 'your horse';
+}
+
 function renderLineagePanel() {
   const model = buildLineageModel(game, ui.selectedHorse);
   if (!model) return '<p class="hint">Pick a horse to see their lineage.</p>';
@@ -492,7 +540,18 @@ function renderLineagePanel() {
       <div class="lineage-block">
         <p class="eyebrow">Parents</p>
         ${parentsEmpty
-          ? `<p class="lineage-empty">${escapeHtml(parentsHint)}</p>`
+          ? `<div class="lineage-empty-card">
+              <svg class="lineage-empty-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M24 8 L24 40 M16 16 L32 16 M14 30 L34 30" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                <circle cx="24" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                <circle cx="16" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                <circle cx="32" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              <div>
+                <strong>Founded on the ranch</strong>
+                <p>${escapeHtml(parentsHint)}</p>
+              </div>
+            </div>`
           : model.parents.map((p) => `
             <div class="lineage-row lineage-row--link">
               ${renderPortrait(p, { size: 'sm' })}
@@ -503,7 +562,17 @@ function renderLineagePanel() {
       <div class="lineage-block">
         <p class="eyebrow">Offspring</p>
         ${offspringEmpty
-          ? `<p class="lineage-empty">${escapeHtml(offspringHint)}</p>`
+          ? `<div class="lineage-empty-card">
+              <svg class="lineage-empty-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M8 38 Q12 30 16 36 Q20 28 24 34 Q28 26 32 32 Q36 28 40 34" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                <circle cx="24" cy="20" r="4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M20 20 L20 28 L28 28 L28 20" fill="none" stroke="currentColor" stroke-width="1.4"/>
+              </svg>
+              <div>
+                <strong>${isCampaigner ? 'Line begins with you' : 'No foals yet'}</strong>
+                <p>${escapeHtml(offspringHint)}</p>
+              </div>
+            </div>`
           : model.offspring.map((o) => `
             <div class="lineage-row lineage-row--link">
               ${renderPortrait(o, { size: 'sm' })}
@@ -514,7 +583,16 @@ function renderLineagePanel() {
       <div class="lineage-block">
         <p class="eyebrow">Traits</p>
         ${traitsEmpty
-          ? `<p class="lineage-empty">${escapeHtml(traitsHint)}</p>`
+          ? `<div class="lineage-empty-card">
+              <svg class="lineage-empty-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M24 6 L24 42 M14 16 Q24 24 34 16 M14 32 Q24 24 34 32" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+                <circle cx="24" cy="24" r="2" fill="currentColor"/>
+              </svg>
+              <div>
+                <strong>${isYoung ? 'Trait unknown' : 'Reading the horse'}</strong>
+                <p>${escapeHtml(traitsHint)}</p>
+              </div>
+            </div>`
           : `<small>${escapeHtml(horse.traitsLine)}</small>`}
       </div>
     </div>
@@ -968,7 +1046,7 @@ function render() {
             <p class="subtitle">${escapeHtml(model.subtitle)} · ${escapeHtml(model.crisisTitle)}${game.ownerName ? ' · ' + escapeHtml(game.ownerName) : ''}</p>
           </div>
         </div>
-        <div class="hero-actions">
+        <div class="hero-actions desktop-only">
           <button class="reset" data-ranch-profile title="Set the ranch name and the brand">Ranch</button>
           <button class="reset" data-codex title="The earned code of the West">Codex</button>
           <button class="reset" data-kitchen-table title="The hands at the kitchen table">Kitchen</button>
@@ -978,6 +1056,14 @@ function render() {
           <button class="reset" data-export-dynasty>Export</button>
           <button class="reset" data-import-dynasty>Import</button>
           <button class="reset" data-reset>New legacy</button>
+        </div>
+        <div class="hero-actions-mobile mobile-only" aria-label="Quick actions">
+          <button class="audio-toggle-mini ${audio.isMuted() ? 'is-muted' : ''}" data-audio-toggle aria-label="Toggle sound">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9 H9 L13 5 V19 L9 15 H5 Z M16 8 Q19 12 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="reset-mini" data-toggle-share-card aria-label="${ui.showShareCard ? 'Hide share card' : 'Show share card'}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 10 H20 M9 6 V19" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
         </div>
       </section>
 
@@ -1033,37 +1119,47 @@ function render() {
 
         <aside class="panel control-panel">
           <p class="eyebrow">Daily decision</p>
-          <h2>Choose the cost</h2>
-          <label>
+          <h2>${recommendAction(game) ? 'What now?' : 'Choose the cost'}</h2>
+          ${renderRecommendedAction(model.actions, game)}
+          <label class="staff-select-label">
             Handler
             <select name="staff-select">
               ${game.staff.map((person) => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name)}</option>`).join('')}
             </select>
           </label>
-          <div class="actions">
-            ${(() => {
-              // Phase 15 — render actions in priority groups with a
-              // divider before the high-stakes cluster.
-              const html = [];
-              let lastWeight = null;
-              for (const action of model.actions) {
-                if (lastWeight === 'management' && action.weight === 'high-stakes') {
-                  html.push('<hr class="actions-divider" aria-hidden="true" />');
+          <details class="actions-disclosure" ${ui.showAllActions ? 'open' : ''}>
+            <summary>
+              <span>${ui.showAllActions ? 'Hide' : 'Show all'} ${model.actions.length} actions</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="chevron"><path d="M6 9 L12 15 L18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </summary>
+            <div class="actions">
+              ${(() => {
+                // Phase 15 — render actions in priority groups with a
+                // divider before the high-stakes cluster.
+                const html = [];
+                let lastWeight = null;
+                const recommended = recommendAction(game);
+                for (const action of model.actions) {
+                  if (lastWeight === 'management' && action.weight === 'high-stakes') {
+                    html.push('<hr class="actions-divider" aria-hidden="true" />');
+                  }
+                  const cls = ['action'];
+                  if (action.weight) cls.push(`action--${action.weight}`);
+                  if (action.danger) cls.push('action--danger');
+                  if (action.weight === 'info') cls.push('action--info');
+                  if (action.type === recommended) cls.push('action--recommended');
+                  html.push(`
+                    <button class="${cls.join(' ')}" data-action="${escapeHtml(action.type)}" ${action.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${action.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
+                      <span class="action-label">${escapeHtml(action.label)}</span>
+                      ${action.type === recommended ? '<span class="action-tag">RECOMMENDED</span>' : ''}
+                    </button>
+                  `);
+                  lastWeight = action.weight;
                 }
-                const cls = ['action'];
-                if (action.weight) cls.push(`action--${action.weight}`);
-                if (action.danger) cls.push('action--danger');
-                if (action.weight === 'info') cls.push('action--info');
-                html.push(`
-                  <button class="${cls.join(' ')}" data-action="${escapeHtml(action.type)}" ${action.requiresHorse && !ui.selectedHorse ? 'disabled' : ''} ${action.requiresStaff && !ui.selectedStaff ? 'disabled' : ''}>
-                    ${escapeHtml(action.label)}
-                  </button>
-                `);
-                lastWeight = action.weight;
-              }
-              return html.join('');
-            })()}
-          </div>
+                return html.join('');
+              })()}
+            </div>
+          </details>
 
           <div class="kitchen-shortcuts">
             <p class="eyebrow">Moral moments <span class="hint">— at the kitchen table</span></p>
@@ -1735,6 +1831,19 @@ function bindEvents() {
     btn.addEventListener('click', () => {
       ui.auctionShowAll = !ui.auctionShowAll;
       render();
+    });
+  }
+
+  // Phase 15 Sheridan lift — actions disclosure. The native <details> open
+  // event fires when the user expands, so we mirror it into ui state and
+  // re-render so any conditional UI updates.
+  for (const det of document.querySelectorAll('.actions-disclosure')) {
+    det.addEventListener('toggle', () => {
+      const isOpen = det.hasAttribute('open');
+      if (ui.showAllActions !== isOpen) {
+        ui.showAllActions = isOpen;
+        // No render here — the native element already updated visually.
+      }
     });
   }
 

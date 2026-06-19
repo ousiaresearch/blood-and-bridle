@@ -1030,6 +1030,43 @@ function removeAction(actions, type) {
   if (idx !== -1) actions.splice(idx, 1);
 }
 
+// Phase 15 Sheridan lift — recommend the single action that best fits the
+// current game state. Returns an action type or null when no recommendation
+// applies (let the UI fall back to the first available primary).
+export function recommendAction(game) {
+  // 1. Pending breeding with an imminent due date → train/show the pregnant mare
+  if (game.pendingBreeding && game.pendingBreeding.daysUntilDue <= 3) {
+    return 'enterShow';
+  }
+  // 2. Low cash AND livestock on hand → boarders first
+  if (game.cash < 4000 && game.horses.length >= 2) {
+    return 'takeBoarders';
+  }
+  // Campaigners are horses that can be trained or shown — not broodmares,
+  // yearlings, foals, or ranch geldings. Match on the campaigner-specific
+  // roles.
+  const campaigners = (game.horses ?? []).filter((h) =>
+    ['campaigner', 'reining', 'racehorse'].includes(h?.role ?? '')
+  );
+  // 3. Reputation low AND have a campaigner → show them (visibility = rep)
+  if ((game.reputation ?? 0) < 50 && campaigners.length > 0) {
+    return 'enterShow';
+  }
+  // 4. Cash healthy + campaigner → train (default daily loop)
+  if (game.cash >= 2000 && campaigners.length > 0) {
+    return 'train';
+  }
+  // 5. Two horses + no pending breeding → breed (build the future)
+  if (game.horses.length >= 2 && !game.pendingBreeding) {
+    return 'breed';
+  }
+  // 6. Pasture stale → rotate
+  const pastureStale = (game.pasture ?? []).some((p) => (p.turnsSinceRest ?? 0) >= 4);
+  if (pastureStale) return 'rotatePasture';
+  // 7. Fallback: whatever primary is available
+  return null;
+}
+
 export function getGameSummary(game) {
   return `Year ${getYear(game)} ${getSeason(game)} · Day ${getDayOfSeason(game)}/${DAYS_PER_SEASON} · Cash $${game.cash.toLocaleString()} · Legacy ${game.legacy} · Rep ${game.reputation} · Dev Pressure ${game.developerPressure}`;
 }
